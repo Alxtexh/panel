@@ -1682,7 +1682,7 @@ function badgeLabel(key: string, value: unknown): string {
                     :errors="actionForm!.errors"
                     :processing="actionForm!.processing"
                     :search-options="searchActionOptions"
-                    @update="(key: string, value: any) => (actionForm!.values[key] = value)"
+                    @change="(key: string, value: any) => (actionForm!.values[key] = value)"
                 />
             </form>
 
@@ -1724,7 +1724,7 @@ function badgeLabel(key: string, value: unknown): string {
                     :errors="actionForm!.errors"
                     :processing="actionForm!.processing"
                     :search-options="searchActionOptions"
-                    @update="(key: string, value: any) => (actionForm!.values[key] = value)"
+                    @change="(key: string, value: any) => (actionForm!.values[key] = value)"
                 />
             </form>
 

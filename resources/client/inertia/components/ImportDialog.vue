@@ -78,6 +78,16 @@ const requiredUnmapped = computed(() =>
     fields.value.filter((f) => f.required && !Object.values(mapping.value).includes(f.key)),
 )
 
+/**
+ * Required fields first, in their own `<optgroup>` - the server sends one
+ * flat, declaration-ordered list, which mixed twelve fields into one menu
+ * with no way to tell "must map this" from "only if you have it" without
+ * reading each `*`. Split once here rather than in the template, which
+ * would recompute the same filter for every one of the file's columns.
+ */
+const requiredFields = computed(() => fields.value.filter((f) => f.required))
+const optionalFields = computed(() => fields.value.filter((f) => !f.required))
+
 const chosenMapping = computed(() =>
     Object.fromEntries(Object.entries(mapping.value).filter(([, field]) => field !== '')),
 )
@@ -186,21 +196,35 @@ async function confirmImport(): Promise<void> {
 
             <!-- Step 1: map columns -->
             <div v-else-if="activeStep === 1" class="flex flex-col gap-3">
-                <div class="flex flex-col gap-2">
+                <div class="rounded-md border">
+                    <div
+                        class="text-muted-foreground grid grid-cols-[1fr_1.4fr] gap-3 border-b px-3 py-1.5 text-xs font-medium"
+                    >
+                        <span>CSV column</span>
+                        <span>Import as</span>
+                    </div>
+
                     <div
                         v-for="header in headers"
                         :key="header"
-                        class="flex items-center gap-2 text-sm"
+                        class="grid grid-cols-[1fr_1.4fr] items-center gap-3 border-b px-3 py-2 text-sm last:border-b-0"
                     >
-                        <span class="w-1/2 truncate font-mono text-xs">{{ header }}</span>
+                        <span class="truncate font-mono text-xs" :title="header">{{ header }}</span>
                         <select
                             v-model="mapping[header]"
-                            class="w-1/2 rounded-md border border-input bg-background px-2 py-1 text-sm"
+                            class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
                         >
                             <option value="">Don't import this column</option>
-                            <option v-for="f in fields" :key="f.key" :value="f.key">
-                                {{ f.label }}{{ f.required ? ' *' : '' }}
-                            </option>
+                            <optgroup label="Required">
+                                <option v-for="f in requiredFields" :key="f.key" :value="f.key">
+                                    {{ f.label }}
+                                </option>
+                            </optgroup>
+                            <optgroup v-if="optionalFields.length" label="Optional">
+                                <option v-for="f in optionalFields" :key="f.key" :value="f.key">
+                                    {{ f.label }}
+                                </option>
+                            </optgroup>
                         </select>
                     </div>
                 </div>
