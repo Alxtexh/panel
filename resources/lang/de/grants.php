@@ -7,6 +7,7 @@ return array_replace_recursive(
     [
         'empty' => [
             'title' => 'Sie haben keine Berechtigungen',
+            'reason' => 'Das Erteilen erfordert Shell-Zugriff - das ist Absicht, kein fehlender Button.',
         ],
     ],
 );

@@ -9,6 +9,7 @@ use Alxtexh\Panel\Pages\ApiKeysPage;
 use Alxtexh\Panel\Pages\FeatureFlagsPage;
 use Alxtexh\Panel\Pages\InvitePage;
 use Alxtexh\Panel\Panel;
+use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
@@ -126,6 +127,8 @@ final class SaaSPagesTest extends TestCase
 
     public function test_onboarding_page_serializes_chrome_steps_until_dismissed(): void
     {
+        app(PanelManager::class)->panel('admin')->onboarding();
+
         $request = \Illuminate\Http\Request::create('/get-started');
 
         $data = \Alxtexh\Panel\Pages\OnboardingPage::data($request);

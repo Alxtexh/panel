@@ -5,18 +5,26 @@
  * THE INSTALLER DOES NOT GRANT EVERY ABILITY. A blank shell used to look
  * broken. This is the kit empty state: you have no grants, here is how to
  * create an Administrator.
+ *
+ * ONE TREATMENT, NOT TWO. `PanelDashboard` used to render this a second time,
+ * full-size, directly under the identical banner `PanelShell` already puts
+ * above every page's toolbar - the same title and the same three commands,
+ * twice on one screen. `PanelShell` is the only caller now, so there is one
+ * design to get right rather than one to maintain and one to forget.
+ *
+ * THE COMMANDS STAY, ON PURPOSE. `panel:permissions grant` is deliberately a
+ * shell-only act - see that command's own docblock: "somebody with the
+ * server is somebody entitled to decide", not whoever is signed in when the
+ * install happens to be short a role. A button here that granted
+ * Administrator to the viewer would turn that guard into a race the moment
+ * two people open a dashboard with nothing set up yet. `reason` says why the
+ * terminal, so this reads as a considered boundary instead of an unfinished
+ * feature.
  */
-import { Terminal } from '@lucide/vue'
+import { Lock, Terminal } from '@lucide/vue'
 import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { useTranslations } from '../composables/useTranslations'
-
-withDefaults(
-    defineProps<{
-        compact?: boolean
-    }>(),
-    { compact: false },
-)
 
 const page = usePage()
 const { t } = useTranslations()
@@ -50,24 +58,31 @@ const hint = computed(() => {
 <template>
     <div
         v-if="hint"
-        class="flex flex-col items-start gap-3 rounded-lg border border-dashed p-4 sm:p-6"
-        :class="compact ? 'sm:p-4' : ''"
+        class="flex flex-col gap-3 rounded-lg border border-dashed bg-muted/20 p-3 sm:flex-row sm:items-start sm:gap-4"
         data-slot="empty-grants"
     >
-        <div>
-            <p class="text-sm font-medium">{{ hint.title }}</p>
-            <p v-if="!compact" class="text-muted-foreground mt-1 text-sm">{{ hint.body }}</p>
-            <p v-else class="text-muted-foreground mt-1 text-sm">
-                {{ t('grants.empty.compact') }}
-            </p>
+        <div class="flex min-w-0 flex-1 items-start gap-2.5">
+            <span
+                class="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                aria-hidden="true"
+            >
+                <Lock class="size-3.5" />
+            </span>
+            <div class="min-w-0">
+                <p class="text-sm font-medium">{{ hint.title }}</p>
+                <p class="text-muted-foreground mt-0.5 text-xs">{{ hint.body }}</p>
+                <p class="text-muted-foreground/80 mt-1 text-xs italic">{{ t('grants.empty.reason') }}</p>
+            </div>
         </div>
-        <code
-            v-for="command in hint.commands"
-            :key="command"
-            class="bg-muted/60 flex items-center gap-2 rounded-md px-3 py-2 font-mono text-xs"
-        >
-            <Terminal class="size-3.5 shrink-0" />
-            {{ command }}
-        </code>
+        <div class="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:flex-col sm:items-stretch">
+            <code
+                v-for="command in hint.commands"
+                :key="command"
+                class="bg-muted/60 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-mono text-[11px] leading-none"
+            >
+                <Terminal class="size-3 shrink-0 opacity-60" aria-hidden="true" />
+                {{ command }}
+            </code>
+        </div>
     </div>
 </template>

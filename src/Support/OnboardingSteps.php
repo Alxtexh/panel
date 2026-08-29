@@ -26,6 +26,11 @@ use Alxtexh\Panel\PanelManager;
  * DEFAULTS ARE KIT CHROME. Organisation, settings, security, roles, directory,
  * backups. No clients, routers, or vertical copy. Apps-only screens appear
  * only when `Panel::apps()` enabled them.
+ *
+ * OFF UNLESS THE PANEL ASKS FOR IT. `Panel::onboarding()` is off by default -
+ * see its own docblock - so `items()` returns nothing for a panel that never
+ * called it, same as it does once every step is done or the guide was
+ * skipped.
  */
 final class OnboardingSteps
 {
@@ -47,7 +52,7 @@ final class OnboardingSteps
         $panel = app(PanelManager::class)->currentPanel()
             ?? app(PanelManager::class)->panel((string) config('panel.default', 'admin'));
 
-        if ($panel === null) {
+        if ($panel === null || ! $panel->offersOnboarding()) {
             return [];
         }
 

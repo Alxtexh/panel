@@ -131,7 +131,7 @@ final class CanAccessPanelTest extends TestCase
         );
 
         $this->assertStringContainsString("t('grants.empty.title')", $vue);
-        $this->assertStringContainsString("t('grants.empty.compact')", $vue);
+        $this->assertStringContainsString("t('grants.empty.reason')", $vue);
         $this->assertStringContainsString('panel:permissions', $vue);
         $this->assertStringNotContainsString('—', $vue);
     }
