@@ -115,7 +115,7 @@ describe('SetupChecklist', () => {
         expect(withoutHref.find('a').exists()).toBe(false)
     })
 
-    it('onboarding variant is a slim banner with step progress, not a stacked card', () => {
+    it('onboarding variant is a compact card with segmented progress, not a stacked list', () => {
         const wrapper = mount(SetupChecklist, {
             props: {
                 variant: 'onboarding',
@@ -136,7 +136,10 @@ describe('SetupChecklist', () => {
         })
 
         const text = wrapper.text()
-        expect(text).toContain('Step 2 of 3')
+        // No bare "Step X of Y" count - DESIGN_RULES.md rule 5 calls that a
+        // dead control. Progress is a segment per step instead, checked below
+        // via aria-valuenow, and via the segment count matching the items.
+        expect(text).not.toContain('Step 2 of 3')
         expect(text).toContain('Second')
         expect(text).toContain('Do second.')
         expect(text).not.toContain('Do third.')
@@ -145,6 +148,7 @@ describe('SetupChecklist', () => {
         expect(wrapper.find('ul').exists()).toBe(false)
         expect(wrapper.findAll('section')).toHaveLength(1)
         expect(wrapper.find('[role="progressbar"]').attributes('aria-valuenow')).toBe('33')
+        expect(wrapper.find('[role="progressbar"]').findAll('span')).toHaveLength(3)
         expect(wrapper.find('a[href="/second"]').exists()).toBe(true)
         expect(wrapper.find('.rounded-full').exists()).toBe(false)
     })

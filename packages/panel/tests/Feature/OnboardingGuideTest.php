@@ -12,6 +12,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
  * First-run dashboard guide: kit chrome with real hrefs, once per person.
+ *
+ * `Panel::onboarding()` IS OPT-IN, off by default - so every test below that
+ * exercises the guide through the dashboard turns it on for the fixture
+ * panel first, the same way a real portal that wants it would.
  */
 final class OnboardingGuideTest extends TestCase
 {
@@ -29,6 +33,8 @@ final class OnboardingGuideTest extends TestCase
             'password' => 'password',
             'email_verified_at' => now(),
         ]);
+
+        app(PanelManager::class)->panel('admin')->onboarding();
     }
 
     private function panel(): \Alxtexh\Panel\Panel
@@ -94,6 +100,22 @@ final class OnboardingGuideTest extends TestCase
             ->get('/dashboard')
             ->assertOk()
             ->viewData('page')['props'];
+    }
+
+    /**
+     * OFF BY DEFAULT. Found live: `chrome()`'s steps carry `'done' => false`
+     * unconditionally, so nothing here can tell a genuinely finished setup
+     * from a fresh one - a panel that never called `onboarding()` must not
+     * get a banner nothing can ever mark done.
+     */
+    public function test_the_guide_is_absent_until_the_panel_opts_in(): void
+    {
+        app(PanelManager::class)->panel('admin')->onboarding(false);
+
+        $props = $this->dashboardProps();
+
+        $this->assertArrayNotHasKey('onboarding', $props);
+        $this->assertArrayNotHasKey('onboardingDismiss', $props);
     }
 
     public function test_dashboard_includes_the_guide_on_a_first_visit(): void

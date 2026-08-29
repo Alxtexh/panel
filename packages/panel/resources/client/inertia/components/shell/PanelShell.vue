@@ -226,7 +226,7 @@ router.on('success', () => {
         <div v-if="horizontal" class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-sidebar">
             <PanelImpersonationBanner />
             <div v-if="(page.props as any).panelEmptyGrants" class="px-4 pt-3">
-                <EmptyGrantsNotice compact />
+                <EmptyGrantsNotice />
             </div>
 
             <!--
@@ -264,7 +264,7 @@ router.on('success', () => {
             <AppContent variant="sidebar" class="min-h-0 overflow-x-hidden overflow-y-auto">
                 <PanelImpersonationBanner />
                 <div v-if="(page.props as any).panelEmptyGrants" class="px-4 pt-3">
-                    <EmptyGrantsNotice compact />
+                    <EmptyGrantsNotice />
                 </div>
 
                 <AppSidebarHeader :breadcrumbs="props.breadcrumbs">

@@ -180,6 +180,19 @@ final class Panel
     private mixed $onboardingStepsResolver = null;
 
     /**
+     * THE FIRST-RUN "GET STARTED" GUIDE. Off by default.
+     *
+     * FOUND FORCED ON EVERY INSTALL. `chrome()`'s steps carry `'done' =>
+     * false` unconditionally - nothing here checks whether organisation,
+     * security or the rest are actually configured - so a packaged install
+     * with no `onboardingSteps()` override showed this banner to every
+     * signed-in person forever, dismissable only by hand. That is a portal
+     * deciding every consumer wants a first-run tour; `editableSupport()`
+     * just above is the same shape of decision made the other way.
+     */
+    private bool $onboardingEnabled = false;
+
+    /**
      * PAGE COPYRIGHT FOOTER after every screen. Off by default.
      *
      * The kit is an empty canvas. Hosts that want the packaged
@@ -2225,6 +2238,27 @@ final class Panel
     public function onboardingStepsResolver(): ?Closure
     {
         return $this->onboardingStepsResolver instanceof Closure ? $this->onboardingStepsResolver : null;
+    }
+
+    /**
+     * Opt this portal into the first-run "Get started" guide. Default off.
+     *
+     * A CALL, NOT A CONFIG DEFAULT, matching `editableSupport()`: whether new
+     * arrivals see a setup tour is a property of THIS portal, not something
+     * every packaged install inherits until somebody notices and turns it
+     * off. Pair with `onboardingSteps()` to mark steps done from real state
+     * instead of the kit defaults' permanent "not done".
+     */
+    public function onboarding(bool $enabled = true): self
+    {
+        $this->onboardingEnabled = $enabled;
+
+        return $this;
+    }
+
+    public function offersOnboarding(): bool
+    {
+        return $this->onboardingEnabled;
     }
 
     /**

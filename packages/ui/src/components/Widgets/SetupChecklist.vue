@@ -3,8 +3,9 @@
  * The dashboard checklist and first-run setup guide. Purely presentational.
  *
  * Doctor findings and onboarding steps share this component. Doctor keeps the
- * full vertical list. Onboarding is a thin single-row banner: progress fill,
- * step index, current title, Open, Skip remaining.
+ * full vertical list. Onboarding is a compact two-row card: a segment per
+ * step (not a bare "Step X of Y" count - DESIGN_RULES.md rule 5), then the
+ * current title, its detail, Open, and Skip remaining.
  *
  * NOTHING INERTIA HERE. Pass `linkComponent` as Inertia `<Link>` from a page.
  */
@@ -51,15 +52,6 @@ const rest = computed(() => props.items.filter((item) => item.key !== next.value
 
 const totalSteps = computed(() => props.items.length)
 const completedCount = computed(() => props.items.filter((item) => item.done).length)
-const currentStepIndex = computed(() => {
-    if (!next.value) {
-        return totalSteps.value
-    }
-
-    const index = props.items.findIndex((item) => item.key === next.value?.key)
-
-    return index >= 0 ? index + 1 : 1
-})
 const progressPercent = computed(() =>
     totalSteps.value > 0 ? Math.round((completedCount.value / totalSteps.value) * 100) : 0,
 )
@@ -92,38 +84,48 @@ const ghostClass = buttonClasses({
 <template>
     <section
         v-if="items.length && variant === 'onboarding'"
-        class="overflow-hidden rounded-md border bg-card"
+        class="flex flex-col gap-2.5 rounded-md border bg-card p-3"
         :aria-label="heading"
     >
-        <div
-            class="h-0.5 w-full bg-muted"
-            role="progressbar"
-            :aria-valuenow="progressPercent"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            :aria-label="`${heading}, ${progressPercent} percent complete`"
-        >
+        <div class="flex items-center justify-between gap-3">
+            <!--
+                A SEGMENT PER STEP, NOT "Step 2 of 3" AS TEXT. A bare count is
+                exactly the dead control DESIGN_RULES.md rule 5 names - it says
+                a number, and nobody acts on the number itself. The fill still
+                answers the same question (`aria-valuenow`) for anyone who
+                cannot see it.
+            -->
             <div
-                class="h-full bg-amber-500 transition-[width] duration-300 ease-out"
-                :style="{ width: `${progressPercent}%` }"
-            />
+                class="flex flex-1 items-center gap-1"
+                role="progressbar"
+                :aria-valuenow="progressPercent"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                :aria-label="`${heading}, ${progressPercent} percent complete`"
+            >
+                <span
+                    v-for="(item, index) in items"
+                    :key="item.key"
+                    class="h-1.5 flex-1 rounded-sm transition-colors duration-300"
+                    :class="index < completedCount ? 'bg-amber-500' : 'bg-muted'"
+                />
+            </div>
+
+            <button
+                v-if="skipLabel"
+                type="button"
+                class="text-muted-foreground hover:text-foreground shrink-0 text-xs hover:underline"
+                @click="emit('skip')"
+            >
+                {{ skipLabel }}
+            </button>
         </div>
 
-        <div class="flex min-h-9 items-center gap-2 px-3 py-1.5 sm:gap-3">
-            <span class="text-muted-foreground shrink-0 text-xs tabular-nums">
-                Step {{ currentStepIndex }} of {{ totalSteps }}
-            </span>
-
-            <p
-                class="min-w-0 flex-1 truncate text-sm"
-                :title="next?.detail || undefined"
-            >
+        <div class="flex items-center gap-3">
+            <p class="min-w-0 flex-1 text-sm">
                 <span class="font-medium">{{ next ? next.title : heading }}</span>
-                <span
-                    v-if="next?.detail"
-                    class="text-muted-foreground hidden sm:inline"
-                >
-                    {{ ': ' + next.detail }}
+                <span v-if="next?.detail" class="text-muted-foreground mt-0.5 block text-xs sm:mt-0 sm:inline sm:before:content-[':_']">
+                    {{ next.detail }}
                 </span>
             </p>
 
@@ -135,15 +137,6 @@ const ghostClass = buttonClasses({
             >
                 {{ next.actionLabel || 'Open' }}
             </component>
-
-            <button
-                v-if="skipLabel"
-                type="button"
-                class="text-muted-foreground hover:text-foreground shrink-0 text-xs hover:underline"
-                @click="emit('skip')"
-            >
-                {{ skipLabel }}
-            </button>
         </div>
     </section>
 

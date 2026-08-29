@@ -117,6 +117,7 @@ final class AdminPanelProvider extends ServiceProvider
                  * `panel.abilities`).
                  */
                 ->editableSupport()
+                ->onboarding()
                 ->paymentSettings(static fn (): array => KitDemo::gateways())
                 ->mailSettings()
                 ->apps(['api-keys', 'webhooks'])
