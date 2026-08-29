@@ -107,6 +107,9 @@ export interface FormField {
     minItems?: number | null;
     maxItems?: number | null;
     collapsible?: boolean;
+    addable?: boolean;
+    deletable?: boolean;
+    cloneable?: boolean;
     /**
      * Builder blocks - roadmap 4.5. Each is a named set of fields, and the
      * stored value is an ordered list of `{type, data}`.

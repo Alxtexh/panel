@@ -792,6 +792,7 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
         :open="pendingRestore !== null"
         title="Restore the database?"
         description="A safety backup is taken first, so this can be undone."
+        size="form"
         @close="pendingRestore = null"
     >
         <div class="flex flex-col gap-3 text-sm">
