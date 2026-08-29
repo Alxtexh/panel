@@ -161,7 +161,7 @@ final class ExportRecords implements ShouldQueue
 
             $this->notifyActor(
                 'Your export is ready',
-                number_format($written).' rows exported from '.$this->resource.'.',
+                number_format($written).' '.($written === 1 ? 'row' : 'rows').' exported from '.$this->resource.'.',
                 $this->downloadPath ?? "/{$this->resource}/jobs/{$this->token}/download",
             );
         } catch (Throwable $e) {

@@ -326,15 +326,14 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
     >
         <p class="text-muted-foreground text-sm font-normal">
             This will export
-            <span class="text-foreground font-medium tabular-nums">
-                <template v-if="!countKnown">…</template>
-                <template v-else
+            <span class="text-foreground font-medium tabular-nums"
+                ><template v-if="!countKnown">…</template
+                ><template v-else
                     >{{ format(effectiveCount!) }} record{{
                         effectiveCount === 1 ? '' : 's'
                     }}</template
-                >
-            </span>
-            .
+                ></span
+            >.
         </p>
 
         <p v-if="countIsZero" class="text-destructive mt-1 text-xs">

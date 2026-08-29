@@ -7,10 +7,10 @@ namespace Tests\Feature;
 use App\Demo\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Notifications\JobFinished;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Alxtexh\Panel\Alerts\Alert;
 use Alxtexh\Panel\Alerts\AlertRule;
+use Alxtexh\Panel\Notifications\JobFinished;
 use RuntimeException;
 use Tests\TestCase;
 

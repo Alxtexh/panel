@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Jobs;
 
-use App\Notifications\JobFinished;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Alxtexh\Panel\Notifications\JobFinished;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
 use RuntimeException;

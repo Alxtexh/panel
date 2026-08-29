@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Notifications;
+namespace Alxtexh\Panel\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -19,6 +19,15 @@ use Illuminate\Notifications\Notification;
  * is emphatically not worth an email; a queued export that emailed on
  * completion would produce a mailbox full of "done" the first time someone
  * exported a few filtered views in a row.
+ *
+ * IN THE PACKAGE, NOT ONE HOST APP. `ActsAsPanelUser::notifyActor()` - every
+ * queued export, import and bulk action's "finished" ping - used to import
+ * `App\Notifications\JobFinished`, a class that only ever existed in
+ * `apps/playground`. Every OTHER consumer, including a plain `panel:install`,
+ * hit "Class App\Notifications\JobFinished not found" on the first background
+ * job it ever ran - caught, logged as a warning, and never surfaced, so the
+ * panel's own "Finished exports land here" copy in the Inbox tab was a promise
+ * nothing behind it could keep.
  */
 final class JobFinished extends Notification
 {

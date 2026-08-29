@@ -116,6 +116,11 @@ describe('BulkActions - count before commit', () => {
         await wrapper.setProps({ total: 90 })
 
         expect(body().text()).toContain('90 records')
+        // Whitespace between the count and the period rendered as a visible
+        // gap - "90 records ." - because the template put the "." on its own
+        // line, and Vue condenses (not removes) inter-element whitespace.
+        expect(body().text()).toContain('90 records.')
+        expect(body().text()).not.toContain('90 records .')
         expect(exportButton?.attributes('disabled')).toBeUndefined()
 
         await exportButton?.trigger('click')
