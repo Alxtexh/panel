@@ -117,7 +117,7 @@ final class SettingsIndex
                 'key' => 'profile',
                 'routes' => ['profile', 'settings.profile'],
                 'title' => 'Profile',
-                'description' => 'Your name and your email address.',
+                'description' => 'Your name and email. Security is a tab in this layout, not a separate account-menu item.',
             ],
             [
                 'key' => 'security',
