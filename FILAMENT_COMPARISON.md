@@ -142,7 +142,7 @@ the one gap left, and it stays open on purpose.
 
 ---
 
-## 3. Relation Managers — narrowing, one gap left
+## 3. Relation Managers — parity
 
 | Capability | PanelKit | Filament v5 |
 |---|---|---|
@@ -155,12 +155,11 @@ the one gap left, and it stays open on purpose.
 **Ideas worth borrowing:**
 
 1. ~~Pivot-column support~~ — ✅ done, including display (see priority list item 22).
-2. An explicit `RelationManager::readOnly()`, or a panel-level default matching
-   Filament's, instead of the current ability-gating workaround.
+2. ~~An explicit `RelationManager::readOnly()`~~ — ✅ done (priority list item 9).
 
-**Verdict: narrowing.** Not architectural — the dedicated-page-not-modal attach flow is
+**Verdict: parity.** Not architectural — the dedicated-page-not-modal attach flow is
 a deliberate, documented tradeoff, not an oversight. Pivot columns are now full
-read/write/display; explicit `readOnly()` is what's left, and nesting depth is a
+read/write/display, and `readOnly()` closed the last concrete item; nesting depth is a
 non-issue since Filament doesn't do it either.
 
 ---
@@ -192,7 +191,7 @@ reach a single row, not just a whole page.
 
 ---
 
-## 5. Table Filters & Inline Editing — mixed, roughly parity
+## 5. Table Filters & Inline Editing — PanelKit ahead
 
 **Filters** — PanelKit is ahead in places, behind in one:
 
@@ -217,18 +216,16 @@ reach a single row, not just a whole page.
 
 **Ideas worth borrowing:**
 
-1. A `TextInputColumn`-equivalent for short free-text inline edits (reference codes,
-   notes) — extend `EditableColumn`, add a third type to `EditableCell.vue:29`.
-2. Give tabs an arbitrary `Closure $modifyQuery`, matching `Tab::modifyQueryUsing()`,
-   while keeping the existing single-query count aggregation for the simple case.
+1. ~~A `TextInputColumn`-equivalent for short free-text inline edits~~ — ✅ done
+   (priority list item 2).
+2. ~~Give tabs an arbitrary `Closure $modifyQuery`~~ — ✅ done (priority list item 7).
 
-**Verdict: parity overall**, with two small concrete gaps (inline text editing,
-per-tab query scoping) balanced by PanelKit being ahead on range filters and inline-edit
-authorization rigor.
+**Verdict: PanelKit ahead.** Both concrete gaps this section named are closed, and
+PanelKit was already ahead on range filters and inline-edit authorization rigor.
 
 ---
 
-## 6. Notifications — parity, small gaps each direction
+## 6. Notifications — PanelKit ahead
 
 | Capability | Filament v5 | PanelKit |
 |---|---|---|
@@ -243,15 +240,18 @@ authorization rigor.
 
 **Ideas worth borrowing:**
 
-1. `->duration()`/`->persistent()` on `Notifications/Notification.php`, threaded through
-   `toArray()` to `Toaster.vue`'s `showFlashToast()`.
-2. `markUnread`/`clearAll` on `NotificationController.php` — both are near-trivial.
-3. Replace the hard 30-row cap with real pagination (`simplePaginate`-style).
-4. Per-notification icon/color override, useful once plugins start firing their own
-   toasts.
+1. ~~`->duration()`/`->persistent()` on `Notifications/Notification.php`~~ — ✅ done,
+   plus `->iconColor()` alongside them (priority list item 11).
+2. ~~`markUnread`/`clearAll` on `NotificationController.php`~~ — ✅ done (priority
+   list item 3).
+3. ~~Replace the hard 30-row cap with real pagination~~ — ✅ done, `simplePaginate`
+   (priority list item 3).
+4. ~~Per-notification icon/color override~~ — ✅ done, `->iconColor()` (priority
+   list item 11).
 
-**Verdict: parity**, slightly behind on toast-builder richness and bell
-pagination/mark-unread/clear-all, ahead on preferences and the Alerts split.
+**Verdict: PanelKit ahead.** Every gap this section named is closed - toast
+duration/persistence/icon-colour and bell pagination/mark-unread/clear-all - on top
+of the preferences and Alerts split Filament core doesn't have at all.
 
 ---
 
@@ -272,16 +272,15 @@ The one area where PanelKit isn't just catching up.
 
 **Ideas worth borrowing (the short list, since this area is mostly ahead):**
 
-1. Responsive/array column spans (`'full'`/breakpoint object), since the current
-   int-only `span()` can't make one widget fill a row on a 3-4 column grid.
-2. Explicit `sort()` per widget, useful once widgets come from multiple
-   discovered/plugin sources.
+1. ~~Responsive/array column spans~~ — ✅ done, `span(int|array)` (priority list item 12).
+2. ~~Explicit `sort()` per widget~~ — ✅ done, same `HasLayout` trait (priority list
+   item 12).
 3. ~~A footer-widgets hook to pair with the existing header one~~ — ✅ done (see
    priority list item 18).
 
-**Verdict: PanelKit is ahead**, net — two features Filament core lacks entirely
-(persisted end-user dashboard rearranging, live-push widgets) outweigh one narrow gap
-(responsive column spans).
+**Verdict: PanelKit is ahead**, net — every gap this section named is closed, on top
+of two features Filament core lacks entirely (persisted end-user dashboard
+rearranging, live-push widgets).
 
 ---
 
