@@ -50,7 +50,7 @@ import {
     SelectionBar,
     PkModal,
 } from '@alxtexh-enterprise/panel'
-import { PkButton as Button } from '@alxtexh-enterprise/panel'
+import { PkButton as Button, actionColorTone } from '@alxtexh-enterprise/panel'
 /*
  * NO `layout` HERE. A packaged screen names no layout - the page file in the
  * consuming application decides, which is what lets one app wrap this in its
@@ -978,6 +978,25 @@ function save(): void {
         </form>
 
         <template #footer>
+            <div
+                v-if="actionForm?.action.extraFooterActions?.length"
+                class="mr-auto flex flex-wrap gap-1"
+            >
+                <Button
+                    v-for="extra in actionForm.action.extraFooterActions"
+                    :key="extra.label"
+                    as="a"
+                    variant="ghost"
+                    size="sm"
+                    :href="extra.url ?? undefined"
+                    target="_blank"
+                    rel="noopener"
+                    :class="actionColorTone(extra.color)"
+                >
+                    {{ extra.label }}
+                </Button>
+            </div>
+
             <Button
                 variant="ghost"
                 size="sm"
