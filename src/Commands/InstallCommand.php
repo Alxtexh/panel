@@ -1283,6 +1283,17 @@ PHP;
      *
      * NEVER WRITES A PASSWORD INTO PRODUCTION CONFIG. The controller refuses
      * prefill outside `local`; this only seeds the published panel config.
+     *
+     * PREFERS `--email`/`--password` OVER THE HARDCODED DEFAULT. Both flags
+     * are parsed before this runs regardless of call order in handle() - only
+     * the account they create runs later, in createFirstUser(). Falling back
+     * to a bare 'admin@example.com' here ignored them: a scripted
+     *
+     *     panel:install --email=admin@fresh.test --password=secret
+     *
+     * created that exact user, then wrote a prefill for a DIFFERENT one, so
+     * pressing Log in on first visit failed against the account the install
+     * had just made - the one case this feature exists for.
      */
     private function writeLocalAuthPrefill(): void
     {
@@ -1317,6 +1328,14 @@ TXT;
             return;
         }
 
+        $email = $this->option('email');
+        $email = is_string($email) && $email !== '' ? $email : 'admin@example.com';
+        $email = addcslashes($email, "'\\");
+
+        $password = $this->option('password');
+        $password = is_string($password) && $password !== '' ? $password : 'password';
+        $password = addcslashes($password, "'\\");
+
         $block = <<<PHP
         |   'reseller' => [
         |       'heading' => 'Reseller portal',
@@ -1329,8 +1348,8 @@ TXT;
         '{$panel}' => [
             // Local only: PanelAuthController refuses this outside `local`.
             'prefill' => [
-                'email' => env('PANEL_DEMO_EMAIL', 'admin@example.com'),
-                'password' => env('PANEL_DEMO_PASSWORD', 'password'),
+                'email' => env('PANEL_DEMO_EMAIL', '{$email}'),
+                'password' => env('PANEL_DEMO_PASSWORD', '{$password}'),
             ],
         ],
 PHP;
