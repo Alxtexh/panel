@@ -58,4 +58,18 @@ describe('iconPath', () => {
     it('still uses the deliberate speck for a truly unknown chrome name', () => {
         expect(iconPath('not-a-real-glyph')).toBe(ICON_PATHS.dot)
     })
+
+    /**
+     * The exact failure this file's own "destinations" comment describes for
+     * `home`/`users`/`router`/`mail`: a nav destination declared server-side
+     * with no path here renders the fallback speck on every phone, looking
+     * like a finished design rather than a missing icon. `settings` repeated
+     * it - present in the sidebar's Lucide map (`panelIcons.ts`) but absent
+     * from this one, so only the bottom bar showed a dot.
+     */
+    it('resolves every destination the navigation set documents, including settings', () => {
+        for (const name of ['home', 'users', 'router', 'mail', 'settings']) {
+            expect(iconPath(name)).not.toBe(ICON_PATHS.dot)
+        }
+    })
 })
