@@ -22,6 +22,7 @@ type NavEntry = {
     title: string
     href: string
     icon?: string
+    description?: string
 }
 
 const ICONS: Record<string, string> = {
@@ -70,9 +71,7 @@ function iconFor(entry: NavEntry): string {
 
         <PkHeading
             :title="currentItem?.title ?? 'Settings'"
-            :description="currentItem?.key === 'profile'
-                ? 'Your name and email. Security is a tab in this layout, not a separate account-menu item.'
-                : 'Organisation, roles, payments and the rest of this portal.'"
+            :description="currentItem?.description ?? 'Organisation, roles, payments and the rest of this portal.'"
         />
 
         <div class="mt-6 md:hidden">
