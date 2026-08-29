@@ -47,6 +47,38 @@ class OrganisationPage extends Page
     }
 
     /**
+     * ABSENT ON A TENANCY-LESS INSTALL, not routed and then 404ing.
+     *
+     * The controller resolves through `TenantContext::tenant()`, which
+     * returns nothing to be an organisation of when `panel.tenancy.mode` is
+     * `none` - there is no tenant model to name or brand. Every install
+     * still got the route (`registerPages()` mounts anything `isEnabled()`
+     * doesn't refuse), so the settings index listed "Organisation" - its own
+     * link generated with `Route::has()`, exactly as documented - and every
+     * click landed on `OrganisationController::tenant()`'s
+     * `abort_if(! $tenant instanceof Model, 404)`. `panel:install`'s
+     * published default is `tenancy.mode => none`, so this was the settings
+     * index's own first link on a plain install.
+     *
+     * READS CONFIG DIRECTLY, NOT `TenantContext::mode()`. `isEnabled()` runs
+     * during route registration - once per boot, well before any request
+     * establishes tenancy - and `TenantContext` is `scoped()` specifically
+     * so it resolves fresh per request and memoizes for exactly one.
+     * Resolving it here forced that memoization early, onto whichever
+     * instance the container handed back at BOOT time, and every later
+     * `mode()` call in that same scope returned the boot-time answer instead
+     * of rechecking config - the exact bug `TenantContext` maintains that
+     * discipline to prevent. The mode itself is a single config value, not
+     * per-tenant state (`hybrid` is the one dynamic case, and it is never
+     * `none`), so reading it plainly costs nothing this page needs
+     * `TenantContext` for.
+     */
+    public static function isEnabled(): bool
+    {
+        return config('panel.tenancy.mode', 'column') !== 'none';
+    }
+
+    /**
      * NULL, PRESERVING WHAT THIS SCREEN ALREADY DID.
      *
      * The controller this replaces had no ability check on the read path: any
