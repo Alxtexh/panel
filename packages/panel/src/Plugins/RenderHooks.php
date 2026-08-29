@@ -42,6 +42,22 @@ final class RenderHooks
     /** Below the table, inside the page. */
     public const LIST_AFTER_TABLE = 'list.after-table';
 
+    /**
+     * Beside a row's own action menu, before it.
+     *
+     * PER ROW, NOT PER PAGE - the one position in this class that is. The
+     * record is forwarded as a `row` prop the same way a form page forwards
+     * which record it is editing, so a plugin reads `row.id` (or any other
+     * column the list query already selected) to decide what to show for
+     * THIS row rather than the page in general - a status badge, a synced-
+     * with-Stripe indicator, anything that answers a question about one
+     * record rather than the whole list.
+     */
+    public const LIST_ROW_ACTIONS_BEFORE = 'list.row-actions-before';
+
+    /** Beside a row's own action menu, after it - see `LIST_ROW_ACTIONS_BEFORE`. */
+    public const LIST_ROW_ACTIONS_AFTER = 'list.row-actions-after';
+
     /** Above a record's form, before the first section. */
     public const FORM_BEFORE = 'form.before';
 
@@ -73,6 +89,8 @@ final class RenderHooks
             self::LIST_BEFORE_HEADER,
             self::LIST_BEFORE_TABLE,
             self::LIST_AFTER_TABLE,
+            self::LIST_ROW_ACTIONS_BEFORE,
+            self::LIST_ROW_ACTIONS_AFTER,
             self::FORM_BEFORE,
             self::FORM_AFTER,
             self::VIEW_BEFORE,

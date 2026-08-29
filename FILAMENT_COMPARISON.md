@@ -168,20 +168,24 @@ worth closing; nesting depth is a non-issue since Filament doesn't do it either.
 |---|---|---|
 | Formal plugin interface | ✅ `PanelPlugin`: `id()`, `appliesTo()`, `register()`, `getVersion()`, `panelIds()` (`Plugins/PanelPlugin.php:34-81`) | ✅ `Filament\Contracts\Plugin`: `getId()`, `register()`, `boot()` |
 | What a plugin can touch | **Deliberately add-only** — a `PluginContext`, not the mutable `Panel`: can append resources/pages/widgets/menu items/routes/render hooks, cannot touch guard/tenancy/middleware (`Plugins/PluginContext.php:17-30,72-212`) | **Full access** — `register(Panel $panel)` hands over the real object; a plugin can reconfigure anything |
-| Hooks/events for extending existing screens | 9 named positions, resolved to a **Vue component + props**, never raw HTML, optionally scoped to specific resources (`Plugins/RenderHooks.php:36-86`) | Dozens of positions across every panel screen, rendering arbitrary Blade/Livewire content |
+| Hooks/events for extending existing screens | 12 named positions, resolved to a **Vue component + props**, never raw HTML, optionally scoped to specific resources, one of them (`list.row-actions-before/after`) genuinely **per-record** rather than per-page (`Plugins/RenderHooks.php:36-89`) | Dozens of positions across every panel screen, rendering arbitrary Blade/Livewire content |
 | Real third-party ecosystem | **Explicitly not the goal** — docblock states this is for first-party, host-owned code, no marketplace track (`PanelPlugin.php:29-33`) | Yes — a real, large plugin ecosystem built on the unrestricted contract |
 | Compatibility/versioning tooling | ✅ `getVersion()` + `CONTRACT_VERSION`, checked by `panel:doctor` (tested: `DoctorPluginCompatibilityTest.php`) | No equivalent in core |
 
-**Idea worth borrowing:** widen `RenderHooks` positions (`Plugins/RenderHooks.php:36-64`)
-to cover more surfaces — dashboard widget columns, table row actions — the current 9 is
-noticeably fewer than Filament's set, while keeping the safer "component name, not raw
-HTML" restriction. **Do not** copy Filament's unrestricted `Panel`-mutation model —
-PanelKit's add-only boundary is a deliberate, stronger design and should stay exactly
+**Idea worth borrowing:** ~~widen `RenderHooks` positions~~ — ✅ done, the "table row
+actions" half (see priority list item 21). "Dashboard widget columns" turned out too
+vague a target to build against - the existing `DASHBOARD_BEFORE`/`AFTER` pair already
+docblocks itself as "above/below the widgets," so a plugin wanting to sit beside them
+already can; a position finer than that (between individual widgets, say) has no
+concrete use case driving its shape yet. **Do not** copy Filament's unrestricted
+`Panel`-mutation model — PanelKit's add-only boundary is a deliberate, stronger design
+and should stay exactly
 as it is.
 
 **Verdict: parity on contract design (PanelKit arguably safer); behind on hook count**
-— about a third as many extension points, partly explained by the intentionally
-narrower "no marketplace" scope.
+— still well short of Filament's "dozens," partly explained by the intentionally
+narrower "no marketplace" scope, and the gap is not purely a count: a plugin can now
+reach a single row, not just a whole page.
 
 ---
 
@@ -307,6 +311,8 @@ Ranked by (impact if fixed) × (how small the fix is), highest first:
 | 19 | `persistInQueryString()` on `Tabs`/`Wizard` | Forms | small–medium | ✅ done — `Tabs::persistInQueryString(string $key = 'tab')`, `Wizard::persistInQueryString(string $key = 'step')`; the key names the query parameter rather than being auto-derived, since a layout node has no identity of its own the way a `Field` does, and two persisted groups on one page need two different names. Client-only: `SchemaNode.vue` reads the initial index from `window.location.search` on mount (falling back to 0 for an unset, non-numeric, or out-of-range value) and syncs it back with `history.replaceState` on every change - no request, and `replaceState` rather than `pushState` so switching tabs never grows the browser's back-button stack. Verified live: switched `ClientResource`'s edit-form tab to "Service", confirmed the URL gained `?tab=1` without a network request, reloaded at that URL, confirmed it reopened on Service rather than resetting to Identity. Tested both sides (7 new PHP unit tests, 7 new Vitest cases covering default-off, default and chosen keys, out-of-range/non-numeric fallback, and the no-`pushState` assertion) |
 
 | 20 | `?action=&record=` deep-linking on `ResourceIndex.vue` | Record Actions | small–medium | ✅ done, scoped down — a link from a notification email or a saved bookmark opens that action on that record once the list has loaded. Entirely client-side: no new server endpoint, since `RecordController::runAction()` already validates ability and `appliesTo()` server-side regardless of what a client sends. Reuses `menuFor()`/`onRecordAction()` rather than posting directly, so a deep-linked action goes through the exact same per-row `_actions` filter, ability check, and form/confirm/link branching a clicked one does. Scoped to whatever page of the list is already loaded (`t.rows`) - a record past page 1 of an unfiltered list is not found, and a toast says so rather than the link silently doing nothing; a genuine per-record lookup independent of pagination is a bigger, separately-scoped mechanism. Caught a real bug along the way: stripping `action`/`record` from the URL immediately at mount lost a race against Inertia's own deferred-prop settling, which repeatedly re-asserted its remembered (unstripped) URL via `history.replaceState` from its own internal page state - fixed by clearing on every `router.on('success', ...)` until the params are actually gone, self-terminating once nothing is re-adding them. Verified live: `?action=change-plan&record=<id>` opened the form dialog with the URL cleaned up after; an unknown action key and a record outside the loaded page each failed closed with no request ever reaching the action endpoint |
+
+| 21 | `list.row-actions-before`/`after` `RenderHooks` positions | Plugins | small | ✅ done, scoped down from the original "dashboard widget columns, table row actions" idea to the second half only (see section 4's own note on why the first half stayed out). The one per-row position in the class: `RenderHook.vue` already forwarded `$attrs` (page context like `resource`) into whichever hook it renders, so mounting it inside `ResourceIndex.vue`'s `#actions="{ row }"` slot with `:row="row"` needed no new mechanism - a plugin's component reads `row` the same way a form-page hook already reads which record it's on. No PHP wiring needed either: `ResourceController::index()` already sent the full, resource-scoped `renderHooks` array before this position existed, for the page-level `list.*` ones - only the client mount point was missing. Verified live: an empty position renders nothing at all (byte-identical to before, confirmed on `ClientResource`'s list with its 250,001 rows) and the row-menu itself keeps working unchanged. Tested server-side (position validity, resource-scoping, cross-resource exclusion, via a fixture plugin) - not demoed with a real playground plugin, matching this codebase's existing precedent that `RenderHooks` in general has none yet |
 
 **What NOT to change:** the plugin system's add-only `PluginContext` boundary (safer
 than Filament's, deliberately), the relation-manager dedicated-page attach flow

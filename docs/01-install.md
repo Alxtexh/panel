@@ -298,6 +298,8 @@ position, from `Alxtexh\Panel\Plugins\RenderHooks`:
 | `LIST_BEFORE_HEADER` | `list.before-header` | Above the page title on a resource list |
 | `LIST_BEFORE_TABLE` | `list.before-table` | Between the list header and the table |
 | `LIST_AFTER_TABLE` | `list.after-table` | Below the table |
+| `LIST_ROW_ACTIONS_BEFORE` | `list.row-actions-before` | Beside a row's own action menu, before it - per RECORD, not per page; the component receives that row as a `row` prop |
+| `LIST_ROW_ACTIONS_AFTER` | `list.row-actions-after` | Beside a row's own action menu, after it |
 | `FORM_BEFORE` | `form.before` | Above a record's create/edit form |
 | `FORM_AFTER` | `form.after` | Below the form, above the save bar |
 | `VIEW_BEFORE` | `view.before` | Above a record's read-only detail |

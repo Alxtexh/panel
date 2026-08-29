@@ -1,1 +1,0 @@
-import{$n as e,k as t,mt as n,v as r,z as i}from"./runtime-core.esm-bundler-BKdLzFmX.js";import{M as a}from"./inertia-1hQnjF8O.js";var o=t({inheritAttrs:!1,__name:`PanelPage`,setup(t){return(t,o)=>(n(),r(a,e(i(t.$attrs)),null,16))}});export{o as default};

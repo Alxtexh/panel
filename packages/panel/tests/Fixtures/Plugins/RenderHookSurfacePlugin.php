@@ -32,5 +32,8 @@ final class RenderHookSurfacePlugin extends Plugin
         $context->render(RenderHooks::FORM_BEFORE, 'FixtureFormBefore', [], ['articles']);
         $context->render(RenderHooks::FORM_AFTER, 'FixtureFormAfter', [], ['articles']);
         $context->render(RenderHooks::FORM_BEFORE, 'FixtureOtherResourceFormBefore', [], ['tags']);
+        $context->render(RenderHooks::LIST_ROW_ACTIONS_BEFORE, 'FixtureRowActionsBefore', [], ['articles']);
+        $context->render(RenderHooks::LIST_ROW_ACTIONS_AFTER, 'FixtureRowActionsAfter', [], ['articles']);
+        $context->render(RenderHooks::LIST_ROW_ACTIONS_BEFORE, 'FixtureOtherResourceRowActionsBefore', [], ['tags']);
     }
 }

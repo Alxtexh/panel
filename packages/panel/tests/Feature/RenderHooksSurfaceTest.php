@@ -123,4 +123,40 @@ final class RenderHooksSurfaceTest extends TestCase
         $this->assertContains('dashboard.before', $positions);
         $this->assertContains('dashboard.after', $positions);
     }
+
+    /**
+     * THE ONE PER-ROW POSITION IN THE CLASS. Nothing about how the server
+     * sends `renderHooks` changes for it - `ResourceController::index()`
+     * already sent the full, resource-scoped list before this position
+     * existed, for the page-level `list.*` hooks. What was missing was a
+     * client mount point inside each row; this only proves the position is
+     * declared and reaches the index page's payload the same way every
+     * other position does.
+     */
+    public function test_the_index_page_carries_row_action_hooks_scoped_to_this_resource(): void
+    {
+        $hooks = $this->get('/articles')
+            ->assertOk()
+            ->viewData('page')['props']['renderHooks'] ?? [];
+
+        $positions = array_column($hooks, 'position');
+        $components = array_column($hooks, 'component');
+
+        $this->assertContains('list.row-actions-before', $positions);
+        $this->assertContains('list.row-actions-after', $positions);
+        $this->assertContains('FixtureRowActionsBefore', $components);
+        $this->assertContains('FixtureRowActionsAfter', $components);
+    }
+
+    public function test_a_row_action_hook_scoped_to_another_resource_does_not_reach_this_one(): void
+    {
+        $hooks = $this->get('/articles')
+            ->assertOk()
+            ->viewData('page')['props']['renderHooks'] ?? [];
+
+        $this->assertNotContains(
+            'FixtureOtherResourceRowActionsBefore',
+            array_column($hooks, 'component'),
+        );
+    }
 }
