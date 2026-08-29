@@ -30,6 +30,14 @@ withDefaults(
         saveLabel?: string
         cancelLabel?: string
         discardLabel?: string
+        /**
+         * A second, non-primary submit - "Create & add another" on a create
+         * form. Undefined hides it, same as `discardLabel`: this bar stays
+         * generic (it also guards ordinary settings forms via
+         * `useUnsavedChanges`), so the concept is a plain optional secondary
+         * action rather than anything creation-specific.
+         */
+        extraLabel?: string
     }>(),
     {
         processing: false,
@@ -39,7 +47,12 @@ withDefaults(
     },
 )
 
-defineEmits<{ (e: 'save'): void; (e: 'cancel'): void; (e: 'discard'): void }>()
+defineEmits<{
+    (e: 'save'): void
+    (e: 'cancel'): void
+    (e: 'discard'): void
+    (e: 'extra'): void
+}>()
 
 const shellReady = ref(false)
 
@@ -110,6 +123,16 @@ const frameClass = computed(() =>
                         @click="$emit('cancel')"
                     >
                         {{ cancelLabel }}
+                    </button>
+
+                    <button
+                        v-if="extraLabel"
+                        type="button"
+                        class="hover:bg-muted rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                        :disabled="processing"
+                        @click="$emit('extra')"
+                    >
+                        {{ extraLabel }}
                     </button>
 
                     <button

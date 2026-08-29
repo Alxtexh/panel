@@ -220,11 +220,27 @@ let saving = false
  */
 let cancelling = false
 
-function submit() {
+/**
+ * `andNew` is create-only (checked by the caller via `isEdit`, not here, so
+ * this stays the one place that decides what "done" means).
+ *
+ * NO SECOND REQUEST. The create route IS the current page, so "and add
+ * another" needs nothing from the server beyond the store response already
+ * in flight - `form.reset()` restores the same defaults the page loaded
+ * with, which also clears `form.isDirty` and so the leave-guard with it.
+ */
+function submit(andNew = false) {
     saving = true
 
     const onSuccess = () => {
         toast.success(`${props.schema.label} ${isEdit.value ? 'updated' : 'created'}`)
+
+        if (andNew && !isEdit.value) {
+            form.reset()
+
+            return
+        }
+
         router.visit(props.schema.routes.index)
     }
 
@@ -764,9 +780,11 @@ onBeforeUnmount(() => {
             :message="isEdit ? 'Unsaved changes' : `New ${schema.label.toLowerCase()}`"
             :save-label="isEdit ? 'Save changes' : `Create ${schema.label}`"
             :discard-label="form.isDirty ? 'Discard' : undefined"
-            @save="submit"
+            :extra-label="isEdit ? undefined : 'Create & add another'"
+            @save="submit()"
             @cancel="cancel"
             @discard="discard"
+            @extra="submit(true)"
         />
 
         <DefineFieldDialog
