@@ -49,6 +49,13 @@ final class SettingsIndexTest extends TestCase
         $this->actingAs($this->user);
     }
 
+    protected function tearDown(): void
+    {
+        config(['panel.tenancy.model' => null]);
+
+        parent::tearDown();
+    }
+
     private function request()
     {
         $request = request();
@@ -110,6 +117,32 @@ final class SettingsIndexTest extends TestCase
         $this->actingAs($this->user->fresh());
 
         $this->assertContains('roles', $this->keys());
+    }
+
+    /**
+     * WORKSPACES HAS NOTHING TO SWITCH BETWEEN ON THE DEFAULT INSTALL.
+     *
+     * `Route::has()` cannot catch this the way it catches a dropped screen -
+     * `settings/workspaces` stays registered on purpose so a direct link
+     * degrades to "not available here" instead of 404. Found on an actual
+     * fresh install: `panel.tenancy.model` is `null` by default (see
+     * `config/panel.php`), the same gap `OrganisationPageTenancyTest`
+     * documents for `OrganisationPage`, just never closed here.
+     */
+    public function test_workspaces_is_absent_without_an_organisation_model(): void
+    {
+        $this->assertNotContains(
+            'workspaces',
+            $this->keys(),
+            'A settings screen was advertised with nothing for it to do.',
+        );
+    }
+
+    public function test_workspaces_appears_once_tenancy_is_actually_configured(): void
+    {
+        config(['panel.tenancy.model' => Tenant::class]);
+
+        $this->assertContains('workspaces', $this->keys());
     }
 
     /**
