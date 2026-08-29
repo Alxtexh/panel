@@ -1709,6 +1709,13 @@ function badgeLabel(key: string, value: unknown): string {
                     </template>
 
                     <template #actions="{ row }">
+                        <RenderHook
+                            position="list.row-actions-before"
+                            :hooks="renderHooks"
+                            :resource="schema.key"
+                            :row="row"
+                        />
+
                         <component
                             :is="schema.table.inlineRecordActions ? InlineRecordActions : RecordActions"
                             :ref="(el: any) => registerRowMenu(row.id, el)"
@@ -1716,6 +1723,13 @@ function badgeLabel(key: string, value: unknown): string {
                             :title="row.name ?? `#${row.id}`"
                             :busy="busyActionFor(row)"
                             @run="onRecordAction(row, $event)"
+                        />
+
+                        <RenderHook
+                            position="list.row-actions-after"
+                            :hooks="renderHooks"
+                            :resource="schema.key"
+                            :row="row"
                         />
                     </template>
                 </DataTable>
