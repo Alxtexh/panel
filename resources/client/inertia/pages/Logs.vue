@@ -17,27 +17,51 @@ const props = withDefaults(
         files: { name: string; bytes: number; at: string }[]
         tail: { name: string | null; lines: string[]; truncated: boolean }
         query?: string
+        tier?: string
         pollSeconds?: number
     }>(),
     {
         query: '',
+        tier: '',
         pollSeconds: 5,
     },
 )
 
+const TIERS: { key: string; label: string }[] = [
+    { key: '', label: 'All' },
+    { key: 'error', label: 'Error' },
+    { key: 'warning', label: 'Warning' },
+    { key: 'info', label: 'Info' },
+    { key: 'debug', label: 'Debug' },
+]
+
 const search = ref(props.query)
+const tier = ref(props.tier)
 const pane = ref<HTMLElement | null>(null)
 const liveTail = ref(props.tail)
 let timer: ReturnType<typeof setInterval> | null = null
 
 function open(name: string) {
-    router.get(props.routes.logs, { file: name, q: search.value }, { preserveState: true })
+    router.get(
+        props.routes.logs,
+        { file: name, q: search.value, tier: tier.value },
+        { preserveState: true },
+    )
 }
 
 function runSearch() {
     router.get(
         props.routes.logs,
-        { file: liveTail.value.name ?? '', q: search.value },
+        { file: liveTail.value.name ?? '', q: search.value, tier: tier.value },
+        { preserveState: true },
+    )
+}
+
+function setTier(key: string) {
+    tier.value = key
+    router.get(
+        props.routes.logs,
+        { file: liveTail.value.name ?? '', q: search.value, tier: key },
         { preserveState: true },
     )
 }
@@ -75,6 +99,10 @@ async function poll(): Promise<void> {
 
     if (search.value) {
         params.set('q', search.value)
+    }
+
+    if (tier.value) {
+        params.set('tier', tier.value)
     }
 
     const url = `${props.routes.tail}?${params.toString()}`
@@ -168,6 +196,30 @@ watch(
                 />
 
                 <p class="text-muted-foreground text-xs font-normal">Auto-refresh every {{ pollSeconds }}s</p>
+            </div>
+
+            <!--
+                A TOGGLE, NOT A SELECT - these are few enough (four levels
+                plus "All") to sit in the open, and a click straight to
+                "Error" beats a menu on the screen somebody opened because
+                something is on fire.
+            -->
+            <div class="flex flex-wrap items-center gap-1 border-t p-2" role="group" aria-label="Filter by level">
+                <button
+                    v-for="t in TIERS"
+                    :key="t.key"
+                    type="button"
+                    class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+                    :class="
+                        tier === t.key
+                            ? 'bg-muted text-foreground'
+                            : 'text-muted-foreground hover:text-foreground'
+                    "
+                    :aria-pressed="tier === t.key"
+                    @click="setTier(t.key)"
+                >
+                    {{ t.label }}
+                </button>
             </div>
 
             <p v-if="liveTail.truncated" class="text-muted-foreground px-3 py-2 text-xs">

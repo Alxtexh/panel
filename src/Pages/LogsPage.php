@@ -90,6 +90,7 @@ class LogsPage extends Page
      *     files: list<array{name: string, bytes: int, at: string}>,
      *     tail: array{name: string|null, lines: list<string>, truncated: bool},
      *     query: string,
+     *     tier: string,
      *     pollSeconds: int
      * }
      */
@@ -108,8 +109,10 @@ class LogsPage extends Page
                 $file,
                 lines: max(50, min(2000, (int) $request->query('lines', 300))),
                 needle: (string) $request->query('q', ''),
+                tier: static::requestedTier($request),
             ),
             'query' => (string) $request->query('q', ''),
+            'tier' => static::requestedTier($request),
             'pollSeconds' => 5,
         ];
     }
@@ -123,6 +126,7 @@ class LogsPage extends Page
             $file,
             lines: max(50, min(2000, (int) $request->query('lines', 300))),
             needle: (string) $request->query('q', ''),
+            tier: static::requestedTier($request),
         ));
     }
 
@@ -146,6 +150,14 @@ class LogsPage extends Page
         $panel = app(PanelManager::class)->panel(static::panel());
 
         return $panel?->getLogTailDefault();
+    }
+
+    /** One of `error`, `warning`, `info`, `debug`, or empty for every level. */
+    private static function requestedTier(Request $request): string
+    {
+        $tier = (string) $request->query('tier', '');
+
+        return in_array($tier, ['error', 'warning', 'info', 'debug'], true) ? $tier : '';
     }
 
     protected static function pageHref(): string

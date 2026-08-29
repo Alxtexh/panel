@@ -71,6 +71,75 @@ final class LogTailTest extends TestCase
         }
     }
 
+    public function test_log_reader_filters_by_level_tier(): void
+    {
+        $dir = sys_get_temp_dir().'/panel-log-'.uniqid();
+        mkdir($dir);
+        file_put_contents($dir.'/laravel.log', implode("\n", [
+            '[2026-01-01 00:00:00] local.ERROR: boom',
+            '[2026-01-01 00:00:01] local.WARNING: careful',
+            '[2026-01-01 00:00:02] local.INFO: fyi',
+            '[2026-01-01 00:00:03] local.DEBUG: trace',
+            '[2026-01-01 00:00:04] local.CRITICAL: on fire',
+        ])."\n");
+
+        try {
+            $reader = new LogReader(directory: $dir);
+
+            $errors = $reader->tail('laravel.log', lines: 50, tier: 'error');
+            $this->assertSame([
+                '[2026-01-01 00:00:00] local.ERROR: boom',
+                '[2026-01-01 00:00:04] local.CRITICAL: on fire',
+            ], $errors['lines']);
+
+            $warnings = $reader->tail('laravel.log', lines: 50, tier: 'warning');
+            $this->assertSame(['[2026-01-01 00:00:01] local.WARNING: careful'], $warnings['lines']);
+
+            $everything = $reader->tail('laravel.log', lines: 50, tier: '');
+            $this->assertCount(5, $everything['lines']);
+
+            $unknownTier = $reader->tail('laravel.log', lines: 50, tier: 'nonsense');
+            $this->assertCount(5, $unknownTier['lines']);
+        } finally {
+            @unlink($dir.'/laravel.log');
+            @rmdir($dir);
+        }
+    }
+
+    public function test_log_reader_combines_tier_and_text_search(): void
+    {
+        $dir = sys_get_temp_dir().'/panel-log-'.uniqid();
+        mkdir($dir);
+        file_put_contents($dir.'/laravel.log', implode("\n", [
+            '[2026-01-01 00:00:00] local.ERROR: payment failed',
+            '[2026-01-01 00:00:01] local.ERROR: queue stuck',
+            '[2026-01-01 00:00:02] local.INFO: payment received',
+        ])."\n");
+
+        try {
+            $reader = new LogReader(directory: $dir);
+
+            $filtered = $reader->tail('laravel.log', lines: 50, needle: 'payment', tier: 'error');
+            $this->assertSame(['[2026-01-01 00:00:00] local.ERROR: payment failed'], $filtered['lines']);
+        } finally {
+            @unlink($dir.'/laravel.log');
+            @rmdir($dir);
+        }
+    }
+
+    public function test_page_data_and_tail_action_pass_the_requested_tier_through(): void
+    {
+        $admin = app(PanelManager::class)->panel('admin');
+        $this->assertNotNull($admin);
+        $admin->logTail();
+
+        $data = LogsPage::data(Request::create('/apps/logs', 'GET', ['tier' => 'warning']));
+        $this->assertSame('warning', $data['tier']);
+
+        $unknown = LogsPage::data(Request::create('/apps/logs', 'GET', ['tier' => 'panic']));
+        $this->assertSame('', $unknown['tier']);
+    }
+
     public function test_route_registers_when_log_tail_is_enabled(): void
     {
         $panels = app(PanelManager::class);

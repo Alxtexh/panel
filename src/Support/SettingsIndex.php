@@ -144,6 +144,13 @@ final class SettingsIndex
                 'description' => 'How this organisation takes money.',
             ],
             [
+                'key' => 'smtp',
+                'routes' => ['pages.mail-settings'],
+                'title' => 'SMTP',
+                'description' => 'The mail server this installation sends through, and a way to test it.',
+                'ability' => 'manage_mail_settings',
+            ],
+            [
                 'key' => 'workspaces',
                 'routes' => ['settings.workspaces'],
                 'title' => 'Workspaces',

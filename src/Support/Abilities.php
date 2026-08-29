@@ -77,7 +77,7 @@ final class Abilities
      * `grants_all` role. `manage_assistant` is currently in exactly that state,
      * gated in `AssistantSettingsController` and absent from here.
      */
-    public const PANEL = ['manage_roles', 'impersonate_users', 'view_operations', 'manage_backups', 'manage_documents', 'manage_api_keys', 'manage_invites', 'manage_feature_flags', 'manage_webhooks'];
+    public const PANEL = ['manage_roles', 'impersonate_users', 'view_operations', 'manage_backups', 'manage_documents', 'manage_api_keys', 'manage_invites', 'manage_feature_flags', 'manage_webhooks', 'manage_mail_settings'];
 
     /**
      * What each panel ability is called on the permission matrix.
@@ -99,6 +99,7 @@ final class Abilities
         'manage_invites' => 'Send and revoke staff invites',
         'manage_feature_flags' => 'Toggle tenant feature flags',
         'manage_webhooks' => 'Manage webhook endpoints and deliveries',
+        'manage_mail_settings' => 'Set and test the outgoing SMTP server',
     ];
 
     /**

@@ -135,6 +135,12 @@ final class Panel
     private bool $paymentSettings = false;
 
     /**
+     * SMTP settings under `/settings/smtp`. Off by default. Pair with
+     * `mailSettings()`.
+     */
+    private bool $mailSettings = false;
+
+    /**
      * Optional empty kit apps (mail, chat). Off by default.
      *
      * @var array<string, bool>
@@ -2018,6 +2024,23 @@ final class Panel
     public function paymentGatewaysResolver(): ?Closure
     {
         return $this->paymentGatewaysResolver;
+    }
+
+    /**
+     * Opt this portal into `/settings/smtp` - the outgoing mail server this
+     * installation sends through, saved and testable from the panel rather
+     * than only `.env`. Default off. See `MailSettingsPage`.
+     */
+    public function mailSettings(): self
+    {
+        $this->mailSettings = true;
+
+        return $this;
+    }
+
+    public function offersMailSettings(): bool
+    {
+        return $this->mailSettings;
     }
 
     /**
