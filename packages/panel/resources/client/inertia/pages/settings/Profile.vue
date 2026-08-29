@@ -9,7 +9,24 @@
  * SEPARATE FROM SECURITY ON PURPOSE. Changing a display name is routine;
  * changing what can get into the account is not, and that screen asks for the
  * current password first. Together, either the routine thing sits behind a
- * password prompt or the serious one does not.
+ * password prompt or the serious one does not. Getting into this account -
+ * password, two-factor, passkeys, connected accounts, signed-in devices -
+ * all lives on Security; this screen is only the name and email printed on
+ * the account.
+ *
+ * NO TWO-FACTOR STATUS HERE EITHER, not any more. This screen used to report
+ * (not manage) the second factor as a discoverability nudge - the ACTION was
+ * always a link to Security - but once both screens had their own bordered
+ * cards, a "Two-factor authentication" card here read as the same section
+ * Security already owns, shown a second time. Security is the one place for
+ * it now; the settings hub's own "Security" entry is the discoverability
+ * this card used to be standing in for.
+ *
+ * TWO CARDS, NOT ONE FLAT STACK - `Security.vue`'s bordered-card rhythm,
+ * unconditionally rather than behind `groupedSecurityCards`. A page with no
+ * visual seam between "change your name" and "delete everything" reads as
+ * one undifferentiated form, and at a glance is easy to mistake for whatever
+ * other settings screen was open last.
  *
  * URLS COME FROM `panel.path`, not from generated route helpers - see the note
  * on Security.vue.
@@ -21,12 +38,9 @@ import {
     PkFieldLabel as Label,
     PkHeading as Heading,
     PkTextInput as Input,
-    buttonClasses,
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
 import DeleteUser from '../../components/DeleteUser.vue'
-
-defineProps<{ twoFactorEnabled?: boolean }>()
 
 const page = usePage()
 /**
@@ -63,7 +77,7 @@ defineOptions({
 
     <h1 class="sr-only">Profile settings</h1>
 
-    <div class="flex flex-col space-y-6">
+    <div class="flex flex-col space-y-6 rounded-lg border p-6">
         <Heading variant="small" title="Profile" description="Update your name and email address" />
 
         <Form
@@ -134,50 +148,13 @@ defineOptions({
     </div>
 
     <!--
-        Status here, the ACTION on Security. Enrolling a second factor sits
-        behind a password confirmation on purpose - somebody at an unlocked
-        laptop must not be able to re-enrol it - but a profile that never
-        mentions it is a profile where nobody finds out it exists.
-    -->
-    <div class="mt-6 flex flex-col space-y-6">
-        <Heading
-            variant="small"
-            title="Two-factor authentication"
-            :description="
-                twoFactorEnabled
-                    ? 'Your account asks for a second factor when you sign in.'
-                    : 'Add a second step at sign-in, so a stolen password is not enough.'
-            "
-        />
-
-        <div class="flex items-center gap-3">
-            <span
-                class="rounded-md px-2 py-0.5 text-xs font-medium"
-                :class="
-                    twoFactorEnabled
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                "
-            >
-                {{ twoFactorEnabled ? 'Enabled' : 'Not enabled' }}
-            </span>
-
-            <!-- Classes on the link's own element - see ErrorScreen's note. -->
-            <Link
-                :href="at('/security')"
-                :class="buttonClasses({ variant: 'outline', size: 'sm' })"
-            >
-                {{ twoFactorEnabled ? 'Manage' : 'Enable' }} two-factor authentication
-            </Link>
-        </div>
-    </div>
-
-    <!--
         THE ACTION IS PASSED, not left to default. `DeleteUser` falls back to a
         bare `/settings/profile`, which is right only for a panel mounted at the
         root - on any other prefix the delete button would post to a URL that
         does not exist, and a confirmation dialog that 404s on submit is worse
         than no dialog.
     -->
-    <DeleteUser :action="at('/profile')" />
+    <div class="mt-6 rounded-lg border p-6">
+        <DeleteUser :action="at('/profile')" />
+    </div>
 </template>
