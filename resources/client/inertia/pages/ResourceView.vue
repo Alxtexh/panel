@@ -66,7 +66,7 @@ const props = defineProps<{
         key: string
         label: string
         labelPlural: string
-        routes: { index: string }
+        routes: { index: string; audit?: string | null }
         table: { columns: SchemaColumn[] }
         /** Optional layout tree. Falls back to a flat list when empty. */
         infolist: any[]
@@ -992,7 +992,17 @@ function destroy() {
             :states="workflow.states"
         />
 
-        <AuditTimeline :resource="schema.key" :record-id="record.id" />
+        <!--
+            HIDDEN, NOT A PERMANENT RETRY LOOP. `schema.routes.audit` is null
+            unless the host actually registered the app-level audit route
+            `PanelRoutes::host()` requires - `panel:install` never scaffolds
+            one, so every fresh install rendered this section and it always
+            404'd. Same guard `WorkflowHistory` above already uses.
+        -->
+        <AuditTimeline
+            v-if="schema.routes.audit"
+            :url="schema.routes.audit.replace('{id}', String(record.id))"
+        />
 
         <div>
             <Link

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Feature;
 
+use Illuminate\Support\Facades\Route;
 use Alxtexh\Panel\Tests\Fixtures\Models\Post;
 use Alxtexh\Panel\Tests\Fixtures\Resources\PostResource;
 use Alxtexh\Panel\Tests\TestCase;
@@ -69,5 +70,47 @@ final class ResourceContractTest extends TestCase
             ['title', 'status', 'created_at'],
             array_values(array_map(static fn (array $c): string => $c['key'], $columns)),
         );
+    }
+
+    /**
+     * NO AUDIT ROUTE UNLESS THE HOST REGISTERED ONE. `PanelRoutes::host()`
+     * explains why the package cannot declare `{resource}/{id}/audit` itself
+     * - it answers to an application controller `panel:install` never
+     * scaffolds. Sending the route unconditionally would have
+     * `<AuditTimeline>` 404 in a permanent retry loop on every resource of
+     * every fresh install, because this fixture app - like a fresh install -
+     * registers no such route.
+     */
+    public function test_a_resource_offers_no_audit_route_unless_the_host_registered_one(): void
+    {
+        config(['panel.schema_cache.enabled' => false]);
+
+        $routes = PostResource::schema()['routes'];
+
+        $this->assertArrayHasKey('audit', $routes);
+        $this->assertNull($routes['audit']);
+    }
+
+    /**
+     * THE OTHER HALF: once a host DOES register `{panel}.audit` - exactly
+     * what `apps/playground`'s `AuditController` route does - the schema
+     * picks it up and `<AuditTimeline>` gets a real URL to fetch.
+     */
+    public function test_a_resource_offers_the_audit_route_once_the_host_registers_it(): void
+    {
+        config(['panel.schema_cache.enabled' => false]);
+
+        /*
+         * `Route::get(...)->name(...)` names the route AFTER the collection
+         * already indexed it - `RouteCollection::add()` runs before the
+         * fluent `->name()` call returns, so the name lookup table normally
+         * only sees this pairing via the ONE-TIME refresh the kernel runs
+         * after loading `routes/*.php` at boot. A route added here, mid-test,
+         * needs that refresh forced by hand.
+         */
+        Route::get('/posts/{id}/audit', static fn () => [])->name('panel.audit');
+        Route::getRoutes()->refreshNameLookups();
+
+        $this->assertSame('/posts/{id}/audit', PostResource::schema()['routes']['audit'] ?? null);
     }
 }
