@@ -5,14 +5,24 @@ type __VLS_Props = {
     saveLabel?: string;
     cancelLabel?: string;
     discardLabel?: string;
+    /**
+     * A second, non-primary submit - "Create & add another" on a create
+     * form. Undefined hides it, same as `discardLabel`: this bar stays
+     * generic (it also guards ordinary settings forms via
+     * `useUnsavedChanges`), so the concept is a plain optional secondary
+     * action rather than anything creation-specific.
+     */
+    extraLabel?: string;
 };
 declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {} & {
     cancel: () => any;
     discard: () => any;
+    extra: () => any;
     save: () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onCancel?: (() => any) | undefined;
     onDiscard?: (() => any) | undefined;
+    onExtra?: (() => any) | undefined;
     onSave?: (() => any) | undefined;
 }>, {
     message: string;
