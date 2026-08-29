@@ -17,4 +17,15 @@ return [
     'nav' => [
         'system' => 'Systeme',
     ],
+
+    'links' => [
+        'settings' => 'Parametres',
+        'users' => 'Utilisateurs',
+        'roles' => 'Roles',
+        'documents' => 'Documents',
+        'backups' => 'Sauvegardes',
+        'logs' => 'Journaux',
+        'monitoring' => 'Supervision',
+        'help' => 'Aide',
+    ],
 ];

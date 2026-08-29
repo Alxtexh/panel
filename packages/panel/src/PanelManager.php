@@ -540,17 +540,6 @@ final class PanelManager
             $pages[] = $class::navigationEntry($panel->getPath());
         }
 
-        /*
-         * OPERATIONS AS A SIDEBAR GROUP, not only the account menu. Backups,
-         * Logs and Monitoring hid under the avatar, so a fresh install looked
-         * like it had no operations cluster. Customer portals still drop them
-         * with `->without(['operations'])`. Ability-filtered here, same as
-         * every other entry in this list.
-         */
-        foreach (Support\OperationsNav::pages($panel, request()->user()) as $entry) {
-            $pages[] = $entry;
-        }
-
         return $pages;
     }
 

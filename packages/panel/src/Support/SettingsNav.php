@@ -64,7 +64,7 @@ final class SettingsNav
 
         return [[
             'key' => 'settings',
-            'title' => __('panel::directory.links.settings'),
+            'title' => __('panel::chrome.links.settings'),
             'href' => $path,
             'icon' => 'settings',
             /*

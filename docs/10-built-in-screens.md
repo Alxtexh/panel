@@ -10,7 +10,6 @@ mounted by default and can be dropped per panel.
 | **Backups** | Operations nav group (and account menu) | `view_operations`, `manage_backups` to restore or delete |
 | **Logs** | Operations nav group (and account menu) | `view_operations` |
 | **Monitoring** | Operations nav group (and account menu) | `view_operations` |
-| **Directory** | Navigation | Chrome links; individual cards still ability-gated |
 | **Activity** | Account menu | - |
 | **Trash** | Account menu | Per-resource `restore` / `forceDelete` |
 | **User management** | Account menu | Resource abilities |

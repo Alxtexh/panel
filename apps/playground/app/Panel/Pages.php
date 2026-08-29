@@ -286,7 +286,6 @@ final class Pages
             '/settings/assistant' => 'Reached from the settings sub-navigation, for holders of manage_assistant.',
             '/settings/workspaces' => 'Reached from the settings sub-navigation.',
             '/settings/roles' => 'The standalone permission matrix. User management is the linked way in.',
-            '/administration' => 'A directory of screens that already have a home. Kept off the sidebar so Kit, Help and Platform are not listed twice.',
 
             /*
              * THE ACCOUNT MENU OWNS THESE THREE, and the sidebar deliberately

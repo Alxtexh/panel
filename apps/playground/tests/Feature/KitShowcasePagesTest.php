@@ -107,22 +107,6 @@ final class KitShowcasePagesTest extends TestCase
         $this->assertSame('Signatures', $byHref['/kit-documents']['title'] ?? null);
         $this->assertSame('Subscription plans', $byHref['/settings/plans']['title'] ?? null);
         $this->assertSame('Kit', $byHref['/settings/plans']['group'] ?? null);
-        $this->assertArrayNotHasKey('/administration', $byHref);
-    }
-
-    public function test_administration_directory_lists_real_routes(): void
-    {
-        $this->actingAs($this->admin)
-            ->get('/administration')
-            ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->component('Administration')
-                ->has('sections', 5)
-                ->where('sections.0.key', 'people')
-                ->where('sections.0.links.0.href', '/clients')
-                ->where('sections.1.key', 'network')
-                ->where('sections.4.key', 'reports')
-                ->where('sections.4.links.0.href', '/dashboard'));
     }
 
     public function test_payments_settings_renders_gateway_cards(): void

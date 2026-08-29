@@ -45,6 +45,7 @@ import {
     RatingCell,
     PkBoundary,
     RecordActions,
+    InlineRecordActions,
     SelectionBar,
     TablePagination,
     TableShell,
@@ -141,6 +142,8 @@ interface ResourceSchema {
                 color?: string
             }[]
         }[]
+        /** `Table::inlineRecordActions()` - off collapses everything into one kebab menu. */
+        inlineRecordActions?: boolean
         bulkActions: {
             key: string
             label: string
@@ -1606,7 +1609,8 @@ function badgeLabel(key: string, value: unknown): string {
                     </template>
 
                     <template #actions="{ row }">
-                        <RecordActions
+                        <component
+                            :is="schema.table.inlineRecordActions ? InlineRecordActions : RecordActions"
                             :ref="(el: any) => registerRowMenu(row.id, el)"
                             :groups="menuFor(row)"
                             :title="row.name ?? `#${row.id}`"

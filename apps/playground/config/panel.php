@@ -293,9 +293,9 @@ return [
     | Page discovery
     |---------------------------------------------------------------------------
     |
-    | directory => namespace. The disposable portal tree is included so a
-    | DirectoryPage left by `make:panel` tests is registered, not reported
-    | as an orphan by `panel:doctor`.
+    | directory => namespace. The disposable portal tree is included so any
+    | page `make:panel` tests leave behind is registered, not reported as an
+    | orphan by `panel:doctor`.
     |
     */
     'discover_pages' => [

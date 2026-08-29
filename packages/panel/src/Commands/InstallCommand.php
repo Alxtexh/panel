@@ -62,7 +62,6 @@ final class InstallCommand extends Command
         $this->createDefaultPanel();
         $this->wireRolesOntoUser();
         $this->writeDashboard();
-        $this->writeDirectory();
         $this->writePageFiles();
 
         if ($this->shouldScaffoldAuth()) {
@@ -1226,56 +1225,6 @@ final class InstallCommand extends Command
         PHP);
 
         $this->components->twoColumnDetail('Wrote', 'app/Panel/Pages/DashboardPage.php');
-    }
-
-    /**
-     * A directory of chrome links so Settings, Users, Roles, Documents,
-     * Backups, Logs, Monitoring and Help are findable on day one.
-     *
-     * EMPTY OF MERCHANDISING. The kit DirectoryPage default is those screens
-     * only. A POS or ISP overrides `sections()`. Playground AdministrationPage
-     * already does.
-     */
-    private function writeDirectory(): void
-    {
-        $path = app_path('Panel/Pages/DirectoryPage.php');
-
-        if (file_exists($path) && ! $this->option('force')) {
-            $this->components->twoColumnDetail('Kept yours', 'app/Panel/Pages/DirectoryPage.php');
-
-            return;
-        }
-
-        if (! is_dir(dirname($path))) {
-            mkdir(dirname($path), 0755, true);
-        }
-
-        $panel = (string) config('panel.default', 'admin');
-
-        file_put_contents($path, <<<PHP
-        <?php
-
-        declare(strict_types=1);
-
-        namespace App\\Panel\\Pages;
-
-        use Alxtexh\\Panel\\Pages\\DirectoryPage as AlxtexhpanelDirectory;
-
-        /**
-         * Chrome hub: Settings, Users, Roles, Documents, Backups, Logs,
-         * Monitoring, Help. Override sections() for your vertical.
-         * No clients, routers, or catalog.
-         */
-        final class DirectoryPage extends AlxtexhpanelDirectory
-        {
-            protected static string \$panel = '{$panel}';
-
-            protected static ?int \$sort = -50;
-        }
-
-        PHP);
-
-        $this->components->twoColumnDetail('Wrote', 'app/Panel/Pages/DirectoryPage.php');
     }
 
     /**

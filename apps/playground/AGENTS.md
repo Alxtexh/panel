@@ -25,9 +25,11 @@ package catalogue name.
 - Keep `resources/css/app.css` status tokens (`--success`, `--warning`, `--info`
   and their `--color-*` `@theme` mappings). Without them, badge variants
   `bg-success` / `bg-warning` / `bg-info` never compile. `panel:update` patches hosts that are missing them.
+- Keep `--pk-form-gap`, `.pk-form-stack`, and landing typography (`.pk-editorial`, `.pk-console`) in sync with the kit stub.
 
 **Do not**
 - Set `layout: null` on a panel page, or delete the `app.ts` layout callback.
+- Assign `page.default.layout ??= PanelLayout` in resolve. Packaged pages already set layout props; use the `createInertiaApp({ layout: … })` callback instead. `panel:doctor` fails on this pattern.
 - Hand-roll a controller and `Inertia::render` for a panel screen.
 - Strip `PanelShell` from `resources/js/layouts/PanelLayout.vue`.
 - Invent Filament / Livewire verbs: no `Filament\…`, `Forms\Components\…`,
@@ -90,9 +92,8 @@ never a modal and never Livewire. BelongsTo pickers use
 create-and-pick dialog (JSON, not a Livewire modal; resource CRUD stays
 on dedicated pages). Nested resources live at
 `/{parent}/{id}/{child}`; BelongsToMany attach is
-`/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas plus
-a Directory of chrome links (Settings, Users, Roles, Documents, Backups,
-Logs, Monitoring, Help). Settings appears in a Settings sidebar group by
+`/{parent}/{id}/{child}/attach`. A fresh install is an empty canvas.
+Settings appears in a Settings sidebar group by
 default (`->sidebarSettings(false)` opts out). Operations appear in an
 Operations nav group when the panel offers them. Catalog is not in core.
 Do not resurrect dashboard sample widgets. `Notification::make()->title('Saved')->success()->send()`
@@ -110,6 +111,7 @@ Panels registered in this application:
 - `reseller` - mounted at `/reseller`, guard `web`, tenant context
 - `superadmin` - mounted at `/superadmin`, guard `superadmins`, central context
 - `client` - mounted at `/client`, guard `customers`, tenant context
+- `authfixture` - mounted at `/authfixture`, guard `web`, tenant context
 
 Resources are discovered from:
 
@@ -463,19 +465,15 @@ fallback and reloads only that widget. Polling pauses while the tab is hidden.
 Never poll and subscribe for the same widget. Redis is infrastructure,
 not a UI transport.
 
-### Add a till, catalog, directory or device preview
+### Add a till, catalog or device preview
 
 ```bash
 php artisan make:panel-page Front --till
 php artisan make:panel-page Browse --catalog
-php artisan make:panel-page Hub --directory
 php artisan make:panel-page Preview --device-preview
 ```
 
-`TillPage` / `CatalogBrowserPage` / `DirectoryPage` / `DevicePreviewPage`
-are empty canvases. Directory inherits chrome links (Settings, Users,
-Roles, Documents, Backups, Logs, Monitoring, Help). Override
-`sections()` for a vertical. `panel:install` already writes a Directory.
+`TillPage` / `CatalogBrowserPage` / `DevicePreviewPage` are empty canvases.
 
 Mail and Chat are opt-in empty apps, not merchandising:
 
@@ -898,23 +896,23 @@ is used. Read that line before planning around anything below.
 
 **Form fields** (36): `BarcodeField` `BuilderField` `CheckboxField` `CheckboxListField` `CodeField` `ColourField` `CountryField` `DateField` `DiffField` `Field` `FileUploadField` `HasAffixes` `HasChoices` `HiddenField` `IconPickerField` `KeyValueField` `MapField` `MarkdownField` `MultiSelectField` `NumberField` `PasswordField` `PhoneField` `QrCodeField` `RadioField` `RatingField` `RepeaterField` `RichEditorField` `SelectField` `SliderField` `TagsField` `TextField` `TextareaField` `ToggleButtonsField` `ToggleField` `TreeSelectField` `VisualSelectField`
 _How to use them: name them in `form()`._
-**Table columns** (18): `BadgeColumn` `CheckboxColumn` `CodeColumn` `ColourColumn` `Column` `ColumnGroup` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `InlineWritableColumn` `KeyValueColumn` `MoneyColumn` `RatingColumn` `SelectColumn` `TagsColumn` `TextColumn` `ToggleColumn`
+**Table columns** (19): `BadgeColumn` `CheckboxColumn` `CodeColumn` `ColourColumn` `Column` `ColumnGroup` `DateColumn` `EditableColumn` `IconColumn` `ImageColumn` `InlineWritableColumn` `KeyValueColumn` `MoneyColumn` `RatingColumn` `SelectColumn` `TagsColumn` `TextColumn` `TextInputColumn` `ToggleColumn`
 _How to use them: name them in `table()`._
 **Table filters** (10): `BooleanFilter` `DateRangeFilter` `Filter` `HasOptions` `Indicator` `MultiSelectFilter` `NumberRangeFilter` `QueryBuilderFilter` `SelectFilter` `TrashedFilter`
 _How to use them: name them in `table()`._
-**Actions** (9): `Action` `ActionGroup` `ActionStep` `BulkAction` `BulkRunner` `ExportedFile` `JobStatus` `RecordAction` `ReplicateAction`
+**Actions** (10): `Action` `ActionGroup` `ActionStep` `BulkAction` `BulkRunner` `ExportedFile` `ImpersonateAction` `JobStatus` `RecordAction` `ReplicateAction`
 _How to use them: name them in `table()` or the resource's actions._
 **Schema (form layout)** (14): `Callout` `Card` `Column` `Columns` `Component` `Fieldset` `Flex` `Grid` `Renderable` `Section` `Step` `Tab` `Tabs` `Wizard`
 _How to use them: wrap fields with them inside `form()`._
-**Dashboard widgets** (16): `BarcodeWidget` `Bucket` `CalendarWidget` `CanPoll` `ChartWidget` `DashboardFilters` `LogTailWidget` `MapWidget` `Period` `Rollup` `StatWidget` `TableWidget` `TimeSeries` `Trend` `WidgetSet` `Window`
+**Dashboard widgets** (17): `BarcodeWidget` `Bucket` `CalendarWidget` `CanPoll` `ChartWidget` `DashboardFilters` `HasLayout` `LogTailWidget` `MapWidget` `Period` `Rollup` `StatWidget` `TableWidget` `TimeSeries` `Trend` `WidgetSet` `Window`
 _How to use them: **declare them on a `DashboardPage`, which is what draws them, or drop a factory under a directory the panel passed to `discoverWidgets()`.** `php artisan make:panel-page Overview --dashboard` writes one; its `stats()`, `charts()` and `tables()` return these classes and the packaged `PanelDashboard` screen renders them, each as its own deferred prop. `TableWidget::make('recent')->resource(OrderResource::class)->limit(5)` renders the existing DataTable with a capped list query. `->live('dashboard.stats')` prefers Echo/Reverb when `window.Echo` exists; `->poll('10s')` on `StatWidget`, `TableWidget` or `ChartWidget` is the HTTP fallback (pauses while the tab is hidden; never both at runtime). Redis is not a UI transport. `Panel::make('admin')->discoverWidgets(app_path('Panel/Widgets'))` is the normal path (namespace is optional when the directory is under `app_path()`). A widget built anywhere else is a value object nothing mounts - correct, tested and invisible. Before 0.3.0 that was true of every widget, which is why this line exists._
-**Pages (screens that are not resources)** (31): `ApiDocsPage` `ApiKeysPage` `BillingPortalPage` `CatalogBrowserPage` `CatalogItemPage` `CatalogRegisterPage` `ChangelogPage` `ChatPage` `DashboardPage` `DevicePreviewPage` `DirectoryPage` `EmailTemplatePage` `EnvironmentPage` `FeatureFlagsPage` `InvitePage` `LogsPage` `MailPage` `MediaLibraryPage` `OnboardingPage` `OrganisationPage` `Page` `PageLayout` `PaymentSettingsPage` `PlanSetupPage` `ShowcasePage` `SignatureStudioPage` `SitemapPage` `TillPage` `UserManagementPage` `WebhookEndpointsPage` `Workspace`
-_How to use them: extend `Page` (or `DashboardPage` / `PlanSetupPage` / `TillPage` / `DirectoryPage` / `DevicePreviewPage` / `MailPage` / `ChatPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. Flags: `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview`. `make:panel-page BillingPlans --plan-setup` writes an empty page (import PlanGrid). `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._
+**Pages (screens that are not resources)** (31): `ApiDocsPage` `ApiKeysPage` `BillingPortalPage` `CatalogBrowserPage` `CatalogItemPage` `CatalogRegisterPage` `ChangelogPage` `ChatPage` `DashboardPage` `DevicePreviewPage` `EmailTemplatePage` `EnvironmentPage` `FeatureFlagsPage` `InvitePage` `LogsPage` `MailPage` `MediaLibraryPage` `OnboardingPage` `OrganisationPage` `Page` `PageLayout` `PaymentSettingsPage` `PlanCatalogPage` `PlanSetupPage` `ShowcasePage` `SignatureStudioPage` `SitemapPage` `TillPage` `UserManagementPage` `WebhookEndpointsPage` `Workspace`
+_How to use them: extend `Page` (or `DashboardPage` / `PlanSetupPage` / `TillPage` / `DevicePreviewPage` / `MailPage` / `ChatPage`) in `app/Panel/Pages` and discovery routes it - `php artisan make:panel-page ServerHealth` writes the class and its Vue file. Flags: `--dashboard`, `--plan-setup`, `--till`, `--catalog`, `--catalog-item`, `--register`, `--signatures`, `--device-preview`. `make:panel-page BillingPlans --plan-setup` writes an empty page (import PlanGrid). `ChangelogPage` and `EnvironmentPage` are the package's OWN screens rather than things to extend: each appears only once configured (`panel.changelog`, `panel.env.editable`) and is absent entirely otherwise, so check those keys before concluding the capability is missing._
 **Ticketing** (3): `MyTicketResource` `TicketResource` `TicketingPlugin`
 _How to use them: do not name these directly - `TicketingPlugin` mounts them from `panel.ticketing.operator` / `.opener`. See the recipe._
 **Client-side components** (`@alxtexh-enterprise/panel`, no PHP equivalent): `StatStrip`
 `MiniStatCard` `SegmentedBar` `HeatmapChart` `ComboChart` `PolarAreaChart`
-`RadarChart` `SetupChecklist` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid` `CatalogTill` `CatalogBrowser` `CatalogRegister` `DirectoryPage` `LineItems` `CartPanel`
+`RadarChart` `SetupChecklist` `CatalogCard` `PlanCard` `PlanGrid` `PlanEditor` `CatalogGrid` `CatalogTill` `CatalogBrowser` `CatalogRegister` `LineItems` `CartPanel`
 `PkQtyStepper` `PkStatusBadge` `PkSignaturePad` `PaymentGateways`
 _How to reach them: import them into YOUR OWN Vue page. A `CatalogBrowserPage` or
 `PlanSetupPage` is optional routing, not a requirement to draw the widget.

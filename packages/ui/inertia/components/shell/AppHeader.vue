@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from '@lucide/vue'
+import { BookOpen, Folder, House, Menu, Search } from '@lucide/vue'
 import { computed } from 'vue'
 import { PkButton as Button, buttonClasses } from '@alxtexh-enterprise/panel'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@alxtexh-enterprise/panel'
@@ -66,7 +66,7 @@ const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'Dashboard',
         href: panelHome.value,
-        icon: LayoutGrid,
+        icon: House,
     },
 ])
 

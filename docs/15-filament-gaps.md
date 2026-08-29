@@ -11,7 +11,7 @@ PanelKit stays Vue + Inertia.
 | Area | PanelKit |
 | --- | --- |
 | Install (GitHub-only) | VCS `Alxtexh/panel` + `panel:install` (auth + first Administrator + `SharePanelProps` on web) |
-| Empty canvas | Settings shell, blank dashboard, kit Profile/Security, Directory chrome |
+| Empty canvas | Settings shell, blank dashboard, kit Profile/Security |
 | CRUD IA | Dedicated create/edit/view pages, nested resources, attach pages |
 | Tables | Keyset lists, filters, ColumnGroup, TagsColumn, relation filters in TableShell |
 | Forms | Schema fields including MapField, BarcodeField, relationship selects, createOption |

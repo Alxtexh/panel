@@ -142,7 +142,6 @@ demo. After sign-in you should see:
 - Settings in the **Settings** sidebar group (primary path; opt out with `->sidebarSettings(false)`)
 - the user menu (Profile, Log out; Settings only when the sidebar opt-out is on)
 - a **Get started** card with kit chrome steps
-- Directory in the sidebar once you hold Administrator
 
 Create and edit stay **dedicated pages**. They are not Livewire modals.
 
@@ -173,7 +172,7 @@ when the users table has no `tenant_id`.
 | Merges `resources/css/app.css` | Points Tailwind at the package. Without this you get a working panel with no styling |
 | Wires `vite.config.js` | Adds the Vue plugin if the app has none |
 | Appends `SharePanelProps` to `web` | App-owned routes keep the shell (account menu, footer). This is not optional |
-| Writes core page files | Auth, CRUD, settings, dashboard host, Directory chrome hub, and the SaaS suspended-access screen. Catalog / PlanSetup / Signatures stay optional (`PanelPages::writeOptional()`) |
+| Writes core page files | Auth, CRUD, settings, dashboard host, and the SaaS suspended-access screen. Catalog / PlanSetup / Signatures stay optional (`PanelPages::writeOptional()`) |
 | Writes empty `DashboardPage` | No sample revenue or orders; host fills `stats()` / `charts()` |
 | Scaffolds sign-in | Default. `--no-auth` to skip |
 | Syncs permissions + first user | Administrator with `grants_all`. `--no-user` to skip |

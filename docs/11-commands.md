@@ -132,7 +132,7 @@ screen the kit already ships.
 | `Panel::socialite()` | Social buttons on this portal's login. Default: every provider with a client id and secret. `['google', 'github']` narrows. `false` hides them. Needs `laravel/socialite` (composer suggest). |
 | `Panel::turnstile()` | Cloudflare Turnstile on this portal. Keys (`TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`) are the install switch. `false` never challenges here. |
 | `TillPage` / `--till` | Empty till canvas. Vue shims packaged Till |
-| `--catalog`, `--catalog-item`, `--register`, `--directory`, `--signatures`, `--device-preview` | Empty page bases. Directory inherits chrome sections |
+| `--catalog`, `--catalog-item`, `--register`, `--signatures`, `--device-preview` | Empty page bases |
 | `Panel::apps(['mail', 'chat'])` | Empty Mail / Chat screens. `without(['mail'])` still drops them |
 | `Panel::apiDocs()` / `apps(['api-docs'])` | Built-in Scalar API reference. OpenAPI at `{panel}/apps/api-docs/openapi.json`. Optional URL: `apiDocs('/path/to/openapi.json')`. Host Vite needs `@scalar/api-reference` (already a kit dependency when using the mirrored client) |
 | `Panel::logTail()` / `apps(['logs'])` | Read-only log tail at `{panel}/apps/logs`. Ability `view_operations`. Optional allow-list: `logTail('laravel.log', ['laravel.log'])`. Polls `{page}/tail` |
@@ -174,4 +174,3 @@ screen the kit already ships.
 | `/{parent}/{id}/{child}/attach` | BelongsToMany attach page |
 | `InteractsWithPanels` | `assertFormState`, `assertNestedAttach`, `assertPanelToast`, `assertEmptyGrantsHint`, `assertBillingSuspendedRedirect`, `assertBillingAllows`, `assertBillingWebhookAccepted`, `assertSuspendedPageRenders` |
 | Operations nav group | Backups / Logs / Monitoring in the sidebar when the panel offers `operations` |
-| Directory on install | Chrome hub: Settings, Users, Roles, Documents, Backups, Logs, Monitoring, Help |

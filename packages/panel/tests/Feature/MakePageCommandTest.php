@@ -54,7 +54,6 @@ final class MakePageCommandTest extends TestCase
 
         $this->assertDoesNotMatchRegularExpression('/^\s*import\s+.+Catalog/m', $vueContents);
         $this->assertDoesNotMatchRegularExpression('/^\s*import\s+.+PlanGrid/m', $vueContents);
-        $this->assertDoesNotMatchRegularExpression('/^\s*import\s+.+Directory/m', $vueContents);
         $this->assertStringNotContainsString('PlanSetup', $vueContents);
         $this->assertStringContainsString("import { CatalogGrid } from '@alxtexh-enterprise/panel'", $vueContents);
         $this->assertStringContainsString("import { AppPageFooter } from '@alxtexh-enterprise/panel'", $vueContents);
@@ -185,22 +184,6 @@ final class MakePageCommandTest extends TestCase
 
         $this->assertStringContainsString('extends CatalogRegisterPage', File::get($php));
         $this->assertStringContainsString('CatalogRegister', File::get($vue));
-    }
-
-    public function test_directory_flag_writes_directory_page(): void
-    {
-        $php = app_path('Panel/Pages/LinksPage.php');
-        $vue = resource_path('js/pages/Links.vue');
-        $this->forget($php, $vue);
-
-        $this->artisan('make:panel-page', [
-            'name' => 'Links',
-            '--directory' => true,
-            '--force' => true,
-        ])->assertSuccessful();
-
-        $this->assertStringContainsString('extends DirectoryPage', File::get($php));
-        $this->assertStringContainsString('DirectoryPage', File::get($vue));
     }
 
     public function test_signatures_flag_writes_signature_studio_page(): void

@@ -13,14 +13,20 @@
  * showed View and Edit twice in the same row - one mechanism serving two
  * breakpoints, read by everyone as a duplicated control.
  *
- * FILAMENT DOES NOT DO THIS EITHER, which settled it: an action wrapped in an
- * `ActionGroup` renders only inside the dropdown, never also beside it. The
- * duplication was ours, not a convention we had inherited.
+ * THIS IS THE COLLAPSED RENDERER, used when a table has NOT called
+ * `Table::inlineRecordActions()`. Filament's own DEFAULT is inline text
+ * links - only an action explicitly wrapped in `ActionGroup` collapses into
+ * a dropdown there - so kebab-only is a PanelKit default rather than
+ * something inherited from Filament's convention; a table opts into
+ * Filament's default via `InlineRecordActions.vue` instead. This component
+ * stays the fallback both for tables that keep the default and for narrow
+ * viewports even when inline is on, so a phone never gets a second, parallel
+ * surface for the same actions.
  *
- * THE COST IS REAL AND ACCEPTED. View and Edit are the actions an operator runs
- * all day, and they now cost two clicks rather than one. Bought back partly by
- * the row itself: right-click opens this menu at the pointer, and the primary
- * column still links straight to the record.
+ * THE COST IS REAL AND ACCEPTED WHEN THIS RENDERS. View and Edit are the
+ * actions an operator runs all day, and they now cost two clicks rather than
+ * one. Bought back partly by the row itself: right-click opens this menu at
+ * the pointer, and the primary column still links straight to the record.
  *
  * DESTRUCTIVE ACTIONS ARE LAST AND SEPARATED. Refused server-side too - this is
  * the one place where making something harder to reach is the feature.

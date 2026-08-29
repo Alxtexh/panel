@@ -369,8 +369,9 @@ final class ChartWidgetTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->has('widgets')
-                // The gallery: every renderer the panel ships, on real data.
-                ->has('charts', 20)
+                // The day-to-day dashboard, not the full renderer gallery -
+                // that moved to its own page (DemoDashboard::galleryCharts()).
+                ->has('charts', 7)
                 ->has('periods')
                 // Deferred props are absent from the first response by design:
                 // the shell must paint before any aggregate runs (§10).

@@ -27,7 +27,6 @@ final class MakePageCommand extends Command
                             {--catalog : Empty CatalogBrowserPage; writes optional Catalog screen}
                             {--catalog-item : Empty CatalogItemPage; writes optional CatalogItem screen}
                             {--register : Empty CatalogRegisterPage; writes optional CatalogRegister screen}
-                            {--directory : Chrome DirectoryPage; install already writes one}
                             {--signatures : Empty SignatureStudioPage; writes optional Signatures screen}
                             {--device-preview : Empty DevicePreviewPage; Vue shims packaged DevicePreview}
                             {--api-keys : Empty ApiKeysPage; Vue shims packaged ApiKeys}
@@ -52,7 +51,6 @@ final class MakePageCommand extends Command
         'catalog',
         'catalog-item',
         'register',
-        'directory',
         'signatures',
         'device-preview',
         'api-keys',
@@ -116,7 +114,6 @@ final class MakePageCommand extends Command
             'catalog' => $this->catalogStub($class, $slug, $name, $panel),
             'catalog-item' => $this->catalogItemStub($class, $slug, $name, $panel),
             'register' => $this->registerStub($class, $slug, $name, $panel),
-            'directory' => $this->directoryStub($class, $slug, $name, $panel),
             'signatures' => $this->signaturesStub($class, $slug, $name, $panel),
             'device-preview' => $this->devicePreviewStub($class, $slug, $name, $panel),
             'api-keys' => $this->apiKeysStub($class, $slug, $name, $panel),
@@ -136,7 +133,7 @@ final class MakePageCommand extends Command
 
         $this->writeComponent($name, $variant);
 
-        if (in_array($variant, ['plan-setup', 'till', 'catalog', 'catalog-item', 'register', 'directory', 'signatures', 'device-preview', 'api-keys', 'api-docs', 'invites', 'feature-flags', 'webhooks', 'billing-portal', 'email-templates', 'onboarding', 'media-library'], true)) {
+        if (in_array($variant, ['plan-setup', 'till', 'catalog', 'catalog-item', 'register', 'signatures', 'device-preview', 'api-keys', 'api-docs', 'invites', 'feature-flags', 'webhooks', 'billing-portal', 'email-templates', 'onboarding', 'media-library'], true)) {
             $optional = PanelPages::writeOptional((bool) $this->option('force'));
 
             if ($optional['written'] !== []) {
@@ -359,7 +356,6 @@ final class MakePageCommand extends Command
             'catalog' => 'CatalogGrid, CatalogBrowser',
             'catalog-item' => 'CatalogItemView',
             'register' => 'CatalogRegister',
-            'directory' => 'DirectoryPage',
             'signatures' => 'SignatureStudio',
             'api-keys' => 'ApiKeys',
             'api-docs' => 'ApiDocs',
@@ -621,47 +617,6 @@ final class MakePageCommand extends Command
             {
                 return [];
             }
-        }
-
-        PHP;
-    }
-
-    private function directoryStub(string $class, string $slug, string $name, string $panel): string
-    {
-        return <<<PHP
-        <?php
-
-        declare(strict_types=1);
-
-        namespace App\\Panel\\Pages;
-
-        use Alxtexh\\Panel\\Pages\\DirectoryPage;
-
-        /**
-         * A searchable directory of links. Inherits chrome sections
-         * (Settings, Users, Roles, Documents, Backups, Logs, Monitoring, Help).
-         */
-        final class {$class} extends DirectoryPage
-        {
-            protected static string \$panel = '{$panel}';
-
-            protected static ?string \$group = null;
-
-            public static function component(): string
-            {
-                return '{$name}';
-            }
-
-            public static function ability(): ?string
-            {
-                return null;
-            }
-
-            /*
-             * Inherit DirectoryPage::chromeSections() (Settings, Users, Roles,
-             * Documents, Backups, Logs, Monitoring, Help). Override sections()
-             * to replace those cards. Do not add Clients or Routers here.
-             */
         }
 
         PHP;

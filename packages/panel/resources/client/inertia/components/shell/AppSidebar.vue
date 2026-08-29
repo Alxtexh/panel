@@ -8,8 +8,8 @@ import {
     Folder,
     FolderOpen,
     HelpCircle,
+    House,
     Info,
-    LayoutGrid,
     MessageCircleQuestion,
     Minus,
     Plus,
@@ -198,7 +198,14 @@ const dashboardItem = computed<NavItem>(() => ({
      */
     title: 'Dashboard',
     href: panelHome.value.href,
-    icon: LayoutGrid,
+    /*
+     * House, not a grid - a grid glyph on the panel's own first, most-clicked
+     * entry reads as "launcher", which is what a grid means everywhere else
+     * in this sidebar (Catalog, the kit showcase). Filament's own default
+     * dashboard nav item is a house for the same reason: "home" needs a home
+     * icon.
+     */
+    icon: House,
 }))
 
 /**

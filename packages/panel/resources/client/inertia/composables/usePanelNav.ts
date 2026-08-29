@@ -1,8 +1,8 @@
 import { usePage } from '@inertiajs/vue3'
 import {
     HelpCircle,
+    House,
     Info,
-    LayoutGrid,
     MessageCircleQuestion,
     Sparkles,
 } from '@lucide/vue'
@@ -156,7 +156,7 @@ export function usePanelNav() {
                 {
                     title: 'Dashboard',
                     href: (page.props.panel as { home?: string } | undefined)?.home ?? '/',
-                    icon: LayoutGrid,
+                    icon: House,
                 },
                 ...ungrouped,
             ] as NavItem[],
