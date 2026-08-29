@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Alxtexh\Panel\Forms\Fields\Field;
 use Alxtexh\Panel\Imports\CsvReader;
+use Alxtexh\Panel\Imports\ImportRow;
 use Alxtexh\Panel\Imports\Importer;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Support\TenantContext;
@@ -109,7 +111,31 @@ final class ImportController extends Controller
             ], 422);
         }
 
-        $written = $this->write($class, $result->prepared);
+        try {
+            $written = $this->write($class, $result->prepared);
+        } catch (QueryException $e) {
+            /*
+             * THE SAME "NOTHING WAS IMPORTED" SHAPE VALIDATION FAILURES
+             * ALREADY RETURN ABOVE, extended to cover what validation cannot
+             * see. A unique-constraint violation - a duplicate access code,
+             * most often - has no query to check against in a form rule, so
+             * it only surfaces here, at the actual write. The bulk `insert()`
+             * this method uses for speed has no per-row identity to blame
+             * (unlike a single `save()`, a chunk fails or lands as one
+             * statement), so this cannot name the row the way a validation
+             * failure does - but it can still refuse to hand the browser a
+             * raw SQLSTATE message and a query dump.
+             */
+            $duplicate = ($e->errorInfo[0] ?? null) === '23000';
+
+            return response()->json([
+                ...$result->toArray(),
+                'written' => 0,
+                'message' => $duplicate
+                    ? 'Nothing was imported: this file has a value that must be unique (an access code or email already in use, in the file or already on record).'
+                    : 'Nothing was imported: the file could not be written.',
+            ], 422);
+        }
 
         return response()->json([...$result->toArray(), 'written' => $written]);
     }
@@ -118,7 +144,7 @@ final class ImportController extends Controller
      * Bulk-insert the prepared rows, chunked.
      *
      * @param  class-string<\Alxtexh\Panel\Resources\Resource>  $class
-     * @param  list<array<string, mixed>>  $rows
+     * @param  list<ImportRow>  $rows
      */
     private function write(string $class, array $rows): int
     {
@@ -130,9 +156,10 @@ final class ImportController extends Controller
         $model = $class::model();
         $now = now();
 
-        $stamped = array_map(static function (array $row) use ($context, $now): array {
-            $row['created_at'] = $now;
-            $row['updated_at'] = $now;
+        $stamped = array_map(static function (ImportRow $row) use ($context, $now): array {
+            $data = $row->data;
+            $data['created_at'] = $now;
+            $data['updated_at'] = $now;
 
             /*
              * The tenant comes from CONTEXT, and only in column mode.
@@ -141,10 +168,10 @@ final class ImportController extends Controller
              * is a SQL error - the same rule every query in the kit follows.
              */
             if ($context->shouldScopeByColumn()) {
-                $row[$context->column()] = $context->currentKey();
+                $data[$context->column()] = $context->currentKey();
             }
 
-            return $row;
+            return $data;
         }, $rows);
 
         $written = 0;

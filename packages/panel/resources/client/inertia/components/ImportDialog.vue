@@ -130,10 +130,20 @@ async function confirmImport(): Promise<void> {
         return
     }
 
-    if ((result.failed ?? 0) > 0) {
-        // The file changed underneath the preview - re-uploaded elsewhere,
-        // or simply reads differently a second time. Show what changed
-        // rather than claiming a partial success that did not happen.
+    if ((result.failed ?? 0) > 0 || result.message) {
+        /*
+         * `result.message` ALONE (WITH `failed` STILL 0) IS THE WRITE-TIME
+         * CASE, not the validation one above. A backend that writes in one
+         * all-or-nothing batch (`apps/playground`'s bulk insert) can refuse
+         * the whole import with `written: 0` and a top-level `message`
+         * while `failed` stays 0 - nothing THIS validator checks changed,
+         * only a database constraint neither validator can see. Falling
+         * through to `emit('imported', 0)` there would close the dialog
+         * claiming success on nothing written, with the actual reason -
+         * "this access code already exists" - never shown. An empty file
+         * legitimately writes 0 rows with no `message` at all, which is why
+         * this does not key off `written` alone.
+         */
         dryRunResult.value = result
 
         return
