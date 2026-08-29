@@ -11,6 +11,7 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Alxtexh\Panel\Actions\ActionGroup;
 use Alxtexh\Panel\Actions\BulkAction;
+use Alxtexh\Panel\Actions\ModalFooterAction;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Actions\ReplicateAction;
 use Alxtexh\Panel\Forms\Fields\DateField;
@@ -574,6 +575,13 @@ final class ClientResource extends Resource
                 RecordAction::make('change-plan', 'Change plan')
                     ->icon('package')
                     ->authorize('update')
+                    // The worked example for RecordAction::extraModalFooterActions() -
+                    // "which plans exist and what they cost" is the thing
+                    // somebody picking a new one usually wants beside them,
+                    // not a second field crammed into this form.
+                    ->extraModalFooterActions([
+                        ModalFooterAction::make('View all plans')->url('/plans')->color('info'),
+                    ])
                     ->form(fn (Form $form): Form => $form->schema([
                         SelectField::make('plan_id')->label('New plan')
                             ->required()

@@ -95,12 +95,12 @@ component the way the Repeater was.
 
 ---
 
-## 2. Record Actions — **moderately behind**
+## 2. Record Actions — parity, one deliberate non-goal
 
-Replicate, import, form-collecting actions, wizard-style multi-step actions,
-keyboard shortcuts, and URL deep-linking are all at parity or independently-equivalent
-design. What remains is **modal customization** (arbitrary extra footer actions) and
-**action-group nesting**.
+Replicate, import, form-collecting actions, wizard-style multi-step actions, keyboard
+shortcuts, URL deep-linking, redirect-after-run, and modal customization
+(width/labels/extra footer links) are all at parity or independently-equivalent design.
+What remains - **action-group nesting** - is a deliberate non-goal, not an oversight.
 
 | Capability | Filament v5 | PanelKit |
 |---|---|---|
@@ -108,20 +108,24 @@ design. What remains is **modal customization** (arbitrary extra footer actions)
 | Import (CSV/upload + mapping) | `ImportAction.php:46-80` + `Imports/Importer.php` | `Imports/Importer.php`, `CsvReader.php`, `ExcelReader.php`, opt-in via `Resource::importable()` — parity in substance |
 | Plain link action, no request | `Concerns/CanOpenUrl.php:22-35` | `RecordAction::link()` renders `<a href>` with no POST (`RecordAction.php:339-344`) — parity |
 | **Redirect after a `handle()` succeeds** | `Concerns/CanRedirect.php:14-55` — `successRedirectUrl()`/`failureRedirectUrl()` | **Gap.** No equivalent — only a flash toast, no "navigate here after success" |
-| **Modal footer customization** | `modalFooterActions()`, `extraModalFooterActions()`, `modalSubmitAction()`/`modalCancelAction()`, `modalWidth()` — all fluent, per-action (`Concerns/CanOpenModal.php`, multiple lines) | **Gap.** `RecordAction` has `slideOver(bool)` and a fixed confirm string only; `PkModal.vue` exposes two hardcoded sizes (`'confirm'\|'form'`) and a `footer` slot a *page* fills, not something an action declares from PHP |
+| **Modal footer customization** | `modalFooterActions()`, `extraModalFooterActions()`, `modalSubmitAction()`/`modalCancelAction()`, `modalWidth()` — all fluent, per-action (`Concerns/CanOpenModal.php`, multiple lines) | ✅ `modalWidth()`, `submitLabel()`, `cancelLabel()`, and `extraModalFooterActions()` — the last scoped to links, deliberately: see `ModalFooterAction`'s own docblock for why a second thing to POST was not built |
 | Wizard-style multi-step action | `Concerns/HasWizard.php:8-64` | `ActionStep.php` + `RecordAction::steps()` (`RecordAction.php:284-320`) — parity, independently designed |
 | **Action-group nesting** | `ActionGroup` can contain another `ActionGroup` (`ActionGroup.php:148`), and can render inline or as a dropdown | **Gap.** `Actions/ActionGroup.php:43-55` does not nest, and — by deliberate, documented design (`RecordActions.vue:10-18`) — **all** record actions render in one single dropdown, no inline-icon-button mode at all |
 | **Keyboard shortcuts / URL deep-linking** | `HasKeyBindings.php:8-38`; query-param action mounting via Livewire `#[Url]` (`Concerns/InteractsWithActions.php:46-76`) | ✅ `RecordAction::keyBindings()`; ✅ `?action=&record=` on `ResourceIndex.vue` (see below) |
 
 **Ideas worth borrowing, in priority order:**
 
-1. `RecordAction::redirect(string $url)` for post-`handle()` navigation — mirror
-   `CanRedirect.php:50-55`. Small, high-value.
-2. `RecordAction::modalFooterActions(array $actions)` / `modalWidth(string)` so a modal
-   isn't stuck at two hardcoded sizes and pages stop hand-writing the `footer` slot.
+1. ~~`RecordAction::redirect(string $url)` for post-`handle()` navigation~~ — ✅ done
+   (priority list item 1), the first thing closed in this whole comparison.
+2. ~~`RecordAction::modalFooterActions(array $actions)` / `modalWidth(string)`~~ — ✅
+   done, `modalWidth()` earlier (priority list item 6) and `extraModalFooterActions()`
+   now (see priority list item 23), the latter scoped to links rather than the full
+   nested-Action shape Filament accepts.
 3. Let `ActionGroup` nest, and give the Vue menu an optional inline-icon-button mode for
    a resource's top 1-2 actions — the component's own comment already flags "View/Edit
-   costs two clicks" as a real, known cost of the current design.
+   costs two clicks" as a real, known cost of the current design. **Deliberately not
+   done** — see priority list item 10: both halves reverse a documented design decision
+   rather than fill a gap.
 4. ~~`keyBindings()` on `RecordAction` for power-user shortcuts~~ — ✅ done (priority
    list item 14) when this section was first written; never marked here.
 5. ~~A lightweight `?action=&record=` query-param convention~~ — ✅ done (see priority
@@ -132,8 +136,9 @@ design. What remains is **modal customization** (arbitrary extra footer actions)
    silently doing nothing; the honest fix (a per-record lookup outside pagination) is
    its own larger mechanism.
 
-**Verdict: behind, narrowing.** Modal footer customization and action-group nesting
-remain; keyboard shortcuts and deep-linking are closed.
+**Verdict: parity, except a deliberate non-goal.** Everything in this section is closed
+or explicitly declined by design — action-group nesting/inline mode (item 3 above) is
+the one gap left, and it stays open on purpose.
 
 ---
 
@@ -313,6 +318,8 @@ Ranked by (impact if fixed) × (how small the fix is), highest first:
 | 21 | `list.row-actions-before`/`after` `RenderHooks` positions | Plugins | small | ✅ done, scoped down from the original "dashboard widget columns, table row actions" idea to the second half only (see section 4's own note on why the first half stayed out). The one per-row position in the class: `RenderHook.vue` already forwarded `$attrs` (page context like `resource`) into whichever hook it renders, so mounting it inside `ResourceIndex.vue`'s `#actions="{ row }"` slot with `:row="row"` needed no new mechanism - a plugin's component reads `row` the same way a form-page hook already reads which record it's on. No PHP wiring needed either: `ResourceController::index()` already sent the full, resource-scoped `renderHooks` array before this position existed, for the page-level `list.*` ones - only the client mount point was missing. Verified live: an empty position renders nothing at all (byte-identical to before, confirmed on `ClientResource`'s list with its 250,001 rows) and the row-menu itself keeps working unchanged. Tested server-side (position validity, resource-scoping, cross-resource exclusion, via a fixture plugin) - not demoed with a real playground plugin, matching this codebase's existing precedent that `RenderHooks` in general has none yet |
 
 | 22 | Automatic pivot-column display on nested lists | Relation Managers | medium | ✅ done - the read side of item 8, closing the exact limitation its own docblock named ("showing a pivot value there needs the list query to join the pivot table"). `NestedRelation::appendPivotColumns()` is a **correlated subquery per column**, not a join - nothing guarantees exactly one pivot row per (parent, child) pair, and a nested list is the wrong place to discover that assumption was wrong; a join would multiply rows the moment it is, where a subquery reads one value regardless, the same choice `UserResource::table()`'s own `role_names` column already made for the identical reason. One shared implementation, two real call sites: `ResourceController::index()`'s dedicated nested page (`TagResource`'s own `/articles/{id}/tags`) and `RelationManager::rows()`/`toSchema()` for the same resource embedded as a tab on the parent's own page (`ArticleResource::relations()`) - genuinely different code paths reading the same `pivotColumns()` declaration, kept as one implementation rather than two that could drift apart. The schema side needed its own fix: `Resource::schema()` is cross-request cached, so a per-parent column can't live there - `ResourceController::index()` already had the exact right precedent for this (its own lens feature re-derives `schema['table']` from a freshly-built `Table` object rather than the cache), reused unchanged. Tested through both real HTTP endpoints, not unit-level assumptions: schema declaration, row values, and that a second row's pivot value never leaks onto a first row sharing the same query - 5 new tests, full 1040-test suite clean. Not demoed live in `apps/playground` - no existing BelongsToMany relationship there has a pivot table safe to add a column to (`User::roles()` is Spatie's own, shared with the whole permission system) |
+
+| 23 | `extraModalFooterActions()` on `RecordAction` | Record Actions | small | ✅ done, scoped down from Filament's full `modalFooterActions()` - a new `ModalFooterAction` value object (`label`, `url`, `color`, `icon`), a plain link rather than a nested `Action` with its own closures. Filament's own contract accepts a full second `Action` here, which given this modal already POSTs once to one endpoint would need its own execution engine to run a second one - a result to reconcile against the first, a state for which of two things submitted, a second wizard-step machine if either has one. The genuinely common case (Filament's own docs reach for this first) is not a second mutation at all - "read the docs", "open this in Stripe" - which is exactly what a link needs and nothing more. Extracted the `RecordAction::color()` six-colour-to-Tailwind-class mapping into a shared `actionColorTone()` (`packages/ui/src/lib/actionColorTone.ts`) along the way, since it was about to become a third private copy (`RecordActions.vue` already had one) - `InlineRecordActions.vue`'s own copy disagrees on what `gray` renders as, a pre-existing inconsistency left as a follow-up rather than folded into this change. Wired into `ClientResource`'s `change-plan` action ("View all plans" → `/plans`) and verified live: the link renders in the footer, left of Cancel/Submit, opens in a new tab, with the declared colour applied. Tested both sides (7 new PHP unit tests on `RecordAction`/`ModalFooterAction`, 3 new Vitest cases on the shared tone helper, existing `RecordActions.spec.ts` re-run clean after the extraction) |
 
 **What NOT to change:** the plugin system's add-only `PluginContext` boundary (safer
 than Filament's, deliberately), the relation-manager dedicated-page attach flow

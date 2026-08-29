@@ -25,6 +25,17 @@ export interface RecordActionItem {
      * `mod` matches Cmd on a Mac and Ctrl elsewhere. Examples: `mod+d`, `shift+e`, `e`.
      */
     keyBindings?: string[];
+    /**
+     * Extra link buttons beside Cancel/Submit in this action's own modal -
+     * `RecordAction::extraModalFooterActions()`. Links, not a second thing
+     * the modal can submit - see that method's own docblock for why.
+     */
+    extraFooterActions?: {
+        label: string;
+        url: string | null;
+        color: string | null;
+        icon: string | null;
+    }[];
 }
 export interface RecordActionGroup {
     label?: string;

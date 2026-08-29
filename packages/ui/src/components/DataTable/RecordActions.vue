@@ -32,6 +32,7 @@
  * the one place where making something harder to reach is the feature.
  */
 import { computed, ref } from 'vue'
+import { actionColorTone } from '../../lib/actionColorTone'
 import { iconPath, resolveActionIcon } from '../primitives/icons'
 import PkDropdown from '../primitives/PkDropdown.vue'
 
@@ -60,6 +61,12 @@ export interface RecordActionItem {
      * `mod` matches Cmd on a Mac and Ctrl elsewhere. Examples: `mod+d`, `shift+e`, `e`.
      */
     keyBindings?: string[]
+    /**
+     * Extra link buttons beside Cancel/Submit in this action's own modal -
+     * `RecordAction::extraModalFooterActions()`. Links, not a second thing
+     * the modal can submit - see that method's own docblock for why.
+     */
+    extraFooterActions?: { label: string; url: string | null; color: string | null; icon: string | null }[]
 }
 
 export interface RecordActionGroup {
@@ -109,17 +116,8 @@ const destructive = computed(() => flat.value.filter((a) => a.destructive))
  * action gets when it declares nothing, so an undeclared action still looks
  * deliberate rather than unfinished.
  */
-const TONES: Record<string, string> = {
-    primary: 'text-primary',
-    gray: 'text-foreground',
-    success: 'text-emerald-600 dark:text-emerald-400',
-    warning: 'text-amber-600 dark:text-amber-500',
-    danger: 'text-destructive',
-    info: 'text-sky-600 dark:text-sky-400',
-}
-
 function tone(action: RecordActionItem): string {
-    return TONES[action.color ?? 'gray'] ?? TONES.gray
+    return actionColorTone(action.color)
 }
 
 const isEmpty = computed(() => flat.value.length === 0)

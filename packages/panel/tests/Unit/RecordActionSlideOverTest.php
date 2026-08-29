@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Tests\Unit;
 
+use Alxtexh\Panel\Actions\ModalFooterAction;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Tests\TestCase;
+use InvalidArgumentException;
 
 final class RecordActionSlideOverTest extends TestCase
 {
@@ -81,5 +83,70 @@ final class RecordActionSlideOverTest extends TestCase
             ->toArray();
 
         $this->assertSame(['e', 'mod+e'], $payload['keyBindings']);
+    }
+
+    public function test_extra_modal_footer_actions_are_omitted_by_default(): void
+    {
+        $payload = RecordAction::make('publish', 'Publish')->toArray();
+
+        $this->assertArrayNotHasKey('extraFooterActions', $payload);
+    }
+
+    public function test_extra_modal_footer_actions_serialize_when_declared(): void
+    {
+        $payload = RecordAction::make('change-plan', 'Change plan')
+            ->extraModalFooterActions([
+                ModalFooterAction::make('View pricing')
+                    ->url('https://example.test/pricing')
+                    ->color('info')
+                    ->icon('external-link'),
+            ])
+            ->toArray();
+
+        $this->assertSame([
+            [
+                'label' => 'View pricing',
+                'url' => 'https://example.test/pricing',
+                'color' => 'info',
+                'icon' => 'external-link',
+            ],
+        ], $payload['extraFooterActions']);
+    }
+
+    public function test_extra_modal_footer_actions_accepts_more_than_one(): void
+    {
+        $payload = RecordAction::make('change-plan', 'Change plan')
+            ->extraModalFooterActions([
+                ModalFooterAction::make('View pricing')->url('https://example.test/pricing'),
+                ModalFooterAction::make('Contact sales')->url('https://example.test/sales'),
+            ])
+            ->toArray();
+
+        $this->assertCount(2, $payload['extraFooterActions']);
+        $this->assertSame('View pricing', $payload['extraFooterActions'][0]['label']);
+        $this->assertSame('Contact sales', $payload['extraFooterActions'][1]['label']);
+    }
+
+    /**
+     * A LINK, NOT A SECOND SUBMIT - `url()`/`color()`/`icon()` are the whole
+     * surface. Nothing on `ModalFooterAction` accepts a closure to run on
+     * click, which is the point: see its own class docblock for why.
+     */
+    public function test_a_modal_footer_action_without_a_url_serializes_null(): void
+    {
+        $payload = RecordAction::make('archive', 'Archive')
+            ->extraModalFooterActions([ModalFooterAction::make('Learn more')])
+            ->toArray();
+
+        $this->assertNull($payload['extraFooterActions'][0]['url']);
+        $this->assertNull($payload['extraFooterActions'][0]['color']);
+        $this->assertNull($payload['extraFooterActions'][0]['icon']);
+    }
+
+    public function test_a_modal_footer_action_refuses_an_unknown_colour(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        ModalFooterAction::make('View pricing')->color('chartreuse');
     }
 }

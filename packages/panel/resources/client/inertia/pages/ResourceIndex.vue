@@ -29,7 +29,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, onMounted, ref, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
-import { PkButton as Button, buttonClasses, PkPageHeader } from '@alxtexh-enterprise/panel'
+import { PkButton as Button, actionColorTone, buttonClasses, PkPageHeader } from '@alxtexh-enterprise/panel'
 import {
     BulkActions,
     DataTable,
@@ -1803,6 +1803,25 @@ function badgeLabel(key: string, value: unknown): string {
             </form>
 
             <template #footer>
+                <div
+                    v-if="actionForm?.action.extraFooterActions?.length"
+                    class="mr-auto flex flex-wrap gap-1"
+                >
+                    <Button
+                        v-for="extra in actionForm.action.extraFooterActions"
+                        :key="extra.label"
+                        as="a"
+                        variant="ghost"
+                        size="sm"
+                        :href="extra.url ?? undefined"
+                        target="_blank"
+                        rel="noopener"
+                        :class="actionColorTone(extra.color)"
+                    >
+                        {{ extra.label }}
+                    </Button>
+                </div>
+
                 <Button
                     variant="ghost"
                     size="sm"
@@ -1845,6 +1864,25 @@ function badgeLabel(key: string, value: unknown): string {
             </form>
 
             <template #footer>
+                <div
+                    v-if="actionForm?.action.extraFooterActions?.length"
+                    class="mr-auto flex flex-wrap gap-1"
+                >
+                    <Button
+                        v-for="extra in actionForm.action.extraFooterActions"
+                        :key="extra.label"
+                        as="a"
+                        variant="ghost"
+                        size="sm"
+                        :href="extra.url ?? undefined"
+                        target="_blank"
+                        rel="noopener"
+                        :class="actionColorTone(extra.color)"
+                    >
+                        {{ extra.label }}
+                    </Button>
+                </div>
+
                 <Button
                     variant="ghost"
                     size="sm"

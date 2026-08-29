@@ -92,6 +92,26 @@ RecordAction::make('delete-account', 'Delete account')
     ->handle(fn (Account $account) => $account->delete());
 ```
 
+`->extraModalFooterActions()` adds link buttons beside Cancel/Submit - not a
+second thing the modal can submit, a place to go:
+
+```php
+use Alxtexh\Panel\Actions\ModalFooterAction;
+
+RecordAction::make('change-plan', 'Change plan')
+    ->form(fn (Form $form) => $form->schema([SelectField::make('plan_id')]))
+    ->extraModalFooterActions([
+        ModalFooterAction::make('View all plans')->url('/plans')->color('info'),
+    ])
+    ->handle(fn (Client $client, array $data) => $client->update($data));
+```
+
+Each is a plain link (opens a new tab), never a nested action with its own
+`handle()` - this modal already POSTs once to one endpoint, and a second
+mutation wired the same way would need its own execution engine. The common
+case - "read the docs", "open this record in Stripe" - is not a mutation at
+all, which is exactly what a link needs.
+
 `->keyBindings(['mod+d'])` runs the action with one keystroke while its row's
 menu is open - `mod` matches Cmd on a Mac and Ctrl elsewhere, so one binding
 covers both without declaring it twice:

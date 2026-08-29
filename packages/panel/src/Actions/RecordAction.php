@@ -118,6 +118,9 @@ final class RecordAction
 
     private ?string $cancelLabel = null;
 
+    /** @var list<ModalFooterAction> */
+    private array $extraModalFooterActions = [];
+
     /** @var list<string> */
     private array $keyBindings = [];
 
@@ -236,6 +239,20 @@ final class RecordAction
     public function cancelLabel(string $label): self
     {
         $this->cancelLabel = $label;
+
+        return $this;
+    }
+
+    /**
+     * Extra link buttons beside Cancel/Submit - "read the docs", "open this
+     * customer in Stripe" - see `ModalFooterAction`'s own docblock for why
+     * these are links and not a second thing this modal can submit.
+     *
+     * @param  list<ModalFooterAction>  $actions
+     */
+    public function extraModalFooterActions(array $actions): self
+    {
+        $this->extraModalFooterActions = $actions;
 
         return $this;
     }
@@ -629,6 +646,12 @@ final class RecordAction
             'submitLabel' => $this->submitLabel,
             'cancelLabel' => $this->cancelLabel,
             'keyBindings' => $this->keyBindings === [] ? null : $this->keyBindings,
+            'extraFooterActions' => $this->extraModalFooterActions === []
+                ? null
+                : array_map(
+                    static fn (ModalFooterAction $a): array => $a->toArray(),
+                    $this->extraModalFooterActions,
+                ),
         ], static fn (mixed $v): bool => $v !== null && $v !== false);
     }
 
