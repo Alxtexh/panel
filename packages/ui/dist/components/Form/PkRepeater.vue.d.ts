@@ -8,6 +8,16 @@ type __VLS_Props = {
     minItems?: number | null;
     maxItems?: number | null;
     collapsible?: boolean;
+    /** Whether "Add" appears at all - distinct from `atMax` below, which
+     * is a count ceiling. This is a declared "never grows" field. */
+    addable?: boolean;
+    /** Whether a row's own remove control appears - distinct from
+     * `atMin`, which is a count floor. This is a declared "never
+     * shrinks" field. */
+    deletable?: boolean;
+    /** Whether a row can be duplicated. Independent of `addable`: a host
+     * can offer "start from a copy" while still refusing a blank row. */
+    cloneable?: boolean;
     disabled?: boolean;
     /** Validation errors for the whole form, keyed by dotted path. */
     errors?: Record<string, string>;
@@ -34,5 +44,8 @@ declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {
     minItems: number | null;
     maxItems: number | null;
     collapsible: boolean;
+    addable: boolean;
+    deletable: boolean;
+    cloneable: boolean;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;

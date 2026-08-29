@@ -54,6 +54,52 @@ final class RepeaterFieldTest extends TestCase
         $this->assertFalse($schema['collapsible']);
     }
 
+    public function test_addable_deletable_and_cloneable_default_to_filaments_common_case(): void
+    {
+        $schema = RepeaterField::make('contacts')->schema([TextField::make('name')])->toSchema();
+
+        $this->assertTrue($schema['addable']);
+        $this->assertTrue($schema['deletable']);
+        $this->assertFalse($schema['cloneable']);
+    }
+
+    public function test_addable_deletable_and_cloneable_can_each_be_toggled(): void
+    {
+        $schema = RepeaterField::make('contacts')
+            ->schema([TextField::make('name')])
+            ->addable(false)
+            ->deletable(false)
+            ->cloneable()
+            ->toSchema();
+
+        $this->assertFalse($schema['addable']);
+        $this->assertFalse($schema['deletable']);
+        $this->assertTrue($schema['cloneable']);
+    }
+
+    /**
+     * `addable()`/`deletable()`/`cloneable()` are UI-only, same as
+     * `itemLabel()` - they decide which buttons a legitimate form offers,
+     * not what a request is validated against. `minItems()`/`maxItems()`
+     * remain the only server-enforced bound, unaffected by any of the
+     * three.
+     */
+    public function test_addable_and_deletable_do_not_change_the_validation_rules(): void
+    {
+        $field = RepeaterField::make('contacts')
+            ->schema([TextField::make('name')])
+            ->minItems(1)
+            ->maxItems(3)
+            ->addable(false)
+            ->deletable(false);
+
+        $rules = $field->rules();
+
+        $this->assertContains('array', $rules);
+        $this->assertContains('min:1', $rules);
+        $this->assertContains('max:3', $rules);
+    }
+
     public function test_schema_carries_item_label_and_children(): void
     {
         $schema = RepeaterField::make('contacts')

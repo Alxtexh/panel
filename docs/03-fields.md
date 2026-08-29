@@ -244,7 +244,8 @@ RepeaterField::make('lines')
     ->minItems(1)
     ->maxItems(50)
     ->itemLabel('description')
-    ->collapsible();
+    ->collapsible()
+    ->cloneable();
 
 BuilderField::make('content')
     ->block('paragraph', [RichEditorField::make('body')])
@@ -256,6 +257,13 @@ Every row has a drag handle for reordering, alongside the up/down buttons -
 not instead of them. The buttons stay because they work from a keyboard and a
 row inside a scrolling page is a poor drag target on its own; the handle is
 there for whoever would rather drag a long list into order.
+
+`addable(false)` and `deletable(false)` hide the "Add" control and each row's
+own remove control, for a repeater that only ever grows (an append-only log)
+or never changes size at all - distinct from `minItems()`/`maxItems()`, which
+are the count bound Laravel actually validates. `cloneable()` adds a
+duplicate-row control, independent of `addable()`: a field can offer "start
+from a copy" while still refusing a blank row.
 
 `->collapsible()` lets a row fold to one line - its ordinal, and the first
 field's value if it is short plain text - so working through the second row

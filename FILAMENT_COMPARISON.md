@@ -60,25 +60,28 @@ visibility on layout nodes**.
 | `Fieldset` — `<fieldset>`/`<legend>`, `columns(2)` default (`Fieldset.php:18,41`) | `Schema\Fieldset` — label/description/columns (`Fieldset.php:25-66`) | parity |
 | Field visibility: arbitrary `Closure` with `Get $get` injected (`Concerns/CanBeHidden.php:11`) | `Field::hidden()` accepts a closure, evaluated on `live()` round-trips (`Forms/Fields/Field.php:134-139`); `afterStateUpdated()` is the direct analogue (`:148-153`) | parity **on fields** |
 | Layout-node visibility (`Section`/`Tabs`/`Fieldset`) — same closure mechanism | `Schema\Component::visibleWhen` only supports a single `[field, value]` equality tuple (`packages/panel/src/Schema/Component.php:40-72`) — can't condition a section on two fields or a non-equality check | **behind** |
-| Repeater — drag-and-drop **and** button reordering, `addable()`/`deletable()`/`cloneable()`, `collapsible()` with collapse/expand-all, `simple()`/`table()` modes, direct `relationship()` binding (`forms/src/Components/Repeater.php`, multiple lines) | `RepeaterField` — min/max items, item label, **deliberately refuses relationship binding by design** (JSON-column only, docblock at `Forms/Fields/RepeaterField.php:17-31`); `PkRepeater.vue` supports add/remove and up/down-button reorder only — no drag, no collapse, no clone, no `simple()`/`table()` modes, no `addable()`/`deletable()` toggle. No dedicated test file. | **behind, clearly** |
+| Repeater — drag-and-drop **and** button reordering, `addable()`/`deletable()`/`cloneable()`, `collapsible()` with collapse/expand-all, `simple()`/`table()` modes, direct `relationship()` binding (`forms/src/Components/Repeater.php`, multiple lines) | `RepeaterField` — min/max items, item label, **deliberately refuses relationship binding by design** (JSON-column only, docblock at `Forms/Fields/RepeaterField.php:17-31`); `PkRepeater.vue` now matches on drag-and-drop reorder, `collapsible()` with collapse/expand-all, and `addable()`/`deletable()`/`cloneable()` — the last of these ships with a per-row duplicate control, independent of `addable`. Remaining gap: no `simple()`/`table()` display modes. Tested both sides (`RepeaterFieldTest.php`, `PkRepeater.spec.ts`). | **behind, narrowly — one display-mode gap left** |
 
 **Ideas worth borrowing, in priority order:**
 
 1. Give `Schema\Component::visibleWhen` a `Closure(array $values): bool` variant so a
    `Section`/`Tabs`/`Fieldset` can be conditioned on more than one field — mirror
    `CanBeHidden.php:11`.
-2. Add drag-and-drop reordering to `PkRepeater.vue`, alongside the existing
-   button-based `move()` — mirror `reorderableWithDragAndDrop()` (`Repeater.php:824`).
-3. Add `collapsible()`/collapse-all to `RepeaterField` (`Repeater.php:38`).
-4. Add `addable()`/`deletable()` toggles to `RepeaterField` (`Repeater.php:773-785`),
-   distinct from `minItems`/`maxItems`, for read-mostly or append-only repeaters.
+2. ~~Add drag-and-drop reordering to `PkRepeater.vue`~~ — ✅ done.
+3. ~~Add `collapsible()`/collapse-all to `RepeaterField`~~ — ✅ done.
+4. ~~Add `addable()`/`deletable()` toggles to `RepeaterField`~~ — ✅ done, `cloneable()`
+   added alongside them (see priority list item 16 below).
 5. Add `persistTabInQueryString()`/`persistStepInQueryString()` equivalents so a
    refresh or back-button preserves position (`Tabs.php:138`, `Wizard.php:264`).
+6. `simple()`/`table()` display modes on `RepeaterField` — the one piece of the
+   original Repeater gap still open. A genuinely separate, larger change (a new
+   rendering mode, not an additive prop) rather than something to fold into the
+   addable/deletable/cloneable pass.
 
-**Verdict: behind, by roughly one tier.** Core primitives and field reactivity are
-solid; the Repeater specifically is the thin spot, and it's user-facing enough
-(anyone building a line-items form, a settings-with-multiple-rows screen) that it's
-worth prioritizing over the rest of this list.
+**Verdict: narrowing.** Core primitives and field reactivity are solid, and the
+Repeater — once the thin spot — is now at parity on reordering, folding, and
+row-count control; `simple()`/`table()` modes are what's left, and are their own
+scoped project rather than a quick addition.
 
 ---
 
@@ -281,6 +284,7 @@ Ranked by (impact if fixed) × (how small the fix is), highest first:
 | 13 | Wider `RenderHooks` surface | Plugins | medium | ✅ done — found and fixed a real, silent gap first: `FORM_BEFORE`/`FORM_AFTER`/`DASHBOARD_BEFORE` were valid declared positions (`RenderHooks::isPosition()` accepted them at plugin registration) that no controller ever sent to the client and no page ever mounted a `<RenderHook>` for - a plugin naming one rendered nowhere, silently, exactly the failure mode the class's own docblock says a named-position system exists to prevent. Wired `renderHooks` into `ResourceController::create()`/`edit()` + `ResourceForm.vue` (form.before/after), and into `PageController::show()` + `PanelDashboard.vue` (dashboard.before, plus a new `DASHBOARD_AFTER` for symmetry with every other before/after pair). Verified end-to-end with a fixture plugin, not just serialization |
 | 14 | `keyBindings()` on `RecordAction` | Record Actions | small | ✅ done, scoped to the open menu — `RecordAction::keyBindings(['mod+d'])`, serialized onto the action. Not a global/page-wide shortcut: a list shows many rows at once, so there is no single unambiguous target for a global binding. Scoped instead to the row menu that is already open (`RecordActions.vue`'s existing arrow-key navigation is the same idea) - one keystroke instead of arrow-then-Enter. `mod` matches Cmd or Ctrl. A bound link action navigates same-tab rather than going through `run()`, matching what its `<a>` would have done and never emitting `run` for a link (which the component never wires to `run()` from a click either) |
 | 15 | Fix `->ability()` → `->authorize()` in `docs/05-actions.md` | Docs | trivial | ✅ done — both occurrences fixed |
+| 16 | `addable()`/`deletable()`/`cloneable()` on `RepeaterField` | Forms | small | ✅ done — three new methods, UI-only like `itemLabel()` (nothing here changes `typeRules()`; `minItems()`/`maxItems()` remain the only server-enforced bound, tested explicitly). `PkRepeater.vue`: Add hides behind `addable`, each row's remove control behind `deletable`, and a new per-row duplicate control appears behind `cloneable` - gated on `atMax` (a clone is still a new row) but deliberately **not** on `addable`, since cloning is its own declared capability and the two are meant to be combinable independently in either direction. Wired into `ClientResource`'s existing "Other contacts" repeater (`cloneable()`) and verified live: filled a row, clicked Duplicate, confirmed the new row carried the same values, confirmed nothing persisted until an explicit save. Closes all of the original Repeater gap except `simple()`/`table()` display modes (see item 6 in section 1 above) |
 
 **What NOT to change:** the plugin system's add-only `PluginContext` boundary (safer
 than Filament's, deliberately), the relation-manager dedicated-page attach flow

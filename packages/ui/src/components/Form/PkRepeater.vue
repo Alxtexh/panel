@@ -50,6 +50,16 @@ const props = withDefaults(
         minItems?: number | null
         maxItems?: number | null
         collapsible?: boolean
+        /** Whether "Add" appears at all - distinct from `atMax` below, which
+         * is a count ceiling. This is a declared "never grows" field. */
+        addable?: boolean
+        /** Whether a row's own remove control appears - distinct from
+         * `atMin`, which is a count floor. This is a declared "never
+         * shrinks" field. */
+        deletable?: boolean
+        /** Whether a row can be duplicated. Independent of `addable`: a host
+         * can offer "start from a copy" while still refusing a blank row. */
+        cloneable?: boolean
         disabled?: boolean
         /** Validation errors for the whole form, keyed by dotted path. */
         errors?: Record<string, string>
@@ -63,6 +73,9 @@ const props = withDefaults(
         minItems: null,
         maxItems: null,
         collapsible: false,
+        addable: true,
+        deletable: true,
+        cloneable: false,
         disabled: false,
         errors: () => ({}),
         childOptions: () => ({}),
@@ -149,7 +162,7 @@ const atMin = computed(() => props.minItems !== null && rows.value.length <= pro
 const singleChild = computed(() => props.children.length === 1)
 
 function add() {
-    if (atMax.value || props.disabled) {
+    if (atMax.value || props.disabled || !props.addable) {
         return
     }
 
@@ -164,6 +177,44 @@ function add() {
 
 function remove(uid: number) {
     rows.value = rows.value.filter((r) => r.uid !== uid)
+    publish()
+}
+
+/**
+ * Insert a copy of one row right after itself.
+ *
+ * Gated on `atMax`, same ceiling `add()` respects - a clone is still a new
+ * row. NOT gated on `addable`: cloning is its own declared capability
+ * (`cloneable()`), so a field can offer "start from a copy" while refusing a
+ * blank row, or the reverse. A shallow-per-child copy is enough because
+ * `FormFieldControl` values are themselves primitives, arrays of primitives,
+ * or already-cloned-on-read objects - nothing here holds a live reference
+ * back into the source row.
+ */
+function cloneRow(uid: number) {
+    if (atMax.value || props.disabled || !props.cloneable) {
+        return
+    }
+
+    const index = rows.value.findIndex((r) => r.uid === uid)
+
+    if (index < 0) {
+        return
+    }
+
+    const source = rows.value[index]
+    const copy: Row = {}
+
+    for (const child of props.children) {
+        const value = source.data[child.key]
+
+        copy[child.key] = Array.isArray(value) ? [...value] : value
+    }
+
+    const next = [...rows.value]
+
+    next.splice(index + 1, 0, { uid: nextUid++, data: copy })
+    rows.value = next
     publish()
 }
 
@@ -478,6 +529,31 @@ function onRowDrop(targetUid: number, event: DragEvent) {
                 </button>
 
                 <button
+                    v-if="cloneable"
+                    type="button"
+                    class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
+                    :disabled="disabled || atMax"
+                    :title="atMax ? `At most ${maxItems} allowed` : undefined"
+                    :aria-label="`Duplicate ${itemLabel} ${index + 1}`"
+                    @click="cloneRow(row.uid)"
+                >
+                    <svg
+                        class="size-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <rect x="8" y="8" width="12" height="12" rx="2" />
+                        <path d="M4 16V6a2 2 0 0 1 2-2h10" />
+                    </svg>
+                </button>
+
+                <button
+                    v-if="deletable"
                     type="button"
                     class="text-muted-foreground hover:bg-destructive/10 hover:text-destructive inline-flex size-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
                     :disabled="disabled || atMin"
@@ -514,7 +590,7 @@ function onRowDrop(targetUid: number, event: DragEvent) {
             nothing more can be added, the honest UI is nothing.
         -->
         <button
-            v-if="!atMax"
+            v-if="!atMax && addable"
             type="button"
             class="text-foreground hover:bg-accent inline-flex w-fit items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors disabled:pointer-events-none disabled:opacity-50"
             :disabled="disabled"

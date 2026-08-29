@@ -43,6 +43,12 @@ final class RepeaterField extends Field
 
     private bool $collapsible = false;
 
+    private bool $addable = true;
+
+    private bool $deletable = true;
+
+    private bool $cloneable = false;
+
     public function type(): string
     {
         return 'repeater';
@@ -105,6 +111,53 @@ final class RepeaterField extends Field
     public function collapsible(bool $collapsible = true): self
     {
         $this->collapsible = $collapsible;
+
+        return $this;
+    }
+
+    /**
+     * Hide the "Add" control. A row count that only ever shrinks - an
+     * approval trail, a log of past addresses - has no honest use for a
+     * button that grows it.
+     *
+     * UI ONLY, same as `deletable()` below: nothing here is a server-side
+     * bound. `minItems()`/`maxItems()` are the ones that get enforced in
+     * `typeRules()` - this only decides which buttons a legitimate form
+     * offers, exactly as `itemLabel()` decides what they say.
+     */
+    public function addable(bool $addable = true): self
+    {
+        $this->addable = $addable;
+
+        return $this;
+    }
+
+    /**
+     * Hide each row's own remove control. An append-only history - once a
+     * note is added it stays - has no honest use for a per-row delete.
+     *
+     * Pairs with `addable(false)` for something that starts with rows already
+     * present and never changes at all, or stands alone for something that
+     * only ever grows.
+     */
+    public function deletable(bool $deletable = true): self
+    {
+        $this->deletable = $deletable;
+
+        return $this;
+    }
+
+    /**
+     * Offer a "duplicate this row" control next to remove/reorder. For the
+     * row that is mostly the same as the last one - another phone number for
+     * the same person, another line item at the same rate - starting from a
+     * copy beats retyping every field. Off by default: most repeaters hold
+     * rows different enough from each other that a clone button would sit
+     * unused.
+     */
+    public function cloneable(bool $cloneable = true): self
+    {
+        $this->cloneable = $cloneable;
 
         return $this;
     }
@@ -208,6 +261,9 @@ final class RepeaterField extends Field
             'minItems' => $this->minItems,
             'maxItems' => $this->maxItems,
             'collapsible' => $this->collapsible,
+            'addable' => $this->addable,
+            'deletable' => $this->deletable,
+            'cloneable' => $this->cloneable,
             'children' => array_map(static fn (Field $f): array => $f->toSchema(), $this->children),
         ];
     }

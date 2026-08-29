@@ -196,3 +196,80 @@ describe('PkRepeater - collapsible', () => {
         expect(wrapper.find('[aria-label="Collapse Step 1"]').exists()).toBe(false)
     })
 })
+
+describe('PkRepeater - addable, deletable, cloneable', () => {
+    /**
+     * These three are declared capabilities, not count bounds - `minItems`/
+     * `maxItems` are what a request is actually validated against.
+     * `addable(false)`/`deletable(false)` only decide which buttons an
+     * honest form offers, mirroring `RepeaterField`'s own docblock.
+     */
+    it('hides Add when the field is not addable, independent of maxItems', () => {
+        const wrapper = mountSingle([{ text: 'One.' }], { addable: false })
+
+        expect(wrapper.text()).not.toContain('Add step')
+    })
+
+    it('shows Add by default', () => {
+        const wrapper = mountSingle([{ text: 'One.' }])
+
+        expect(wrapper.text()).toContain('Add step')
+    })
+
+    it('hides every row remove control when the field is not deletable', () => {
+        const wrapper = mountSingle([{ text: 'One.' }, { text: 'Two.' }], { deletable: false })
+
+        expect(wrapper.find('[aria-label^="Remove"]').exists()).toBe(false)
+    })
+
+    it('shows remove controls by default', () => {
+        const wrapper = mountSingle([{ text: 'One.' }])
+
+        expect(wrapper.find('[aria-label="Remove Step 1"]').exists()).toBe(true)
+    })
+
+    it('offers no duplicate control unless cloneable is set', () => {
+        const wrapper = mountSingle([{ text: 'One.' }])
+
+        expect(wrapper.find('[aria-label^="Duplicate"]').exists()).toBe(false)
+    })
+
+    it('duplicates a row with its values, right after itself, when cloneable', async () => {
+        const wrapper = mountSingle([{ text: 'First.' }, { text: 'Second.' }], { cloneable: true })
+
+        await wrapper.find('[aria-label="Duplicate Step 1"]').trigger('click')
+
+        const emitted = wrapper.emitted('update:modelValue')
+        expect(emitted?.at(-1)?.[0]).toEqual([
+            { text: 'First.' },
+            { text: 'First.' },
+            { text: 'Second.' },
+        ])
+    })
+
+    /**
+     * A clone is still a new row, so it answers to the same ceiling `add()`
+     * does - proven by disabling rather than hiding, since `maxItems` alone
+     * (with no explicit `cloneable` gate) is the thing under test here.
+     */
+    it('disables duplicate at maxItems, the same ceiling Add respects', () => {
+        const wrapper = mountSingle([{ text: 'One.' }, { text: 'Two.' }], {
+            cloneable: true,
+            maxItems: 2,
+        })
+
+        const duplicate = wrapper.find('[aria-label="Duplicate Step 1"]')
+        expect(duplicate.attributes('disabled')).toBeDefined()
+    })
+
+    it('still allows cloning when addable is false - the two are independent', async () => {
+        const wrapper = mountSingle([{ text: 'One.' }], { addable: false, cloneable: true })
+
+        expect(wrapper.text()).not.toContain('Add step')
+
+        await wrapper.find('[aria-label="Duplicate Step 1"]').trigger('click')
+
+        const emitted = wrapper.emitted('update:modelValue')
+        expect(emitted?.at(-1)?.[0]).toEqual([{ text: 'One.' }, { text: 'One.' }])
+    })
+})

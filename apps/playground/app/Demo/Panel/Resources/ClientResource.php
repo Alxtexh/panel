@@ -198,6 +198,11 @@ final class ClientResource extends Resource
                                 ->label('Contacts')
                                 ->itemLabel('Contact')
                                 ->maxItems(5)
+                                // Two numbers for the same person - a
+                                // landline and a mobile - are the common
+                                // repeat here; starting from a copy beats
+                                // retyping the name and relation.
+                                ->cloneable()
                                 ->schema([
                                     TextField::make('name')->label('Name')->max(80),
                                     TextField::make('phone')->label('Phone')->as('tel')->max(32),
