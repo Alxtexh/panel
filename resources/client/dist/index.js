@@ -1278,7 +1278,7 @@ const gl = {
                 R("…")
               ], 64))
             ]),
-            p[10] || (p[10] = R(" . ", -1))
+            p[10] || (p[10] = R(". ", -1))
           ]),
           f.value ? (t(), a("p", Fo, " Nothing matches the current filters - there is nothing to export. ")) : $("", !0)
         ]),
