@@ -15,6 +15,8 @@ namespace Alxtexh\Panel\Schema;
  */
 final class Tabs extends Component
 {
+    private ?string $persistInQueryString = null;
+
     public static function make(): self
     {
         return new self;
@@ -29,5 +31,35 @@ final class Tabs extends Component
     public function component(): string
     {
         return 'tabs';
+    }
+
+    /**
+     * Remember which tab was open in the URL, so a refresh or a back-button
+     * return lands where it was left rather than resetting to the first one.
+     *
+     * `$key` NAMES THE QUERY PARAMETER (`?tab=2` by default) rather than
+     * being inferred, because a layout node has no identity of its own the
+     * way a `Field` does - two persisted `Tabs` on one page need two
+     * different names, chosen by whoever declared them, or the second
+     * would silently read and overwrite the first's position.
+     *
+     * CLIENT-SIDE ONLY. Switching tabs is local state, so the client
+     * updates the URL with `history.replaceState` - no request, no
+     * `pushState` entry that would need the back button pressed once per
+     * tab switch to escape.
+     */
+    public function persistInQueryString(string $key = 'tab'): self
+    {
+        $this->persistInQueryString = $key;
+
+        return $this;
+    }
+
+    public function toSchema(): array
+    {
+        return [
+            ...parent::toSchema(),
+            'persistInQueryString' => $this->persistInQueryString,
+        ];
     }
 }
