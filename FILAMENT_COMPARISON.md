@@ -97,10 +97,10 @@ component the way the Repeater was.
 
 ## 2. Record Actions — **moderately behind**
 
-Replicate, import, form-collecting actions, and wizard-style multi-step actions are all
-at parity or independently-equivalent design. The real gaps are in **modal
-customization**, **action-group nesting**, **redirect-after-run**, and
-**keyboard/URL deep-linking**.
+Replicate, import, form-collecting actions, wizard-style multi-step actions,
+keyboard shortcuts, and URL deep-linking are all at parity or independently-equivalent
+design. What remains is **modal customization** (arbitrary extra footer actions) and
+**action-group nesting**.
 
 | Capability | Filament v5 | PanelKit |
 |---|---|---|
@@ -111,7 +111,7 @@ customization**, **action-group nesting**, **redirect-after-run**, and
 | **Modal footer customization** | `modalFooterActions()`, `extraModalFooterActions()`, `modalSubmitAction()`/`modalCancelAction()`, `modalWidth()` — all fluent, per-action (`Concerns/CanOpenModal.php`, multiple lines) | **Gap.** `RecordAction` has `slideOver(bool)` and a fixed confirm string only; `PkModal.vue` exposes two hardcoded sizes (`'confirm'\|'form'`) and a `footer` slot a *page* fills, not something an action declares from PHP |
 | Wizard-style multi-step action | `Concerns/HasWizard.php:8-64` | `ActionStep.php` + `RecordAction::steps()` (`RecordAction.php:284-320`) — parity, independently designed |
 | **Action-group nesting** | `ActionGroup` can contain another `ActionGroup` (`ActionGroup.php:148`), and can render inline or as a dropdown | **Gap.** `Actions/ActionGroup.php:43-55` does not nest, and — by deliberate, documented design (`RecordActions.vue:10-18`) — **all** record actions render in one single dropdown, no inline-icon-button mode at all |
-| **Keyboard shortcuts / URL deep-linking** | `HasKeyBindings.php:8-38`; query-param action mounting via Livewire `#[Url]` (`Concerns/InteractsWithActions.php:46-76`) | **Gap.** No equivalent on either axis |
+| **Keyboard shortcuts / URL deep-linking** | `HasKeyBindings.php:8-38`; query-param action mounting via Livewire `#[Url]` (`Concerns/InteractsWithActions.php:46-76`) | ✅ `RecordAction::keyBindings()`; ✅ `?action=&record=` on `ResourceIndex.vue` (see below) |
 
 **Ideas worth borrowing, in priority order:**
 
@@ -122,13 +122,18 @@ customization**, **action-group nesting**, **redirect-after-run**, and
 3. Let `ActionGroup` nest, and give the Vue menu an optional inline-icon-button mode for
    a resource's top 1-2 actions — the component's own comment already flags "View/Edit
    costs two clicks" as a real, known cost of the current design.
-4. `keyBindings()` on `RecordAction` for power-user shortcuts.
-5. A lightweight `?action=&record=` query-param convention in `RecordController` for
-   deep-linkable actions (PanelKit is Inertia, so there's no Livewire `#[Url]`
-   shortcut — this would need its own small mechanism).
+4. ~~`keyBindings()` on `RecordAction` for power-user shortcuts~~ — ✅ done (priority
+   list item 14) when this section was first written; never marked here.
+5. ~~A lightweight `?action=&record=` query-param convention~~ — ✅ done (see priority
+   list item 20). Client-only: `ResourceIndex.vue` reuses `menuFor()`/`onRecordAction()`
+   rather than posting directly, so a deep-linked action goes through every check a
+   clicked one does. Scoped to whatever page of the list is already loaded — a record
+   past page 1 of an unfiltered list is not found, and says so via toast rather than
+   silently doing nothing; the honest fix (a per-record lookup outside pagination) is
+   its own larger mechanism.
 
-**Verdict: behind, moderately.** Not a rebuild — five additive methods and one Vue
-rendering-mode change would close most of this.
+**Verdict: behind, narrowing.** Modal footer customization and action-group nesting
+remain; keyboard shortcuts and deep-linking are closed.
 
 ---
 
@@ -300,6 +305,8 @@ Ranked by (impact if fixed) × (how small the fix is), highest first:
 | 18 | Footer-widgets hook (`Page`/`Resource`) | Widgets | small | ✅ done — `Page::footerWidgets()`, `Resource::footerWidgets()`, both wired through `WidgetSet::props($widgets, $user, 'footer')` in `PageController`/`ResourceController`. `PanelWidgets.vue` needed no changes at all - it already read `${prefix}Widgets`/`Charts`/`Tables` off page props with `prefix` defaulting to `'header'`, so `<PanelWidgets prefix="footer" />` in `PanelPage.vue`/`ResourceIndex.vue` was the entire client-side change. Wired into `ClientResource` (a real "Suspended" count below the list) and verified live: renders correctly under the table/pagination, separate from the header row's Active/Expired pair. Tested both sides - a fixture page and `ArticleResource` each declare distinct header and footer widgets, asserting the two prefixes never collide |
 
 | 19 | `persistInQueryString()` on `Tabs`/`Wizard` | Forms | small–medium | ✅ done — `Tabs::persistInQueryString(string $key = 'tab')`, `Wizard::persistInQueryString(string $key = 'step')`; the key names the query parameter rather than being auto-derived, since a layout node has no identity of its own the way a `Field` does, and two persisted groups on one page need two different names. Client-only: `SchemaNode.vue` reads the initial index from `window.location.search` on mount (falling back to 0 for an unset, non-numeric, or out-of-range value) and syncs it back with `history.replaceState` on every change - no request, and `replaceState` rather than `pushState` so switching tabs never grows the browser's back-button stack. Verified live: switched `ClientResource`'s edit-form tab to "Service", confirmed the URL gained `?tab=1` without a network request, reloaded at that URL, confirmed it reopened on Service rather than resetting to Identity. Tested both sides (7 new PHP unit tests, 7 new Vitest cases covering default-off, default and chosen keys, out-of-range/non-numeric fallback, and the no-`pushState` assertion) |
+
+| 20 | `?action=&record=` deep-linking on `ResourceIndex.vue` | Record Actions | small–medium | ✅ done, scoped down — a link from a notification email or a saved bookmark opens that action on that record once the list has loaded. Entirely client-side: no new server endpoint, since `RecordController::runAction()` already validates ability and `appliesTo()` server-side regardless of what a client sends. Reuses `menuFor()`/`onRecordAction()` rather than posting directly, so a deep-linked action goes through the exact same per-row `_actions` filter, ability check, and form/confirm/link branching a clicked one does. Scoped to whatever page of the list is already loaded (`t.rows`) - a record past page 1 of an unfiltered list is not found, and a toast says so rather than the link silently doing nothing; a genuine per-record lookup independent of pagination is a bigger, separately-scoped mechanism. Caught a real bug along the way: stripping `action`/`record` from the URL immediately at mount lost a race against Inertia's own deferred-prop settling, which repeatedly re-asserted its remembered (unstripped) URL via `history.replaceState` from its own internal page state - fixed by clearing on every `router.on('success', ...)` until the params are actually gone, self-terminating once nothing is re-adding them. Verified live: `?action=change-plan&record=<id>` opened the form dialog with the URL cleaned up after; an unknown action key and a record outside the loaded page each failed closed with no request ever reaching the action endpoint |
 
 **What NOT to change:** the plugin system's add-only `PluginContext` boundary (safer
 than Filament's, deliberately), the relation-manager dedicated-page attach flow

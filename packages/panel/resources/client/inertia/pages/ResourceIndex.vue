@@ -26,7 +26,7 @@
  *   schema cache key drop the tenant id entirely.
  */
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
-import { computed, ref, toRef, watch } from 'vue'
+import { computed, onMounted, ref, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
 import { PkButton as Button, buttonClasses, PkPageHeader } from '@alxtexh-enterprise/panel'
@@ -715,6 +715,106 @@ function onRecordAction(row: Record<string, any>, action: RecordActionItem) {
 
     runRecordAction(row, action)
 }
+
+/**
+ * Strip `action`/`record` from the URL once Inertia's own bookkeeping has
+ * settled, not sooner.
+ *
+ * `history.replaceState` RIGHT AWAY LOSES THE RACE. This page's deferred
+ * widget props each resolve as their own partial reload, and every one of
+ * those has Inertia write `history.replaceState(page, '', page.url)` from
+ * ITS OWN remembered URL - which is still the original `?action=&record=`
+ * one, since only the browser's address bar was told about this page's
+ * edit, never Inertia's router. A `setTimeout` deferral was tried first and
+ * still lost some of the time, because the churn is however many deferred
+ * props this resource declares, not one fixed tick.
+ *
+ * `router.on('success', ...)` FIRES AFTER EACH OF THOSE SETTLES, so
+ * clearing on every one - which is a harmless no-op once the params are
+ * already gone - means the last write, whenever it lands, is this one.
+ */
+function clearActionParams(): void {
+    const url = new URL(window.location.href)
+
+    url.searchParams.delete('action')
+    url.searchParams.delete('record')
+    window.history.replaceState(window.history.state, '', url)
+}
+
+function clearActionParamsOnNextSettle(): void {
+    // Stripped once immediately - the only write that happens at all when
+    // this resource has no deferred props to churn through.
+    clearActionParams()
+
+    const unsubscribe = router.on('success', () => {
+        const url = new URL(window.location.href)
+
+        if (!url.searchParams.has('action') && !url.searchParams.has('record')) {
+            unsubscribe()
+
+            return
+        }
+
+        clearActionParams()
+    })
+}
+
+/**
+ * `?action=<key>&record=<id>` opens that action on that record the moment
+ * the list finishes loading - a link from a notification email, a saved
+ * bookmark, an "approve this" message that should not cost its reader a
+ * manual search first.
+ *
+ * SCOPED TO WHATEVER PAGE IS ALREADY LOADED. There is no per-record lookup
+ * behind this - `t.rows` is exactly the page `useListTable` already fetched,
+ * so a record on page 4,823 of an unfiltered list is not found by a link
+ * built for page 1. That is stated here rather than quietly failing: the
+ * honest fix (fetching one record outside the list's own pagination) is a
+ * bigger, separately-scoped mechanism, and a link that sometimes silently
+ * does nothing is worse than one that says why it didn't work.
+ *
+ * REUSES `menuFor()`/`onRecordAction()` RATHER THAN POSTING DIRECTLY, so a
+ * deep-linked action goes through every check a clicked one does - the
+ * per-row `_actions` filter, the ability check, the same form/confirm/link
+ * branching - rather than a second, easier-to-drift path to the same POST.
+ */
+function openActionFromQueryString(): void {
+    if (typeof window === 'undefined') {
+        return
+    }
+
+    const params = new URLSearchParams(window.location.search)
+    const actionKey = params.get('action')
+    const recordId = params.get('record')
+
+    if (!actionKey || !recordId) {
+        return
+    }
+
+    clearActionParamsOnNextSettle()
+
+    const row = t.rows.value.find((r) => String(r.id) === recordId)
+
+    if (!row) {
+        toast.error(`Record #${recordId} isn't in the current view. Search for it and try again.`)
+
+        return
+    }
+
+    const action = menuFor(row)
+        .flatMap((group) => group.actions)
+        .find((a) => a.key === actionKey)
+
+    if (!action) {
+        toast.error(`"${actionKey}" isn't available for that record.`)
+
+        return
+    }
+
+    onRecordAction(row, action)
+}
+
+onMounted(openActionFromQueryString)
 
 /**
  * The open form action, or null.

@@ -109,6 +109,23 @@ already the one place a single row is unambiguously in focus - it opens on
 one row and closes before another can - so this is the same idea the menu's
 arrow-key navigation already uses, one keystroke instead of arrow-then-Enter.
 
+`?action=<key>&record=<id>` on a resource's index URL opens that action on
+that record once the list has loaded - a link from a notification email or a
+saved bookmark that should not cost its reader a manual search first:
+
+```
+https://app.example.com/invoices?action=send&record=482
+```
+
+No route or PHP code is needed for this - it runs through the same
+`{resource}/{id}/action` endpoint and the same client-side dialog logic a
+clicked row action does, so it inherits every check a click already gets:
+the per-row visibility, the ability check, and whichever of form, confirm,
+or run-immediately the action itself declares. It only works when the
+record is on whatever page of the list is already loaded; a record further
+into an unfiltered list is not found, and the reader sees a toast saying so
+rather than a link that silently does nothing.
+
 Group related actions with `ActionGroup`.
 
 By default a successful action reloads the current list in place. `->redirect()`
