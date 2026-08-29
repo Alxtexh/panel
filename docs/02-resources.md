@@ -118,11 +118,12 @@ final class TagResource extends Resource
 The attach page collects them once and applies the same values to every id in
 that submission - not a separate form per selected row. `Edit pivot` is then
 an auto-registered row action next to `Detach` for changing them afterwards,
-via `updateExistingPivot()`, without detaching and reattaching. Declaring
-`pivotColumns()` does not put the values on the nested list as columns - that
-needs the list query to join the pivot table, which it does not do today; add
-`->withPivot('note')` on the relationship and read the value the resource's
-own way until that join exists.
+via `updateExistingPivot()`, without detaching and reattaching. Each declared
+field also appears as its own `pivot_{key}` column on the nested list, on
+both the resource's dedicated nested page and a `RelationManager` tab
+embedding the same resource - read through a correlated subquery per column,
+not a join, so a pair with more than one pivot row still reads one value
+rather than multiplying the list's rows.
 
 ## Relation managers
 
