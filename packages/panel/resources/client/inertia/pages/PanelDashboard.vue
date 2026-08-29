@@ -55,7 +55,6 @@ import { emptySeries, type Chart, type Series } from '../components/widgets/type
 import { useWidgetPoll, useWidgetChannels, canUseEcho } from '../composables/useWidgetPoll'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
-import EmptyGrantsNotice from '../components/EmptyGrantsNotice.vue'
 import RenderHook from '../components/RenderHook.vue'
 import type { Announcement } from '../types'
 
@@ -501,7 +500,6 @@ const hasAnything = computed(
         || props.tables.length > 0
         || onboarding.value.length > 0,
 )
-const emptyGrants = computed(() => Boolean((page.props as Record<string, any>).panelEmptyGrants))
 
 /**
  * ADDITIONAL STRIPS THE PAGE DECLARED - `DashboardPage::strips()`.
@@ -984,8 +982,13 @@ function layoutLabel(item: AnyLayoutItem): string {
             </template>
         </PkSlideover>
 
-        <EmptyGrantsNotice v-if="emptyGrants" />
-        <p v-else-if="!hasAnything" class="text-sm text-muted-foreground font-normal">
+        <!--
+            NOT REPEATED HERE. `PanelShell` already renders the compact notice
+            above the toolbar on every page, this one included - a second,
+            fuller copy of the identical title and commands right below it read
+            as the page having glitched into showing its own banner twice.
+        -->
+        <p v-if="!hasAnything" class="text-sm text-muted-foreground font-normal">
             This dashboard has no widgets yet. Declare them in <code>stats()</code> and
             <code>charts()</code> on the page class, or
             <code>discoverWidgets(app_path('Panel/Widgets'))</code>.
