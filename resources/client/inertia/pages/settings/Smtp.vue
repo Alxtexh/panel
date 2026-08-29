@@ -15,6 +15,14 @@
  * same reasoning, duplicated rather than shared for four lines with no
  * other purpose - because a full-page Inertia visit is the wrong shape for
  * "try this and tell me what happened without navigating anywhere".
+ *
+ * SAVE/CANCEL ARE `UnsavedBar`, NOT AN INLINE BUTTON PAIR - the kit's own
+ * save control, `ResourceForm.vue`'s same reasoning: a floating bar visible
+ * wherever the scroll is beats a button at the bottom of a form nobody has
+ * scrolled to yet. "Send test email" stays OUTSIDE the bar and always
+ * visible regardless of `form.isDirty` - it tests whatever is currently
+ * live (saved, or the form's own unsaved values), which is exactly the
+ * thing an operator wants to check on a page that has nothing typed yet.
  */
 import { ref } from 'vue'
 import { Head, useForm } from '@inertiajs/vue3'
@@ -24,6 +32,7 @@ import {
     PkButton as Button,
     PkHeading as Heading,
     ShadcnInput as Input,
+    UnsavedBar,
 } from '@alxtexh-enterprise/panel'
 import AuthInputError from '../../components/AuthInputError.vue'
 
@@ -62,9 +71,22 @@ function submit() {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset('password')
+
+                // `form.isDirty` compares against the defaults captured when
+                // `useForm()` ran, not against "whatever was last saved" -
+                // Inertia keeps this component instance mounted rather than
+                // remounting it, so nothing resets that baseline on its own.
+                // Without this, `UnsavedBar` stays visible right after a
+                // successful save, which reads as the save having failed.
+                form.defaults()
                 toast.success('SMTP settings saved')
             },
         })
+}
+
+function discard() {
+    form.reset()
+    form.clearErrors()
 }
 
 function csrf(): string {
@@ -127,7 +149,12 @@ async function sendTest() {
 
     <h1 class="sr-only">SMTP settings</h1>
 
-    <div class="flex flex-col space-y-6">
+    <!--
+        `pb-24` CLEARS THE FLOATING SAVE BAR - `ResourceForm.vue`'s same
+        comment. The bar is fixed to the bottom of `#pk-main`; without
+        reserved space it sits on top of the last field instead of below it.
+    -->
+    <div class="flex flex-col space-y-6 pb-24">
         <Heading
             variant="small"
             title="SMTP"
@@ -149,6 +176,16 @@ async function sendTest() {
                 environment configures. Fill in the form below and save to take over.
             </template>
         </p>
+
+        <div>
+            <Button type="button" variant="outline" :disabled="testing" @click="sendTest">
+                {{ testing ? 'Sending…' : 'Send test email' }}
+            </Button>
+            <p class="mt-1 text-xs text-muted-foreground font-normal">
+                Sends to your own account's address, using whichever password is in the field
+                below - or the saved one, if you left it blank.
+            </p>
+        </div>
 
         <form class="space-y-6" @submit.prevent="submit">
             <div class="grid gap-4 sm:grid-cols-2">
@@ -212,19 +249,15 @@ async function sendTest() {
                     <AuthInputError :message="form.errors.from_name" />
                 </div>
             </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-                <Button type="submit" :disabled="form.processing">
-                    {{ form.processing ? 'Saving…' : 'Save' }}
-                </Button>
-                <Button type="button" variant="outline" :disabled="testing" @click="sendTest">
-                    {{ testing ? 'Sending…' : 'Send test email' }}
-                </Button>
-                <p class="text-xs text-muted-foreground font-normal">
-                    Sends to your own account's address, using whichever password is in the field
-                    above - or the saved one, if you left it blank.
-                </p>
-            </div>
         </form>
+
+        <UnsavedBar
+            :show="form.isDirty"
+            :processing="form.processing"
+            message="Unsaved changes"
+            save-label="Save"
+            @save="submit"
+            @cancel="discard"
+        />
     </div>
 </template>
