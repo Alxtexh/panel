@@ -127,6 +127,23 @@ final class NavigationCoverageTest extends TestCase
              */
             ...collect(app(PanelManager::class)->panels())
                 ->flatMap(static fn ($panel): array => array_values(array_filter([
+                    /*
+                     * BOTH `profile` AND `settings.profile`, because both
+                     * are genuinely linked, not a pick-one. `PanelRoutes.php`
+                     * registers them side by side on the same controller
+                     * action on purpose - a direct link from the account
+                     * menu (which resolves `namedUrl(['profile', 'settings.
+                     * profile'])`, `profile` first) AND the same screen
+                     * reached from the settings hub too. Checking only
+                     * `settings.profile` here missed the account menu's own
+                     * href entirely once it started preferring `profile` -
+                     * `/profile` (and its per-panel equivalents) read as
+                     * unlinked orphans despite being exactly what the menu
+                     * pointed at.
+                     */
+                    Route::has($panel->getRouteName().'profile')
+                        ? parse_url(route($panel->getRouteName().'profile'), PHP_URL_PATH)
+                        : null,
                     Route::has($panel->getRouteName().'settings.profile')
                         ? parse_url(route($panel->getRouteName().'settings.profile'), PHP_URL_PATH)
                         : null,
@@ -160,6 +177,14 @@ final class NavigationCoverageTest extends TestCase
                     // menu and from the settings sub-navigation.
                     Route::has($panel->getRouteName().'settings.index')
                         ? parse_url(route($panel->getRouteName().'settings.index'), PHP_URL_PATH)
+                        : null,
+                    // SMTP, same reasoning as Workspaces just above: a card
+                    // on the settings hub (`SettingsIndex`'s `pages.mail-
+                    // settings` entry), not `panelPages`, which is why it
+                    // needs naming here too. Missing since MailSettingsPage
+                    // shipped - this sweep is what caught it.
+                    Route::has($panel->getRouteName().'pages.mail-settings')
+                        ? parse_url(route($panel->getRouteName().'pages.mail-settings'), PHP_URL_PATH)
                         : null,
                 ])))
                 ->all(),

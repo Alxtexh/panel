@@ -180,6 +180,17 @@ final class SocialLoginTest extends TestCase
     /** A provider without credentials still routes, and explains what to set. */
     public function test_an_unconfigured_provider_explains_the_missing_env_keys(): void
     {
+        /*
+         * `show_unconfigured` MUST BE ON to even reach the code path this
+         * test names. `SocialProviders::offered()` defaults to
+         * `enabled($panel)` - configured providers only - so an unconfigured
+         * one fails `isOffered()` and 404s before `SocialLoginController::
+         * redirect()`'s own `isEnabled()` check (the credentials-hint
+         * redirect this test asserts) is ever reached. That branch is live
+         * only in showcase mode, same as `test_show_unconfigured_lists_the_
+         * full_catalogue` above already opts into.
+         */
+        config(['panel.auth.social.show_unconfigured' => true]);
         config(['services.github.client_id' => null, 'services.github.client_secret' => null]);
 
         $this->get('/auth/github/redirect')

@@ -61,23 +61,53 @@ final class Tenants
     }
 
     /**
+     * Container binding for the memoized result of `current()`, registered
+     * scoped (not singleton) in `PanelServiceProvider` - see that
+     * registration's own comment.
+     */
+    public const MEMO_BINDING = 'alxtexhpanel.tenants.current-memo';
+
+    /**
      * The acting user's organisation, or null.
      *
      * RESOLVED THROUGH THE USER, NOT THROUGH `tenancy()`. The helper reads
      * whatever the current bootstrapper initialised, which in `column` mode is
      * nothing at all - so a screen built on it renders empty for the majority
      * arrangement while working in the one it was written under.
+     *
+     * MEMOIZED ON A SCOPED CONTAINER BINDING, NOT ON `$request`.
+     * `SharePanelProps::chrome()` calls this once per shared prop it builds a
+     * cache key for - fourteen props, fourteen identical `find()` queries per
+     * request, confirmed live (`Performance\ClientsPerformanceTest` expects
+     * five queries on a warmed request and was counting twenty).
+     *
+     * `$request->attributes` looked like the obvious memo location and does
+     * NOT work: `SharePanelProps` runs this twice per logical request (its
+     * own `chrome()` docblock - once on the web-group pass, again as route
+     * middleware after `UsePanel`), and logging `spl_object_id($request)`
+     * across both proved they are two DIFFERENT `Request` objects, not the
+     * same one revisited - so a memo keyed to the request only ever survived
+     * within one of the two passes. The scoped container binding both passes
+     * share is what actually spans them, the same mechanism `TenantContext`
+     * already uses for exactly this reason.
      */
     public static function current(Request $request): ?Model
     {
+        /** @var \ArrayObject<string, Model|null> $memo */
+        $memo = app(self::MEMO_BINDING);
+
+        if ($memo->offsetExists('tenant')) {
+            return $memo['tenant'];
+        }
+
         $model = self::model();
         $key = $request->user()?->{self::column()} ?? null;
 
-        if ($model === null || $key === null) {
-            return null;
-        }
+        $tenant = $model === null || $key === null ? null : $model::query()->find($key);
 
-        return $model::query()->find($key);
+        $memo['tenant'] = $tenant;
+
+        return $tenant;
     }
 
     /**

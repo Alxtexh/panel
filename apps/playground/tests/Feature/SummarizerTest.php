@@ -159,6 +159,21 @@ final class SummarizerTest extends TestCase
         $queries = array_column(DB::getQueryLog(), 'query');
         DB::disableQueryLog();
 
+        /*
+         * `tickets` IS EXEMPT, same reasoning as the list-query count guards
+         * elsewhere (`ClientsListTest` names it first). The header's
+         * quick-create menu asks every creatable resource `can('create')` on
+         * every page; Ticket's own answer is rate-limited
+         * (`TicketPolicy::create()`) and its single query happens to use
+         * `sum(case when ...)` to get both the hourly and daily window counts
+         * in one round trip - unrelated to this page's own summary column,
+         * bounded by one person's own tickets, not by tenant size.
+         */
+        $queries = array_filter(
+            $queries,
+            static fn (string $sql): bool => ! str_contains($sql, 'tickets'),
+        );
+
         foreach ($queries as $sql) {
             $this->assertStringNotContainsStringIgnoringCase(
                 'sum(',

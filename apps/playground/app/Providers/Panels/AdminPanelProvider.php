@@ -118,6 +118,21 @@ final class AdminPanelProvider extends ServiceProvider
                  */
                 ->editableSupport()
                 ->onboarding()
+                /*
+                 * OPT-IN CAPABILITY, INACTIVE BY DEFAULT - `panel.auth.
+                 * magic_link` (env `PANEL_MAGIC_LINK`) still gates whether it
+                 * actually does anything; this only registers the routes and
+                 * lets `PanelAuthController` offer the login-page button once
+                 * that config is also true. Without this call the routes
+                 * (`magic-link.request`/`.consume`) never register at all -
+                 * `hasPasswordless()` gates route registration in
+                 * `PanelRoutes.php`, and nothing here had ever called
+                 * `->passwordless()` to turn it on, so the config toggle had
+                 * nothing to toggle. Found live via `MagicLinkAndOtpTest`,
+                 * which sets the config expecting exactly this route to
+                 * exist.
+                 */
+                ->passwordless()
                 ->paymentSettings(static fn (): array => KitDemo::gateways())
                 ->mailSettings()
                 ->apps(['api-keys', 'webhooks'])

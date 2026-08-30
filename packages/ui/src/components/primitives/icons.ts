@@ -125,6 +125,48 @@ export const ICON_PATHS: Record<string, string> = {
     menu: 'M4 6h16M4 12h16M4 18h16',
 
     /*
+     * NINE MORE OF THE SAME GAP - `DeclaredIconsExistTest` names every icon
+     * `app/Panel/Pages.php` declares and checks each has a path here; these
+     * nine did not, so the reference app's own nav fell back to the dot on
+     * a phone the same way `undo` and the row-menu names above once did.
+     * Copied from `@lucide/vue`'s icon sources (`node_modules/@lucide/vue/
+     * dist/esm/icons/*.mjs`), including converting each icon's `<rect rx>`
+     * primitive into the equivalent rounded-corner path by hand - this
+     * registry holds `<path d>` strings only, no nested shape elements.
+     *
+     * A LOWERCASE `m` STARTING A LATER SUBPATH IS NOT ABSOLUTE, and joining
+     * several Lucide icons' separate `<path>` elements into one `d` string
+     * hits this the moment one of them originally started with lowercase
+     * `m`. SVG only treats the very FIRST moveto in an entire path string as
+     * absolute either way; every subsequent `m` is relative to wherever the
+     * previous subpath ended, not a fresh (0,0) - `panel-left-close`'s
+     * chevron and `chevrons-up-down`'s second arrow both silently moved
+     * off-canvas as a result. Capitalising that `m` to `M` is only HALF the
+     * fix: an SVG moveto's own trailing coordinate pairs are implicit
+     * linetos in the SAME case as the moveto, so `M16 15-3-3 3-3` draws an
+     * ABSOLUTE line out to (-3,-3) - nowhere near the chevron. The pairs
+     * after the first need their own explicit lowercase `l` to stay
+     * relative: `M16 15l-3-3 3-3`. Caught by actually rendering these to
+     * PNG and looking, not by reading the coordinates.
+     */
+    'panel-left':
+        'M5 3H19A2 2 0 0 1 21 5V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V5A2 2 0 0 1 5 3Z M9 3v18',
+    'panel-left-close':
+        'M5 3H19A2 2 0 0 1 21 5V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V5A2 2 0 0 1 5 3Z M9 3v18 M16 15l-3-3 3-3',
+    square: 'M5 3H19A2 2 0 0 1 21 5V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V5A2 2 0 0 1 5 3Z',
+    layers:
+        'M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12 M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17',
+    'app-window':
+        'M4 4H20A2 2 0 0 1 22 6V18A2 2 0 0 1 20 20H4A2 2 0 0 1 2 18V6A2 2 0 0 1 4 4Z M10 4v4 M2 8h20 M6 4v4',
+    'app-window-mac':
+        'M4 4H20A2 2 0 0 1 22 6V18A2 2 0 0 1 20 20H4A2 2 0 0 1 2 18V6A2 2 0 0 1 4 4Z M6 8h.01 M10 8h.01 M14 8h.01',
+    'chevrons-up-down': 'm7 15 5 5 5-5 M7 9l5-5 5 5',
+    'folder-tree':
+        'M20 10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2.5a1 1 0 0 1-.8-.4l-.9-1.2A1 1 0 0 0 15 3h-2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z M20 21a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-2.9a1 1 0 0 1-.88-.55l-.42-.85a1 1 0 0 0-.92-.6H13a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z M3 5a2 2 0 0 0 2 2h3 M3 3v13a2 2 0 0 0 2 2h3',
+    calendar:
+        'M8 2v3 M16 2v3 M5 3H19A2 2 0 0 1 21 5V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V5A2 2 0 0 1 5 3Z M3 9h18',
+
+    /*
      * ROW-MENU VOCABULARY that hosts declare without always shipping a path.
      *
      * `log-in` / `impersonate` and `coins` / `wallet` / `recharge` are the

@@ -165,10 +165,17 @@ final class ClientsListTest extends TestCase
          * hit through the morph index, bounded by what that person has been
          * sent. Excluding it by name keeps the guard sharp; broadening the
          * pattern to "ignore counts we expect" would let a real one back in.
+         *
+         * `tickets` IS THE SAME SHAPE. The header's quick-create menu asks
+         * every creatable resource `can('create')`, on every page - Ticket's
+         * own answer is rate-limited (`TicketPolicy::create()`), so it costs
+         * one query, bounded by one person's own tickets in the last day, not
+         * by tenant size.
          */
         $queries = array_filter(
             $queries,
-            static fn (string $sql): bool => ! str_contains($sql, 'notifications'),
+            static fn (string $sql): bool => ! str_contains($sql, 'notifications')
+                && ! str_contains($sql, 'tickets'),
         );
 
         foreach ($queries as $sql) {

@@ -273,7 +273,16 @@ final class Pages
              * it sits under `errors/`.
              */
             '/shell-preview' => 'A fixture for the packaged shell\'s browser test. Deliberately in no menu.',
-            '/login-preview' => 'A fixture for the packaged login browser test. Deliberately in no menu; Auth samples cover families.',
+            /*
+             * `/login-preview` USED TO BE HERE, EXCUSING A PATH THE SWEEP
+             * NEVER EXAMINES. `NavigationCoverageTest::candidatePaths()`
+             * only walks routes behind `auth` middleware in the first place
+             * - `routes/web.php`'s `Route::get('/login-preview', ...)` has
+             * none, correctly, since it previews the SIGNED-OUT login
+             * screen - so this entry was never protecting anything from a
+             * false orphan report; it just sat in the list looking load-
+             * bearing. `test_the_allow_list_has_no_stale_entries` caught it.
+             */
 
             '/dashboard' => 'The home screen: the first item in the sidebar and the target of the logo.',
             '/settings' => 'The searchable settings index. Reached from the account menu\'s Settings link.',
@@ -358,6 +367,20 @@ final class Pages
             '/reseller/account/suspended' => 'Reached by redirect when the tenant is billing-suspended. Not a destination.',
             '/superadmin/account/suspended' => 'Reached by redirect when the tenant is billing-suspended. Not a destination.',
             '/client/account/suspended' => 'Reached by redirect when the tenant is billing-suspended. Not a destination.',
+            /*
+             * THE SHOWCASE PLAN-CHOOSING PAIR. `PlanCatalogPage` (Choose a
+             * plan) and `SubscriptionConfirmedPage` (the confirmation it
+             * sends the browser to) link to EACH OTHER from inside their own
+             * Vue templates - `SubscriptionConfirmedPage` passes
+             * `subscriptionHref` back to the catalog - not from `panelNav`
+             * or any settings hub this sweep can see. Neither has a sidebar
+             * entry: a customer portal's own dashboard or billing widget is
+             * where a real host would put the "Choose a plan" call to
+             * action, matching `PlanCatalogPage`'s own docblock describing
+             * this closure as a showcase rather than a wired processor.
+             */
+            '/client/account/subscription' => 'Choose-a-plan showcase; linked from a billing CTA a real host provides, not the sidebar.',
+            '/client/subscription-confirmed' => 'Reached by redirect after choosing a plan. Not a destination; links back to the catalog from its own template.',
             /*
              * SETTINGS AND CHANGELOG COPIES PER PORTAL. Same destinations as
              * the operator portal's, mounted under each portal prefix.

@@ -81,8 +81,13 @@ final class AccountScreensTest extends TestCase
     /**
      * THE MENU LINKS PROFILE AND SETTINGS as different doors.
      *
-     * Profile is `/settings/profile`. Settings is the `/settings` hub.
-     * Security is a tab on the settings layout, not a third dropdown row.
+     * Profile is `/profile` - `SharePanelProps`'s `namedUrl($panel,
+     * ['profile', 'settings.profile'], ...)` tries the bare top-level route
+     * first, and both exist (`PanelRoutes.php` registers `profile` and
+     * `settings.profile` side by side, same controller action, on purpose -
+     * a direct link from the account menu, and the same screen reachable
+     * from the settings hub too). Settings is the `/settings` hub. Security
+     * is a tab on the settings layout, not a third dropdown row.
      */
     public function test_the_account_menu_is_given_the_urls(): void
     {
@@ -108,7 +113,7 @@ final class AccountScreensTest extends TestCase
         );
         $accountPath = parse_url((string) $props['panel']['account'], PHP_URL_PATH);
         $settingsPath = parse_url((string) $props['panel']['settings'], PHP_URL_PATH);
-        $this->assertStringEndsWith('/settings/profile', (string) $accountPath);
+        $this->assertStringEndsWith('/profile', (string) $accountPath);
         $this->assertStringEndsWith('/settings', (string) $settingsPath);
         $this->assertStringNotContainsString('/settings/profile', (string) $settingsPath);
     }
