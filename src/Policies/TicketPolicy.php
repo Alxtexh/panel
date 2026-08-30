@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Alxtexh\Panel\Policies;
 
-use DateTimeInterface;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Alxtexh\Panel\Models\Ticket;
@@ -124,30 +123,50 @@ final class TicketPolicy
      * several in an hour, and refusing them is refusing the customer who most
      * needs help. The limits are set where only a machine reaches them.
      */
+    /**
+     * ONE QUERY, NOT TWO. This runs on every request that computes the
+     * header quick-create menu (`PanelQuickCreate::build()` calls
+     * `can('create')` on every registered resource, Ticket included) - not
+     * only on an actual ticket-creation attempt. Two separate `count()`
+     * calls here were two separate "New ticket" nav-visibility queries on
+     * every page, tenant-wide performance tests included, for a check that
+     * ends up allowed the overwhelming majority of the time. `SUM(CASE
+     * WHEN ...)` (portable across sqlite/mysql/pgsql, unlike `FILTER`) gets
+     * both windows' counts from one query over the wider (daily) range,
+     * since the hourly window is always inside it.
+     */
     public function create(Authenticatable&Authorizable $user): bool
     {
         if (! $this->hasTenant()) {
             return false;
         }
 
-        return $this->withinRate($user, 'max_per_hour', 10, now()->subHour())
-            && $this->withinRate($user, 'max_per_day', 30, now()->subDay());
-    }
+        $hourLimit = (int) config('panel.ticketing.max_per_hour', 10);
+        $dayLimit = (int) config('panel.ticketing.max_per_day', 30);
 
-    private function withinRate(Authenticatable&Authorizable $user, string $key, int $default, DateTimeInterface $since): bool
-    {
-        $limit = (int) config("panel.ticketing.{$key}", $default);
-
-        // Zero or less turns the limit OFF rather than blocking everything -
+        // Zero or less turns a limit OFF rather than blocking everything -
         // an installation writing 0 means "no cap", never "no tickets".
-        if ($limit <= 0) {
+        if ($hourLimit <= 0 && $dayLimit <= 0) {
             return true;
         }
 
-        return Ticket::query()
+        $hourAgo = now()->subHour();
+        $dayAgo = now()->subDay();
+
+        $counts = Ticket::query()
             ->where('opened_by', $user->getAuthIdentifier())
-            ->where('created_at', '>=', $since)
-            ->count() < $limit;
+            ->where('created_at', '>=', $dayAgo)
+            ->selectRaw(
+                'count(*) as daily, sum(case when created_at >= ? then 1 else 0 end) as hourly',
+                [$hourAgo],
+            )
+            ->first();
+
+        if ($hourLimit > 0 && (int) $counts->hourly >= $hourLimit) {
+            return false;
+        }
+
+        return $dayLimit <= 0 || (int) $counts->daily < $dayLimit;
     }
 
     /**

@@ -120,6 +120,14 @@ final class SharePanelProps
          * before `UsePanel`, the panel is still null and chrome stays a plain
          * closure. The route-middleware pass after `UsePanel` re-shares with
          * `Inertia::once`, which is what page-to-page visits keep.
+         *
+         * `Tenants::current($request)` MEMOIZES ON THE REQUEST NOW (see its
+         * own docblock) - this used to call it once per prop `chrome()`
+         * builds a cache key for. Fourteen props sharing through `chrome()`
+         * meant fourteen identical `select * from tenants where id = ?`
+         * queries on every request - confirmed live via
+         * `Performance\ClientsPerformanceTest`, which expects five queries
+         * on a warmed-up request and was seeing twenty.
          */
         $chrome = static fn (callable $resolve, string $name) => self::chrome(
             $resolve,

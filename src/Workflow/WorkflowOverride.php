@@ -29,8 +29,39 @@ final class WorkflowOverride extends Model
         ];
     }
 
+    /**
+     * Container binding for the per-request memo, registered scoped (not
+     * singleton) in `PanelServiceProvider` - see that registration's own
+     * comment, and `Tenants::MEMO_BINDING` for the sibling case this copies.
+     */
+    public const MEMO_BINDING = 'alxtexhpanel.workflow-override.memo';
+
+    /**
+     * MEMOIZED PER RESOURCE KEY, PER REQUEST. `RecordAction::transitionTo()`
+     * gates each transition action's visibility with a per-ROW closure
+     * (`canTransitionFromAttributes()` -> `stateTransitions()` ->
+     * `overlayTransitionsMap()` -> here), and `Workflow::recordActions()`
+     * builds one such action per declared transition - so an unmemoized
+     * version of this method cost (rows x transitions) identical queries on
+     * every list request for a workflow-eligible resource. Found on the
+     * ticket queue: 3 transitions, confirmed live as ~3 queries per row
+     * (`Performance\QueryCountTest::test_the_tickets_list_does_not_query_per_row`
+     * - 16 for 5 tickets, 151 for 50, both roughly 3x row count). The
+     * override is admin-edited data, not something expected to change mid
+     * request, which is exactly the shape a per-request memo is safe for.
+     */
     public static function forResource(string $resourceKey): ?self
     {
-        return self::query()->where('resource_key', $resourceKey)->first();
+        /** @var \ArrayObject<string, self|null> $memo */
+        $memo = app(self::MEMO_BINDING);
+
+        if ($memo->offsetExists($resourceKey)) {
+            return $memo[$resourceKey];
+        }
+
+        $override = self::query()->where('resource_key', $resourceKey)->first();
+        $memo[$resourceKey] = $override;
+
+        return $override;
     }
 }

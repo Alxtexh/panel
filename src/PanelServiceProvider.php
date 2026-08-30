@@ -40,6 +40,18 @@ final class PanelServiceProvider extends ServiceProvider
         // state by definition. A singleton here is the classic Octane leak.
         $this->app->scoped(Support\TenantContext::class, fn () => new Support\TenantContext);
 
+        // Same reasoning, for `Tenants::current()`'s own memo - see that
+        // method's docblock for why `$request->attributes` could not be used
+        // instead (SharePanelProps hands it two genuinely different Request
+        // objects across its two passes; the container is what both share).
+        $this->app->scoped(Support\Tenants::MEMO_BINDING, fn () => new \ArrayObject());
+
+        // Same reasoning again, for `WorkflowOverride::forResource()` - see
+        // that method's own docblock. A per-row `visible()` closure on every
+        // declared transition action multiplied this by (rows x transitions)
+        // on any workflow-eligible list.
+        $this->app->scoped(Workflow\WorkflowOverride::MEMO_BINDING, fn () => new \ArrayObject());
+
         // Stateless, so a singleton is safe here - it holds no request or tenant
         // data, which is the only thing S9 forbids in a long-lived binding.
         $this->app->singleton(Support\SchemaCache::class);
