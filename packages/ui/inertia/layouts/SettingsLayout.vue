@@ -7,8 +7,8 @@
  * settings index uses. A portal that never routed payment gateways does not
  * see that row. Icon names are kit paths, not Lucide components.
  */
-import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import { PAGE_SHELL, PkHeading, PkSubNav } from '@alxtexh-enterprise/panel'
 import type { SubNavItem } from '@alxtexh-enterprise/panel'
 import { useCurrentUrl } from '../composables/useCurrentUrl'
@@ -58,7 +58,10 @@ const currentItem = computed(
 
         <PkHeading
             :title="currentItem?.title ?? 'Settings'"
-            :description="currentItem?.description ?? 'Organisation, roles, payments and the rest of this portal.'"
+            :description="
+                currentItem?.description ??
+                'Organisation, roles, payments and the rest of this portal.'
+            "
         />
 
         <!--

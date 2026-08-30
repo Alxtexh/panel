@@ -87,7 +87,9 @@ setAppearancePersister((patch) => {
                 return;
             }
 
-            const data = (await response.json()) as { appearance?: Record<string, unknown> };
+            const data = (await response.json()) as {
+                appearance?: Record<string, unknown>;
+            };
 
             if (data.appearance && typeof data.appearance === 'object') {
                 initializeAppearance(data.appearance);

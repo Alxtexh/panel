@@ -11,6 +11,7 @@ describe('Input', () => {
         })
 
         const input = wrapper.get('input')
+
         for (const token of INPUT_COPY.split(' ')) {
             expect(input.classes()).toContain(token)
         }

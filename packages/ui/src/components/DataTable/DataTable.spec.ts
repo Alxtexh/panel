@@ -165,7 +165,13 @@ describe('DataTable grouping', () => {
     const groupedRows = [
         { id: 1, name: 'Amina', status: 'draft', __group: 'draft', __groupTitle: 'Status: draft' },
         { id: 2, name: 'Brian', status: 'draft', __group: 'draft', __groupTitle: 'Status: draft' },
-        { id: 3, name: 'Chi', status: 'published', __group: 'published', __groupTitle: 'Status: published' },
+        {
+            id: 3,
+            name: 'Chi',
+            status: 'published',
+            __group: 'published',
+            __groupTitle: 'Status: published',
+        },
     ]
 
     it('renders a heading when the group value changes', () => {

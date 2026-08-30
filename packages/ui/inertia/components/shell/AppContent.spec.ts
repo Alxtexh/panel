@@ -14,14 +14,16 @@ vi.mock('@inertiajs/vue3', () => ({
 
 vi.mock('@alxtexh-enterprise/panel', async () => {
     const { useShellPageFooter } = await import('../../../src/composables/useShellPageFooter')
-    const { default: AppPageFooter } = await import('../../../src/components/Layout/AppPageFooter.vue')
+    const { default: AppPageFooter } =
+        await import('../../../src/components/Layout/AppPageFooter.vue')
 
     return {
         AppPageFooter,
         useShellPageFooter,
         SidebarInset: {
             inheritAttrs: false,
-            template: '<main id="pk-main" data-slot="sidebar-inset" v-bind="$attrs"><slot /></main>',
+            template:
+                '<main id="pk-main" data-slot="sidebar-inset" v-bind="$attrs"><slot /></main>',
         },
         useAppearance: () => ({
             appearance,
@@ -75,10 +77,12 @@ describe('AppContent', () => {
         const columnNodes = [...column.element.children]
         expect(columnNodes[columnNodes.length - 1]).toBe(footer.element)
         expect(
-            charts.element.compareDocumentPosition(footer.element) & Node.DOCUMENT_POSITION_FOLLOWING,
+            charts.element.compareDocumentPosition(footer.element) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeTruthy()
         expect(
-            footer.element.compareDocumentPosition(charts.element) & Node.DOCUMENT_POSITION_FOLLOWING,
+            footer.element.compareDocumentPosition(charts.element) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeFalsy()
     })
 

@@ -116,7 +116,15 @@ describe('PanelNotificationBell', () => {
                     ok: true,
                     json: async () => ({
                         notifications: [
-                            { id: 'n2', title: 'Older note', body: '', href: null, severity: 'info', read: true, at: null },
+                            {
+                                id: 'n2',
+                                title: 'Older note',
+                                body: '',
+                                href: null,
+                                severity: 'info',
+                                read: true,
+                                at: null,
+                            },
                         ],
                         hasMore: false,
                     }),
@@ -131,7 +139,15 @@ describe('PanelNotificationBell', () => {
                     canAnnounce: false,
                     hasMore: true,
                     notifications: [
-                        { id: 'n1', title: 'Newest note', body: '', href: null, severity: 'info', read: false, at: null },
+                        {
+                            id: 'n1',
+                            title: 'Newest note',
+                            body: '',
+                            href: null,
+                            severity: 'info',
+                            read: false,
+                            at: null,
+                        },
                     ],
                 }),
             }
@@ -174,7 +190,15 @@ describe('PanelNotificationBell', () => {
                     canAnnounce: false,
                     hasMore: false,
                     notifications: [
-                        { id: 'n1', title: 'Already read', body: '', href: null, severity: 'info', read: true, at: null },
+                        {
+                            id: 'n1',
+                            title: 'Already read',
+                            body: '',
+                            href: null,
+                            severity: 'info',
+                            read: true,
+                            at: null,
+                        },
                     ],
                 }),
             })),
@@ -195,7 +219,10 @@ describe('PanelNotificationBell', () => {
     })
 
     it('asks for confirmation before clearing every notification', async () => {
-        vi.stubGlobal('confirm', vi.fn(() => false))
+        vi.stubGlobal(
+            'confirm',
+            vi.fn(() => false),
+        )
 
         const wrapper = mount(PanelNotificationBell)
 

@@ -2,7 +2,6 @@
 /**
  * Kit till demo: fake SKUs into CatalogTill. Header ChartWidgets stay here.
  */
-import { computed, ref } from 'vue';
 import {
     CatalogTill,
     PAGE_SHELL,
@@ -13,6 +12,7 @@ import {
 import type { CatalogFacet, CatalogItem } from '@alxtexh-enterprise/panel';
 import { PanelWidgets } from '@alxtexh-enterprise/panel/inertia';
 import { Head, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 defineOptions({ inheritAttrs: false });
 

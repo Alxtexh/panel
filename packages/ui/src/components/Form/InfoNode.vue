@@ -15,14 +15,14 @@
  * page does not feel like reading a muted wall of text.
  */
 import { computed, ref } from 'vue'
-import PkBadge from '../primitives/PkBadge.vue'
-import PkStatusBadge from '../primitives/PkStatusBadge.vue'
+import { entryView, registeredEntryViews } from '../../composables/useEntryViews'
+import { BADGE_VARIANTS, hasBadgeValue } from '../../composables/useSchemaColumns'
+import ColourCell from '../DataTable/ColourCell.vue'
 import IconCell from '../DataTable/IconCell.vue'
 import ImageCell from '../DataTable/ImageCell.vue'
-import ColourCell from '../DataTable/ColourCell.vue'
-import { BADGE_VARIANTS, hasBadgeValue } from '../../composables/useSchemaColumns'
-import { entryView, registeredEntryViews } from '../../composables/useEntryViews'
 import { iconPath } from '../primitives/icons'
+import PkBadge from '../primitives/PkBadge.vue'
+import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 
 export interface InfoNode {
     component: 'entry' | 'section' | 'grid' | 'tabs' | 'tab'
@@ -102,6 +102,7 @@ const moneyDisplay = computed(() => {
     }
 
     const raw = Number(value.value)
+
     if (Number.isNaN(raw)) {
         return 'None'
     }
@@ -154,14 +155,17 @@ const badgeVariant = computed(() => {
 
 const registeredView = computed(() => {
     const name = typeof props.node.view === 'string' ? props.node.view : ''
+
     return name ? entryView(name) : undefined
 })
 
 const missingViewMessage = computed(() => {
     const name = typeof props.node.view === 'string' ? props.node.view : ''
+
     if (!name) {
         return 'ViewEntry has no view name.'
     }
+
     const registered = registeredEntryViews()
     const list = registered.length > 0 ? registered.join(', ') : '(none)'
 
@@ -172,20 +176,20 @@ const missingViewMessage = computed(() => {
 <template>
     <!-- Entry: a labelled value with quiet label / loud value contrast. -->
     <div v-if="node.component === 'entry'" class="flex flex-col gap-1">
-        <dt
-            class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
-        >
+        <dt class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
             {{ node.label }}
         </dt>
         <dd class="text-foreground text-sm font-medium">
             <PkBadge
                 v-if="node.type === 'badge' && hasBadgeValue(value)"
-                :variant="(badgeVariant as any)"
+                :variant="badgeVariant as any"
                 class="capitalize"
             >
                 {{ value }}
             </PkBadge>
-            <span v-else-if="node.type === 'badge'" class="text-muted-foreground font-normal">None</span>
+            <span v-else-if="node.type === 'badge'" class="text-muted-foreground font-normal"
+                >None</span
+            >
             <IconCell
                 v-else-if="node.type === 'icon'"
                 :value="value"
@@ -220,7 +224,12 @@ const missingViewMessage = computed(() => {
             </div>
             <div v-else-if="node.type === 'keyvalue'" class="font-normal">
                 <dl
-                    v-if="value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length"
+                    v-if="
+                        value &&
+                        typeof value === 'object' &&
+                        !Array.isArray(value) &&
+                        Object.keys(value).length
+                    "
                     class="divide-y rounded-md border"
                 >
                     <div
@@ -305,7 +314,11 @@ const missingViewMessage = computed(() => {
     <!-- Section: elevated chrome matches SchemaNode form sections. -->
     <section
         v-else-if="node.component === 'section'"
-        :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
+        :class="
+            isRoot
+                ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                : ''
+        "
     >
         <header
             class="flex items-start justify-between gap-3"
@@ -336,7 +349,11 @@ const missingViewMessage = computed(() => {
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                         <h3 class="text-sm font-semibold">{{ node.label }}</h3>
-                        <PkStatusBadge v-if="node.status" :status="node.status" class="capitalize" />
+                        <PkStatusBadge
+                            v-if="node.status"
+                            :status="node.status"
+                            class="capitalize"
+                        />
                     </div>
                     <p v-if="node.description" class="text-muted-foreground mt-0.5 text-xs">
                         {{ node.description }}
@@ -362,7 +379,11 @@ const missingViewMessage = computed(() => {
     </section>
 
     <!-- Grid. -->
-    <dl v-else-if="node.component === 'grid'" class="grid grid-cols-1 gap-x-6 gap-y-4" :class="gridClass">
+    <dl
+        v-else-if="node.component === 'grid'"
+        class="grid grid-cols-1 gap-x-6 gap-y-4"
+        :class="gridClass"
+    >
         <InfoNode
             v-for="(child, i) in node.children ?? []"
             :key="i"
@@ -376,7 +397,11 @@ const missingViewMessage = computed(() => {
     <!-- Tabs. -->
     <div
         v-else-if="node.component === 'tabs'"
-        :class="isRoot ? 'bg-card overflow-hidden rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
+        :class="
+            isRoot
+                ? 'bg-card overflow-hidden rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                : ''
+        "
     >
         <div
             class="bg-muted/30 flex gap-1 overflow-x-auto p-1"

@@ -80,7 +80,9 @@ const props = defineProps<{
 
 defineOptions({
     // Page props arrive as attributes and this root is a fragment.
-    inheritAttrs: false, layout: { breadcrumbs: [{ title: 'Trash', href: '/trash' }] } })
+    inheritAttrs: false,
+    layout: { breadcrumbs: [{ title: 'Trash', href: '/trash' }] },
+})
 
 const selected = ref<Set<number | string>>(new Set())
 const confirming = ref<'one' | 'many' | null>(null)

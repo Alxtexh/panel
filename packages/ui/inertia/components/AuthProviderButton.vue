@@ -32,8 +32,8 @@ function onActivate(event: MouseEvent): void {
 
     event.preventDefault()
     toast.message(
-        props.provider.hint
-            ?? `Set ${props.provider.key.toUpperCase()}_CLIENT_ID and SECRET in .env`,
+        props.provider.hint ??
+            `Set ${props.provider.key.toUpperCase()}_CLIENT_ID and SECRET in .env`,
     )
 }
 </script>
@@ -48,18 +48,11 @@ function onActivate(event: MouseEvent): void {
         :aria-disabled="provider.configured === false ? 'true' : undefined"
         :class="[
             'bg-background inline-flex h-9 items-center justify-center gap-2 rounded-md border px-2.5 text-sm font-medium transition-colors',
-            provider.configured === false
-                ? 'cursor-not-allowed opacity-60'
-                : 'hover:bg-accent',
+            provider.configured === false ? 'cursor-not-allowed opacity-60' : 'hover:bg-accent',
         ]"
         @click="onActivate"
     >
-        <svg
-            v-if="provider.key === 'google'"
-            class="size-4"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-        >
+        <svg v-if="provider.key === 'google'" class="size-4" viewBox="0 0 24 24" aria-hidden="true">
             <path
                 fill="#4285F4"
                 d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.48a5.54 5.54 0 0 1-2.4 3.64v3.02h3.88c2.26-2.08 3.53-5.14 3.53-8.9Z"

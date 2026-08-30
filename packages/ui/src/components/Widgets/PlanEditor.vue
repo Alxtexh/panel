@@ -5,16 +5,16 @@
  * Modules are tags. Numeric limits use -1 for Unlimited. Extra perks are a
  * free-form key/value repeater. The page persists; this emits `save`.
  */
-import { PAGE_SHELL } from '../../lib/pageShell'
-import { INPUT_COPY } from '../../lib/inputClasses'
 import { computed, reactive, watch } from 'vue'
+import { INPUT_COPY } from '../../lib/inputClasses'
+import { PAGE_SHELL } from '../../lib/pageShell'
+import { iconPath } from '../primitives/icons'
 import PkButton from '../primitives/PkButton.vue'
 import PkFieldLabel from '../primitives/PkFieldLabel.vue'
-import PkTextInput from '../primitives/PkTextInput.vue'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
+import PkTextInput from '../primitives/PkTextInput.vue'
 import { Switch } from '../shadcn/switch'
-import { iconPath } from '../primitives/icons'
-import type { ExtraPerk, PlanLimitField, PlanModuleOption, PlanRecord } from './planTypes'
+import type { PlanLimitField, PlanModuleOption, PlanRecord } from './planTypes'
 
 const emptyPlan = (): PlanRecord => ({
     id: '',
@@ -58,7 +58,10 @@ const emit = defineEmits<{
 
 const draft = reactive<PlanRecord>(emptyPlan())
 
-function perkValue(key: string, fallback: number | boolean | string[]): number | boolean | string[] {
+function perkValue(
+    key: string,
+    fallback: number | boolean | string[],
+): number | boolean | string[] {
     const current = draft.perks?.[key]?.value
 
     if (current === undefined || current === null) {
@@ -122,10 +125,15 @@ watch(
 const moduleKeys = computed({
     get: () => {
         const value = perkValue('modules', [])
+
         return Array.isArray(value) ? value.map(String) : []
     },
     set: (keys: (string | number)[]) => {
-        setPerk('modules', withRequiredParents(keys.map(String)), draft.perks?.modules?.overview ?? '')
+        setPerk(
+            'modules',
+            withRequiredParents(keys.map(String)),
+            draft.perks?.modules?.overview ?? '',
+        )
     },
 })
 
@@ -146,8 +154,10 @@ function withRequiredParents(keys: string[]): string[] {
     }
 
     let changed = true
+
     while (changed) {
         changed = false
+
         for (const key of [...selected]) {
             for (const parent of byKey[key]?.requires ?? []) {
                 if (!selected.has(parent)) {
@@ -176,11 +186,9 @@ function submit() {
     })
 }
 
-const inputClass =
-    `file:text-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] ${INPUT_COPY}`
+const inputClass = `file:text-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] ${INPUT_COPY}`
 
-const areaClass =
-    `dark:bg-input/30 border-input min-h-20 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] ${INPUT_COPY}`
+const areaClass = `dark:bg-input/30 border-input min-h-20 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] ${INPUT_COPY}`
 </script>
 
 <template>
@@ -279,7 +287,10 @@ const areaClass =
                     />
                 </div>
                 <label class="flex items-center gap-3 text-sm">
-                    <Switch :checked="draft.active !== false" @update:checked="draft.active = $event" />
+                    <Switch
+                        :checked="draft.active !== false"
+                        @update:checked="draft.active = $event"
+                    />
                     Active
                 </label>
 
@@ -304,10 +315,7 @@ const areaClass =
                         :value="draft.perks?.modules?.overview ?? ''"
                         :class="areaClass"
                         @input="
-                            setOverview(
-                                'modules',
-                                ($event.target as HTMLTextAreaElement).value,
-                            )
+                            setOverview('modules', ($event.target as HTMLTextAreaElement).value)
                         "
                     />
                 </div>
@@ -349,7 +357,9 @@ const areaClass =
                                 )
                             "
                         />
-                        <p class="text-muted-foreground text-xs font-normal">Use -1 for Unlimited.</p>
+                        <p class="text-muted-foreground text-xs font-normal">
+                            Use -1 for Unlimited.
+                        </p>
                     </template>
                     <PkFieldLabel :for="`plan-overview-${field.key}`">Overview</PkFieldLabel>
                     <textarea
@@ -357,10 +367,7 @@ const areaClass =
                         :value="draft.perks?.[field.key]?.overview ?? ''"
                         :class="areaClass"
                         @input="
-                            setOverview(
-                                field.key,
-                                ($event.target as HTMLTextAreaElement).value,
-                            )
+                            setOverview(field.key, ($event.target as HTMLTextAreaElement).value)
                         "
                     />
                 </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Signatures from '@alxtexh-enterprise/panel/pages/Signatures.vue'
+import Signatures from '@alxtexh-enterprise/panel/pages/Signatures.vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>

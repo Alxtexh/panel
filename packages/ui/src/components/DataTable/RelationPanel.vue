@@ -137,7 +137,10 @@ function isEmpty(value: unknown): boolean {
             />
         </template>
 
-        <div v-if="loading && rows.length === 0" class="text-muted-foreground px-4 py-10 text-center text-sm">
+        <div
+            v-if="loading && rows.length === 0"
+            class="text-muted-foreground px-4 py-10 text-center text-sm"
+        >
             Loading…
         </div>
 
@@ -198,7 +201,10 @@ function isEmpty(value: unknown): boolean {
                                 >
                                     {{ format(column, row[column.key]) }}
                                 </a>
-                                <span v-else-if="isEmpty(row[column.key])" class="text-muted-foreground">
+                                <span
+                                    v-else-if="isEmpty(row[column.key])"
+                                    class="text-muted-foreground"
+                                >
                                     None
                                 </span>
                                 <template v-else>{{ format(column, row[column.key]) }}</template>

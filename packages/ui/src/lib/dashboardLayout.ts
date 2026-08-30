@@ -18,14 +18,15 @@ export type DashboardLayout = {
     widgets: DashboardLayoutEntry[]
 }
 
-export type LayoutItem<T extends { key: string; span?: number } = { key: string; span?: number }> = {
-    id: string
-    kind: DashboardWidgetKind
-    key: string
-    span: number
-    hidden: boolean
-    source: T
-}
+export type LayoutItem<T extends { key: string; span?: number } = { key: string; span?: number }> =
+    {
+        id: string
+        kind: DashboardWidgetKind
+        key: string
+        span: number
+        hidden: boolean
+        source: T
+    }
 
 export function widgetId(kind: DashboardWidgetKind, key: string): string {
     return `${kind}:${key}`

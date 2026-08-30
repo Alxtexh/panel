@@ -32,11 +32,10 @@ describe('useAppearance server hydration', () => {
     })
 
     it('readServerAppearance prefers the inline account payload', () => {
-        ;(window as unknown as { __panelAppearance?: Record<string, string> }).__panelAppearance =
-            {
-                theme: 'dark',
-                primary: 'rose',
-            }
+        ;(window as unknown as { __panelAppearance?: Record<string, string> }).__panelAppearance = {
+            theme: 'dark',
+            primary: 'rose',
+        }
 
         expect(readServerAppearance()).toEqual({ theme: 'dark', primary: 'rose' })
     })
@@ -67,10 +66,9 @@ describe('useAppearance server hydration', () => {
     })
 
     it('bootstrapAppearance hydrates from the inline script', () => {
-        ;(window as unknown as { __panelAppearance?: Record<string, string> }).__panelAppearance =
-            {
-                theme: 'dark',
-            }
+        ;(window as unknown as { __panelAppearance?: Record<string, string> }).__panelAppearance = {
+            theme: 'dark',
+        }
 
         bootstrapAppearance()
 
@@ -81,11 +79,10 @@ describe('useAppearance server hydration', () => {
     })
 
     it('does not re-apply CSS when the Blade prepaint script already ran', () => {
-        ;(window as unknown as { __panelAppearance?: Record<string, string> }).__panelAppearance =
-            {
-                theme: 'dark',
-                primary: 'rose',
-            }
+        ;(window as unknown as { __panelAppearance?: Record<string, string> }).__panelAppearance = {
+            theme: 'dark',
+            primary: 'rose',
+        }
         ;(window as unknown as { __panelAppearanceApplied?: boolean }).__panelAppearanceApplied =
             true
 

@@ -10,8 +10,8 @@
  * custom drawing (SVG, photo, or kit art). Prefer the semantic `icon` prop for
  * ordinary empties; use the slot when the empty state is itself a product beat.
  */
-import { iconPath } from './icons'
 import { useSlots } from 'vue'
+import { iconPath } from './icons'
 
 withDefaults(
     defineProps<{

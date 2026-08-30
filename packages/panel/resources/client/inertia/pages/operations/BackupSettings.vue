@@ -368,7 +368,9 @@ const telegramHalfDone = computed(
                     </template>
 
                     <template #actions>
-                        <span class="text-xs text-muted-foreground font-normal">how long copies live</span>
+                        <span class="text-xs text-muted-foreground font-normal"
+                            >how long copies live</span
+                        >
                     </template>
 
                     <div class="flex flex-col gap-3 p-4">
@@ -384,7 +386,9 @@ const telegramHalfDone = computed(
                                         :disabled="!can.manage"
                                         class="w-24 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
                                     />
-                                    <span class="text-xs text-muted-foreground font-normal">days</span>
+                                    <span class="text-xs text-muted-foreground font-normal"
+                                        >days</span
+                                    >
                                 </div>
 
                                 <!--
@@ -433,7 +437,9 @@ const telegramHalfDone = computed(
                                         :disabled="!can.manage"
                                         class="w-28 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
                                     />
-                                    <span class="text-xs text-muted-foreground font-normal">MB</span>
+                                    <span class="text-xs text-muted-foreground font-normal"
+                                        >MB</span
+                                    >
                                 </div>
                             </label>
                         </div>
@@ -459,7 +465,9 @@ const telegramHalfDone = computed(
                     </template>
 
                     <template #actions>
-                        <span class="text-xs text-muted-foreground font-normal">where copies are kept</span>
+                        <span class="text-xs text-muted-foreground font-normal"
+                            >where copies are kept</span
+                        >
                     </template>
 
                     <div class="flex flex-col gap-3 p-4">
@@ -530,7 +538,9 @@ const telegramHalfDone = computed(
                     </template>
 
                     <template #actions>
-                        <span class="text-xs text-muted-foreground font-normal">who is told, and how</span>
+                        <span class="text-xs text-muted-foreground font-normal"
+                            >who is told, and how</span
+                        >
                     </template>
 
                     <div class="flex flex-col gap-4 p-4">

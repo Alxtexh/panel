@@ -36,16 +36,11 @@ const emit = defineEmits<{
     toggle: [key: string]
 }>()
 
-const connectedCount = computed(
-    () => props.gateways.filter((gateway) => gateway.connected).length,
-)
+const connectedCount = computed(() => props.gateways.filter((gateway) => gateway.connected).length)
 </script>
 
 <template>
-    <div
-        :class="['flex flex-col gap-4', CATALOGUE_CONTAINER]"
-        data-slot="payment-gateways"
-    >
+    <div :class="['flex flex-col gap-4', CATALOGUE_CONTAINER]" data-slot="payment-gateways">
         <p class="text-muted-foreground text-sm font-normal">
             {{ connectedCount }} of {{ gateways.length }} connected, showcase only, no live
             processors.
@@ -68,7 +63,9 @@ const connectedCount = computed(
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-2">
                             <h3 class="truncate text-sm font-medium">{{ gateway.label }}</h3>
-                            <PkStatusBadge :status="gateway.connected ? 'connected' : 'disconnected'">
+                            <PkStatusBadge
+                                :status="gateway.connected ? 'connected' : 'disconnected'"
+                            >
                                 {{ gateway.connected ? 'Connected' : 'Not connected' }}
                             </PkStatusBadge>
                             <PkStatusBadge
@@ -77,10 +74,7 @@ const connectedCount = computed(
                             >
                                 Offered
                             </PkStatusBadge>
-                            <PkStatusBadge
-                                v-else-if="gateway.connected"
-                                status="disabled"
-                            >
+                            <PkStatusBadge v-else-if="gateway.connected" status="disabled">
                                 Disabled
                             </PkStatusBadge>
                             <PkStatusBadge v-if="gateway.isDefault" status="default">

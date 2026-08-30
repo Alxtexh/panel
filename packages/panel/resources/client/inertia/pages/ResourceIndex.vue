@@ -29,7 +29,12 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, onMounted, ref, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { PkBadge as Badge } from '@alxtexh-enterprise/panel'
-import { PkButton as Button, actionColorTone, buttonClasses, PkPageHeader } from '@alxtexh-enterprise/panel'
+import {
+    PkButton as Button,
+    actionColorTone,
+    buttonClasses,
+    PkPageHeader,
+} from '@alxtexh-enterprise/panel'
 import {
     BulkActions,
     DataTable,
@@ -61,10 +66,10 @@ import {
     useSchemaColumns,
 } from '@alxtexh-enterprise/panel'
 import type { RecordActionGroup, RecordActionItem, SchemaColumn } from '@alxtexh-enterprise/panel'
-import PanelWidgets from '../components/widgets/PanelWidgets.vue'
 import ImportDialog from '../components/ImportDialog.vue'
-import ResourceCrudModal from '../components/ResourceCrudModal.vue'
 import RenderHook from '../components/RenderHook.vue'
+import ResourceCrudModal from '../components/ResourceCrudModal.vue'
+import PanelWidgets from '../components/widgets/PanelWidgets.vue'
 import { useBulkJob } from '../composables/useBulkJob'
 import { useListTable } from '../composables/useListTable'
 import type { ListPageProps } from '../composables/useListTable'
@@ -80,9 +85,9 @@ interface ResourceSchema {
     purpose: string | null
     icon: string
     group: string | null
-        routes: { index: string; attach?: string }
-        forms?: { create: 'page' | 'modal'; edit: 'page' | 'modal'; view: 'page' | 'modal' }
-        lenses?: { key: string; label: string }[]
+    routes: { index: string; attach?: string }
+    forms?: { create: 'page' | 'modal'; edit: 'page' | 'modal'; view: 'page' | 'modal' }
+    lenses?: { key: string; label: string }[]
     table: {
         columns: SchemaColumn[]
         filters: {
@@ -402,9 +407,10 @@ const badgeKeys = computed(() =>
 
 const confirmingDelete = ref<Record<string, any> | null>(null)
 
-const crudModal = ref<{ mode: 'create' | 'edit' | 'view'; recordId?: string | number | null } | null>(
-    null,
-)
+const crudModal = ref<{
+    mode: 'create' | 'edit' | 'view'
+    recordId?: string | number | null
+} | null>(null)
 
 function formUsesModal(action: 'create' | 'edit' | 'view'): boolean {
     return props.schema.forms?.[action] === 'modal'
@@ -1057,9 +1063,7 @@ const canReorder = computed(
  */
 const reordering = ref(false)
 
-const showEmptyCreate = computed(
-    () => canWrite.value && props.can.create && !reordering.value,
-)
+const showEmptyCreate = computed(() => canWrite.value && props.can.create && !reordering.value)
 
 /*
  * Leaving the ordering drops out of the mode.
@@ -1261,7 +1265,8 @@ useLiveUpdates({
  */
 function badgeLabel(key: string, value: unknown): string {
     const column = byKey.value[key] as
-        { label?: string; labels?: Record<string, string>; options?: Record<string, string> } | undefined
+        | { label?: string; labels?: Record<string, string>; options?: Record<string, string> }
+        | undefined
     const lookup = typeof value === 'boolean' ? (value ? '1' : '0') : String(value)
 
     if (column?.labels?.[lookup] !== undefined) {
@@ -1384,13 +1389,17 @@ function badgeLabel(key: string, value: unknown): string {
             </PkPageHeader>
 
             <div v-if="schema.lenses?.length" class="flex flex-wrap items-center gap-2">
-                <span class="text-muted-foreground text-xs font-medium uppercase tracking-wide">Lens</span>
+                <span class="text-muted-foreground text-xs font-medium uppercase tracking-wide"
+                    >Lens</span
+                >
                 <button
                     type="button"
-                    :class="buttonClasses({
-                        variant: !lens ? 'default' : 'outline',
-                        size: 'sm',
-                    })"
+                    :class="
+                        buttonClasses({
+                            variant: !lens ? 'default' : 'outline',
+                            size: 'sm',
+                        })
+                    "
                     @click="setLens(null)"
                 >
                     All
@@ -1399,10 +1408,12 @@ function badgeLabel(key: string, value: unknown): string {
                     v-for="item in schema.lenses"
                     :key="item.key"
                     type="button"
-                    :class="buttonClasses({
-                        variant: lens === item.key ? 'default' : 'outline',
-                        size: 'sm',
-                    })"
+                    :class="
+                        buttonClasses({
+                            variant: lens === item.key ? 'default' : 'outline',
+                            size: 'sm',
+                        })
+                    "
                     @click="setLens(item.key)"
                 >
                     {{ item.label }}
@@ -1717,7 +1728,11 @@ function badgeLabel(key: string, value: unknown): string {
                         />
 
                         <component
-                            :is="schema.table.inlineRecordActions ? InlineRecordActions : RecordActions"
+                            :is="
+                                schema.table.inlineRecordActions
+                                    ? InlineRecordActions
+                                    : RecordActions
+                            "
                             :ref="(el: any) => registerRowMenu(row.id, el)"
                             :groups="menuFor(row)"
                             :title="row.name ?? `#${row.id}`"

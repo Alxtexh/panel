@@ -195,7 +195,9 @@ watch(
                     @keyup.enter="runSearch"
                 />
 
-                <p class="text-muted-foreground text-xs font-normal">Auto-refresh every {{ pollSeconds }}s</p>
+                <p class="text-muted-foreground text-xs font-normal">
+                    Auto-refresh every {{ pollSeconds }}s
+                </p>
             </div>
 
             <!--
@@ -204,7 +206,11 @@ watch(
                 "Error" beats a menu on the screen somebody opened because
                 something is on fire.
             -->
-            <div class="flex flex-wrap items-center gap-1 border-t p-2" role="group" aria-label="Filter by level">
+            <div
+                class="flex flex-wrap items-center gap-1 border-t p-2"
+                role="group"
+                aria-label="Filter by level"
+            >
                 <button
                     v-for="t in TIERS"
                     :key="t.key"

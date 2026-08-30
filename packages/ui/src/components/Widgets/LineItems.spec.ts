@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import LineItems from './LineItems.vue'
 import CartPanel from './CartPanel.vue'
+import LineItems from './LineItems.vue'
 
 describe('LineItems', () => {
     it('shows quantity, amount and a dedicated payment pill', () => {

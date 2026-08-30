@@ -2,9 +2,9 @@
 /**
  * Index of PlanCards. Create is a page action; this only emits.
  */
-import PlanCard from './PlanCard.vue'
 import { PAGE_SHELL } from '../../lib/pageShell'
 import PkButton from '../primitives/PkButton.vue'
+import PlanCard from './PlanCard.vue'
 import type { PlanRecord } from './planTypes'
 
 withDefaults(
@@ -26,11 +26,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div
-        class="w-full space-y-6"
-        :class="embedded ? '' : PAGE_SHELL"
-        data-slot="plan-grid"
-    >
+    <div class="w-full space-y-6" :class="embedded ? '' : PAGE_SHELL" data-slot="plan-grid">
         <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <h1 v-if="title" class="text-xl font-semibold tracking-tight sm:text-2xl">
@@ -50,10 +46,7 @@ const emit = defineEmits<{
             No plans yet. Create one to offer organisations a bundle of modules and limits.
         </p>
 
-        <div
-            v-else
-            class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
-        >
+        <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <PlanCard
                 v-for="plan in plans"
                 :key="plan.id"

@@ -18,8 +18,8 @@
  * live processor yet. This screen never talks to a payment processor
  * directly.
  */
-import { computed, ref } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
 import {
     PAGE_SHELL_STACK,
     PkBadge,
@@ -88,9 +88,7 @@ const STATUS_TONES: Record<string, 'success' | 'warning' | 'destructive' | 'info
     expired: 'destructive',
 }
 
-const statusTone = computed(
-    () => STATUS_TONES[props.subscription?.status ?? ''] ?? 'info',
-)
+const statusTone = computed(() => STATUS_TONES[props.subscription?.status ?? ''] ?? 'info')
 
 const statusLabel = computed(() => {
     const status = props.subscription?.status
@@ -201,18 +199,16 @@ const confirmPrice = computed(() => {
             <PkBadge :variant="statusTone">{{ statusLabel }}</PkBadge>
         </section>
 
-        <PkEmptyState
-            v-else
-            :title="t('billing.subscription.no_active')"
-            icon="credit-card"
-        />
+        <PkEmptyState v-else :title="t('billing.subscription.no_active')" icon="credit-card" />
 
         <div v-if="canSwitchAnnual" class="flex items-center justify-center gap-3">
             <div class="bg-background inline-flex rounded-md border p-1" role="group">
                 <button
                     type="button"
                     class="rounded px-3 py-1.5 text-sm font-medium transition-colors"
-                    :class="!annual ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'"
+                    :class="
+                        !annual ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+                    "
                     :aria-pressed="!annual"
                     @click="annual = false"
                 >
@@ -228,10 +224,7 @@ const confirmPrice = computed(() => {
                     {{ t('billing.subscription.annual') }}
                 </button>
             </div>
-            <span
-                v-if="annualSavingsPercent > 0"
-                class="text-success text-xs font-semibold"
-            >
+            <span v-if="annualSavingsPercent > 0" class="text-success text-xs font-semibold">
                 Save {{ annualSavingsPercent }}%
             </span>
         </div>
@@ -261,8 +254,8 @@ const confirmPrice = computed(() => {
             <p v-if="confirming" class="text-sm">
                 You're about to switch to
                 <span class="font-medium">{{ confirming.name }}</span>
-                at <span class="font-medium">{{ confirmPrice }}</span>.
-                You'll be sent to a secure checkout to complete payment.
+                at <span class="font-medium">{{ confirmPrice }}</span
+                >. You'll be sent to a secure checkout to complete payment.
             </p>
 
             <template #footer>

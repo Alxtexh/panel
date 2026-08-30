@@ -13,13 +13,14 @@
  */
 import { Head } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import SupportPageEditor, {
-    type SupportProps,
-} from '../../components/support/SupportPageEditor.vue'
+import SupportPageEditor from '../../components/support/SupportPageEditor.vue'
+import type { SupportProps } from '../../components/support/SupportPageEditor.vue'
 
 defineOptions({
     // Page props arrive as attributes and this root is a fragment.
-    inheritAttrs: false, layout: { breadcrumbs: [{ title: 'FAQ', href: '' }] } })
+    inheritAttrs: false,
+    layout: { breadcrumbs: [{ title: 'FAQ', href: '' }] },
+})
 
 /**
  * THE QUESTIONS COME FROM THE SERVER, and they used to be an array right here -
@@ -68,47 +69,52 @@ function toggle(id: string) {
 
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 sm:p-6">
         <SupportPageEditor :support="support">
-        <header class="flex flex-col gap-1">
-            <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
-                Frequently asked questions
-            </h1>
-            <p class="text-sm text-muted-foreground font-normal">The things people ask in the first week.</p>
-        </header>
+            <header class="flex flex-col gap-1">
+                <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
+                    Frequently asked questions
+                </h1>
+                <p class="text-sm text-muted-foreground font-normal">
+                    The things people ask in the first week.
+                </p>
+            </header>
 
-        <section v-for="group in sections" :key="group.title" class="flex flex-col gap-2">
-            <h2 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                {{ group.title }}
-            </h2>
+            <section v-for="group in sections" :key="group.title" class="flex flex-col gap-2">
+                <h2 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    {{ group.title }}
+                </h2>
 
-            <div class="divide-y overflow-hidden rounded-lg border bg-card">
-                <div v-for="item in group.items" :key="item.id">
-                    <h3>
-                        <button
-                            type="button"
-                            class="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-accent/50"
-                            :aria-expanded="openId === item.id"
-                            @click="toggle(item.id)"
-                        >
-                            {{ item.q }}
-                            <svg
-                                viewBox="0 0 24 24"
-                                class="size-4 shrink-0 text-muted-foreground transition-transform"
-                                :class="openId === item.id ? 'rotate-180' : ''"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
+                <div class="divide-y overflow-hidden rounded-lg border bg-card">
+                    <div v-for="item in group.items" :key="item.id">
+                        <h3>
+                            <button
+                                type="button"
+                                class="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-accent/50"
+                                :aria-expanded="openId === item.id"
+                                @click="toggle(item.id)"
                             >
-                                <path d="m6 9 6 6 6-6" />
-                            </svg>
-                        </button>
-                    </h3>
+                                {{ item.q }}
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    class="size-4 shrink-0 text-muted-foreground transition-transform"
+                                    :class="openId === item.id ? 'rotate-180' : ''"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                >
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </button>
+                        </h3>
 
-                    <p v-if="openId === item.id" class="px-4 pb-3 text-sm text-muted-foreground">
-                        {{ item.a }}
-                    </p>
+                        <p
+                            v-if="openId === item.id"
+                            class="px-4 pb-3 text-sm text-muted-foreground"
+                        >
+                            {{ item.a }}
+                        </p>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
         </SupportPageEditor>
     </div>
 </template>

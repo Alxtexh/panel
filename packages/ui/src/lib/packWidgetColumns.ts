@@ -9,9 +9,7 @@
  * `span >= 2` widgets flush the current column batch and sit on their own
  * full-width band, matching `lg:col-span-2` without stretching siblings.
  */
-export type WidgetColumnBand<T> =
-    | { type: 'wide'; item: T }
-    | { type: 'columns'; columns: T[][] }
+export type WidgetColumnBand<T> = { type: 'wide'; item: T } | { type: 'columns'; columns: T[][] }
 
 type ResponsiveSpan = number | Record<string, number>
 

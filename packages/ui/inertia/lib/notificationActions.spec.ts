@@ -13,9 +13,8 @@ vi.mock('vue-sonner', () => ({
     },
 }))
 
-const { flashToastHrefs, linkedNotificationActions, showFlashToast } = await import(
-    './notificationActions'
-)
+const { flashToastHrefs, linkedNotificationActions, showFlashToast } =
+    await import('./notificationActions')
 const { toast } = await import('vue-sonner')
 
 describe('notification actions', () => {
@@ -58,9 +57,16 @@ describe('notification actions', () => {
     })
 
     it('maps persistent to an infinite duration, ignoring a duration alongside it', () => {
-        showFlashToast({ type: 'warning', message: 'Action needed', persistent: true, duration: 8000 })
+        showFlashToast({
+            type: 'warning',
+            message: 'Action needed',
+            persistent: true,
+            duration: 8000,
+        })
 
-        expect(toast.warning).toHaveBeenCalledWith('Action needed', { duration: Number.POSITIVE_INFINITY })
+        expect(toast.warning).toHaveBeenCalledWith('Action needed', {
+            duration: Number.POSITIVE_INFINITY,
+        })
     })
 
     it('overrides the icon colour independently of type', () => {

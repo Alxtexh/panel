@@ -71,9 +71,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
 // PHONES ARE NEVER THE ICON RAIL. `open` is the desktop collapse cookie; the
 // mobile drawer uses `openMobile`. Leaving `state` collapsed on a phone made
 // AppSidebar render flyout icons with no labels inside the overlay sheet.
-const state = computed(() =>
-    isMobile.value || open.value ? 'expanded' : 'collapsed',
-)
+const state = computed(() => (isMobile.value || open.value ? 'expanded' : 'collapsed'))
 
 provideSidebarContext({
     state,

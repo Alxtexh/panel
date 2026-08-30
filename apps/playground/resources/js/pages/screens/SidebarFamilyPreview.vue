@@ -7,9 +7,9 @@
  * chrome so each sample is distinct: accordion, file-tree, calendar, dialog,
  * header, inset, and the rest.
  */
-import { computed } from 'vue'
-import { Head, Link } from '@inertiajs/vue3'
-import { PAGE_SHELL } from '@alxtexh-enterprise/panel'
+import { PAGE_SHELL } from '@alxtexh-enterprise/panel';
+import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 type SidebarLayout =
     | 'inset'
@@ -20,7 +20,7 @@ type SidebarLayout =
     | 'accordion'
     | 'file-tree'
     | 'calendar'
-    | 'dialog'
+    | 'dialog';
 
 const LAYOUTS: SidebarLayout[] = [
     'inset',
@@ -32,7 +32,7 @@ const LAYOUTS: SidebarLayout[] = [
     'file-tree',
     'calendar',
     'dialog',
-]
+];
 
 const LAYOUT_META: Record<
     SidebarLayout,
@@ -93,12 +93,12 @@ const LAYOUT_META: Record<
         lookFor: 'Rail hidden until you open it from the top bar trigger.',
         shadcn: 'sidebar-13',
     },
-}
+};
 
 const props = defineProps<{
-    forceSidebarLayout: SidebarLayout
-    layoutLabel: string
-}>()
+    forceSidebarLayout: SidebarLayout;
+    layoutLabel: string;
+}>();
 
 const siblings = computed(() =>
     LAYOUTS.map((layout) => ({
@@ -107,9 +107,9 @@ const siblings = computed(() =>
         label: LAYOUT_META[layout].label,
         current: layout === props.forceSidebarLayout,
     })),
-)
+);
 
-const meta = computed(() => LAYOUT_META[props.forceSidebarLayout])
+const meta = computed(() => LAYOUT_META[props.forceSidebarLayout]);
 </script>
 
 <template>
@@ -121,7 +121,9 @@ const meta = computed(() => LAYOUT_META[props.forceSidebarLayout])
                 class="flex flex-wrap items-center gap-2 text-xs"
                 aria-label="Sidebar layout samples"
             >
-                <span class="font-medium text-muted-foreground">{{ layoutLabel }}</span>
+                <span class="font-medium text-muted-foreground">{{
+                    layoutLabel
+                }}</span>
                 <span class="text-muted-foreground/50">|</span>
                 <Link
                     v-for="item in siblings"
@@ -139,7 +141,9 @@ const meta = computed(() => LAYOUT_META[props.forceSidebarLayout])
             </nav>
 
             <div class="space-y-3">
-                <h1 class="text-lg font-semibold tracking-tight">{{ meta.label }} sidebar</h1>
+                <h1 class="text-lg font-semibold tracking-tight">
+                    {{ meta.label }} sidebar
+                </h1>
                 <p class="text-sm text-muted-foreground">{{ meta.blurb }}</p>
                 <p class="text-sm text-foreground">
                     <span class="font-medium">What to look for:</span>
@@ -147,7 +151,9 @@ const meta = computed(() => LAYOUT_META[props.forceSidebarLayout])
                 </p>
                 <p class="text-sm text-muted-foreground">
                     Live AppLayout shell. shadcn-vue block
-                    <code class="rounded bg-muted px-1 py-0.5 text-xs">{{ meta.shadcn }}</code>
+                    <code class="rounded bg-muted px-1 py-0.5 text-xs">{{
+                        meta.shadcn
+                    }}</code>
                     via
                     <code class="rounded bg-muted px-1 py-0.5 text-xs"
                         >Panel::sidebarLayout('{{ forceSidebarLayout }}')</code
@@ -157,12 +163,13 @@ const meta = computed(() => LAYOUT_META[props.forceSidebarLayout])
                     v-if="forceSidebarLayout === 'dialog'"
                     class="text-sm text-muted-foreground"
                 >
-                    Use the sidebar trigger in the top bar to open the overlay rail. This
-                    family starts closed on purpose.
+                    Use the sidebar trigger in the top bar to open the overlay
+                    rail. This family starts closed on purpose.
                 </p>
                 <p v-else class="text-sm text-muted-foreground">
-                    Collapse the rail, switch families above, and confirm the chrome
-                    rearranges. This page is content only; it does not draw a second shell.
+                    Collapse the rail, switch families above, and confirm the
+                    chrome rearranges. This page is content only; it does not
+                    draw a second shell.
                 </p>
             </div>
         </div>

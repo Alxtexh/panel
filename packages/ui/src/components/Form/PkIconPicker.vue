@@ -44,7 +44,10 @@ function pick(name: string) {
             type="button"
             role="option"
             class="border-input hover:bg-accent inline-flex h-9 min-w-9 items-center justify-center rounded-md border px-2 text-xs font-medium disabled:opacity-50"
-            :class="[FOCUS_RING, current === name ? 'border-primary bg-primary/10 text-primary' : '']"
+            :class="[
+                FOCUS_RING,
+                current === name ? 'border-primary bg-primary/10 text-primary' : '',
+            ]"
             :aria-selected="current === name"
             :disabled="disabled"
             :title="name"

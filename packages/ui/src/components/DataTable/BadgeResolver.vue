@@ -9,10 +9,10 @@
  * `destructive` / `info` are the dedicated tokens PkBadge already owns.
  */
 import { computed } from 'vue'
+import { BADGE_VARIANTS } from '../../composables/useSchemaColumns'
+import { iconPath } from '../primitives/icons'
 import PkBadge from '../primitives/PkBadge.vue'
 import PkDropdown from '../primitives/PkDropdown.vue'
-import { iconPath } from '../primitives/icons'
-import { BADGE_VARIANTS } from '../../composables/useSchemaColumns'
 
 const props = withDefaults(
     defineProps<{

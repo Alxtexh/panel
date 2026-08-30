@@ -19,13 +19,14 @@
  */
 import { Head } from '@inertiajs/vue3'
 import { ExternalLink, Info, LifeBuoy } from '@lucide/vue'
-import SupportPageEditor, {
-    type SupportProps,
-} from '../../components/support/SupportPageEditor.vue'
+import SupportPageEditor from '../../components/support/SupportPageEditor.vue'
+import type { SupportProps } from '../../components/support/SupportPageEditor.vue'
 
 defineOptions({
     // Page props arrive as attributes and this root is a fragment.
-    inheritAttrs: false, layout: { breadcrumbs: [{ title: 'About', href: '' }] } })
+    inheritAttrs: false,
+    layout: { breadcrumbs: [{ title: 'About', href: '' }] },
+})
 
 withDefaults(
     defineProps<{
@@ -55,72 +56,78 @@ withDefaults(
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 sm:p-6">
         <SupportPageEditor :support="support">
-        <header class="flex flex-col gap-2">
-            <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
-                {{ name ?? 'About' }}
-            </h1>
+            <header class="flex flex-col gap-2">
+                <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
+                    {{ name ?? 'About' }}
+                </h1>
 
-            <p v-if="tagline" class="text-muted-foreground text-sm font-normal">
-                {{ tagline }}
-            </p>
+                <p v-if="tagline" class="text-muted-foreground text-sm font-normal">
+                    {{ tagline }}
+                </p>
 
-            <p v-if="version" class="text-muted-foreground text-xs font-normal">Version {{ version }}</p>
-        </header>
+                <p v-if="version" class="text-muted-foreground text-xs font-normal">
+                    Version {{ version }}
+                </p>
+            </header>
 
-        <div v-if="description" class="bg-card rounded-lg border p-5 text-sm leading-relaxed">
-            <Info class="text-muted-foreground mb-3 size-4" />
-            <p>{{ description }}</p>
-        </div>
+            <div v-if="description" class="bg-card rounded-lg border p-5 text-sm leading-relaxed">
+                <Info class="text-muted-foreground mb-3 size-4" />
+                <p>{{ description }}</p>
+            </div>
 
-        <!--
+            <!--
             NOTHING CONFIGURED IS SAID PLAINLY, rather than left as a blank
             screen. A page that renders an empty card reads as a bug; one that
             says what is missing and where to set it reads as unconfigured, and
             the second is recoverable by whoever is looking at it.
         -->
-        <div
-            v-if="!description && links.length === 0 && !contact"
-            class="text-muted-foreground rounded-lg border border-dashed p-6 text-sm"
-        >
-            Nothing has been written here yet. Fill in
-            <code class="bg-muted rounded px-1 py-0.5 text-xs">panel.about</code>
-            in your configuration to describe this installation, add links, and say who to contact.
-        </div>
-
-        <div v-if="links.length > 0" class="flex flex-col gap-2">
-            <a
-                v-for="link in links"
-                :key="link.href"
-                :href="link.href"
-                class="bg-card hover:bg-accent flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-colors"
+            <div
+                v-if="!description && links.length === 0 && !contact"
+                class="text-muted-foreground rounded-lg border border-dashed p-6 text-sm"
             >
-                <span class="font-medium">{{ link.label }}</span>
-                <ExternalLink class="text-muted-foreground size-4" />
-            </a>
-        </div>
+                Nothing has been written here yet. Fill in
+                <code class="bg-muted rounded px-1 py-0.5 text-xs">panel.about</code>
+                in your configuration to describe this installation, add links, and say who to
+                contact.
+            </div>
 
-        <div v-if="contact" class="bg-card flex items-start gap-3 rounded-lg border p-5 text-sm">
-            <LifeBuoy class="text-muted-foreground mt-0.5 size-4 shrink-0" />
-            <p>{{ contact }}</p>
-        </div>
+            <div v-if="links.length > 0" class="flex flex-col gap-2">
+                <a
+                    v-for="link in links"
+                    :key="link.href"
+                    :href="link.href"
+                    class="bg-card hover:bg-accent flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-colors"
+                >
+                    <span class="font-medium">{{ link.label }}</span>
+                    <ExternalLink class="text-muted-foreground size-4" />
+                </a>
+            </div>
 
-        <section
-            v-for="extra in extras"
-            :key="extra.title"
-            class="bg-card flex flex-col gap-3 rounded-lg border p-5 text-sm"
-        >
-            <h2 class="font-semibold">{{ extra.title }}</h2>
-            <p v-if="extra.body" class="leading-relaxed">{{ extra.body }}</p>
-            <a
-                v-for="link in extra.links"
-                :key="link.href"
-                :href="link.href"
-                class="text-primary inline-flex items-center gap-2 hover:underline"
+            <div
+                v-if="contact"
+                class="bg-card flex items-start gap-3 rounded-lg border p-5 text-sm"
             >
-                {{ link.label }}
-                <ExternalLink class="size-3.5" />
-            </a>
-        </section>
+                <LifeBuoy class="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                <p>{{ contact }}</p>
+            </div>
+
+            <section
+                v-for="extra in extras"
+                :key="extra.title"
+                class="bg-card flex flex-col gap-3 rounded-lg border p-5 text-sm"
+            >
+                <h2 class="font-semibold">{{ extra.title }}</h2>
+                <p v-if="extra.body" class="leading-relaxed">{{ extra.body }}</p>
+                <a
+                    v-for="link in extra.links"
+                    :key="link.href"
+                    :href="link.href"
+                    class="text-primary inline-flex items-center gap-2 hover:underline"
+                >
+                    {{ link.label }}
+                    <ExternalLink class="size-3.5" />
+                </a>
+            </section>
         </SupportPageEditor>
     </div>
 </template>

@@ -15,12 +15,10 @@
  */
 export const CATALOGUE_CONTAINER = '@container min-w-0'
 
-export const CATALOGUE_GRID =
-    'grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3'
+export const CATALOGUE_GRID = 'grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3'
 
 /** Same column rules with a tighter gap (directory-style link tiles). */
-export const CATALOGUE_GRID_TIGHT =
-    'grid grid-cols-1 gap-2 @lg:grid-cols-2 @3xl:grid-cols-3'
+export const CATALOGUE_GRID_TIGHT = 'grid grid-cols-1 gap-2 @lg:grid-cols-2 @3xl:grid-cols-3'
 
 /**
  * Product / merch tiles: same container column steps, slightly larger gap.

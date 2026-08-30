@@ -4,8 +4,8 @@
  *
  * Renders nothing without Echo or when presence is off in shared props.
  */
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { echoClient } from '../composables/useWidgetPoll'
 
 type Member = { id: number | string; name: string }
@@ -26,8 +26,12 @@ const visible = computed(() =>
     others.value.filter((m) => String(m.id) !== String(selfId.value ?? '')),
 )
 
-let channel: { leave?: () => void; here?: Function; joining?: Function; leaving?: Function } | null =
-    null
+let channel: {
+    leave?: () => void
+    here?: (members: Member[]) => void
+    joining?: (member: Member) => void
+    leaving?: (member: Member) => void
+} | null = null
 
 onMounted(() => {
     if (!enabled.value || props.tenantId == null || props.tenantId === '') {

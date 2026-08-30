@@ -16,7 +16,8 @@ import { computed } from 'vue'
 
 const props = withDefaults(
     defineProps<{
-        variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'info'
+        variant?:
+            'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'info'
         class?: string
     }>(),
     { variant: 'default' },

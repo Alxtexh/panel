@@ -8,9 +8,9 @@
 import { computed } from 'vue'
 import PkSlideover from '../Overlay/PkSlideover.vue'
 import PkStatusBadge from '../primitives/PkStatusBadge.vue'
-import Sparkline from './Sparkline.vue'
-import MiniStatCard from './MiniStatCard.vue'
 import type { CatalogItem } from './CatalogCard.vue'
+import MiniStatCard from './MiniStatCard.vue'
+import Sparkline from './Sparkline.vue'
 
 const props = defineProps<{
     open: boolean
@@ -51,11 +51,7 @@ const history = computed(() => {
     }
 
     const base =
-        item.stock ??
-        item.progress?.value ??
-        item.metrics?.price ??
-        item.metrics?.rent ??
-        12
+        item.stock ?? item.progress?.value ?? item.metrics?.price ?? item.metrics?.rent ?? 12
 
     return series(Number(base) || 12, seed(item.key) % 7)
 })
@@ -73,10 +69,7 @@ const occupancy = computed(() => {
 })
 
 const showCart = computed(
-    () =>
-        Boolean(props.item) &&
-        !isUnit.value &&
-        props.item?.status !== 'out-of-stock',
+    () => Boolean(props.item) && !isUnit.value && props.item?.status !== 'out-of-stock',
 )
 </script>
 
@@ -111,7 +104,10 @@ const showCart = computed(
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="text-lg font-semibold tabular-nums">{{ item.price }}</p>
-                    <p v-if="typeof item.stock === 'number'" class="text-muted-foreground text-sm font-normal">
+                    <p
+                        v-if="typeof item.stock === 'number'"
+                        class="text-muted-foreground text-sm font-normal"
+                    >
                         {{ item.stock }} in stock
                     </p>
                 </div>
@@ -132,22 +128,14 @@ const showCart = computed(
                     "
                     :series="isUnit ? occupancy : history"
                 />
-                <MiniStatCard
-                    label="Price"
-                    :value="item.price ?? '-'"
-                    :series="history"
-                />
+                <MiniStatCard label="Price" :value="item.price ?? '-'" :series="history" />
             </div>
 
             <div class="flex flex-col gap-2">
                 <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                     {{ isUnit ? 'Occupancy, last 6 months' : 'Stock movement, last 6 months' }}
                 </p>
-                <Sparkline
-                    :data="isUnit ? occupancy : history"
-                    :height="72"
-                    filled
-                />
+                <Sparkline :data="isUnit ? occupancy : history" :height="72" filled />
             </div>
         </div>
 

@@ -6,17 +6,14 @@
  */
 import { computed, ref } from 'vue'
 import { PAGE_SHELL } from '../../lib/pageShell'
-import PkHeading from '../primitives/PkHeading.vue'
-import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 import DataTable from '../DataTable/DataTable.vue'
 import type { TableColumn } from '../DataTable/types'
-import CatalogGrid from './CatalogGrid.vue'
-import {
-    emptyCatalogFilters,
-    matchCatalogItem,
-} from './catalogFilter'
-import type { CatalogFacet, CatalogFilters } from './catalogFilter'
+import PkHeading from '../primitives/PkHeading.vue'
+import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 import type { CatalogItem } from './CatalogCard.vue'
+import { emptyCatalogFilters, matchCatalogItem } from './catalogFilter'
+import type { CatalogFacet, CatalogFilters } from './catalogFilter'
+import CatalogGrid from './CatalogGrid.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -64,10 +61,7 @@ const visibleCards = computed(() =>
 </script>
 
 <template>
-    <div
-        class="flex w-full flex-col gap-10"
-        :class="embedded ? '' : PAGE_SHELL"
-    >
+    <div class="flex w-full flex-col gap-10" :class="embedded ? '' : PAGE_SHELL">
         <PkHeading :title="title" :description="description ?? undefined" />
 
         <section class="flex flex-col gap-4">

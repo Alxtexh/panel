@@ -3,11 +3,13 @@ import { packWidgetColumns } from './packWidgetColumns'
 
 describe('packWidgetColumns', () => {
     it('keeps declaration order in a single column', () => {
-        const items = [{ key: 'a', span: 1 }, { key: 'b', span: 1 }, { key: 'c', span: 1 }]
+        const items = [
+            { key: 'a', span: 1 },
+            { key: 'b', span: 1 },
+            { key: 'c', span: 1 },
+        ]
 
-        expect(packWidgetColumns(items, 1)).toEqual([
-            { type: 'columns', columns: [items] },
-        ])
+        expect(packWidgetColumns(items, 1)).toEqual([{ type: 'columns', columns: [items] }])
     })
 
     it('round-robins span-1 widgets so each column stacks independently', () => {
@@ -18,10 +20,7 @@ describe('packWidgetColumns', () => {
         expect(packWidgetColumns([signups, look, newest], 2)).toEqual([
             {
                 type: 'columns',
-                columns: [
-                    [signups, newest],
-                    [look],
-                ],
+                columns: [[signups, newest], [look]],
             },
         ])
     })

@@ -1,4 +1,4 @@
-import { type LineItem } from './LineItems.vue';
+import type { LineItem } from './LineItems.vue';
 type __VLS_Props = {
     items: LineItem[];
     title?: string;

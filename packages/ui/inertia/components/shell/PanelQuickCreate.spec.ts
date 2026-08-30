@@ -64,11 +64,7 @@ describe('PanelQuickCreate', () => {
         )
 
         const links = wrapper.findAll('a')
-        expect(links.map((link) => link.text().trim())).toEqual([
-            'Plan',
-            'Announcement',
-            'Client',
-        ])
+        expect(links.map((link) => link.text().trim())).toEqual(['Plan', 'Announcement', 'Client'])
         expect(links.map((link) => link.attributes('href'))).toEqual([
             '/plans/create',
             '/announcements/create',

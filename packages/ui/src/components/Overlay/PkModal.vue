@@ -152,7 +152,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                         </p>
                     </div>
 
-                    <div :class="['min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4', OVERLAY_FORM_MEASURE]">
+                    <div
+                        :class="[
+                            'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4',
+                            OVERLAY_FORM_MEASURE,
+                        ]"
+                    >
                         <slot />
                     </div>
 

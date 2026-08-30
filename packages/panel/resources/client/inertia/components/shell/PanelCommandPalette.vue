@@ -115,6 +115,7 @@ function loadRecent(): void {
 
         if (!raw) {
             recentItems.value = []
+
             return
         }
 
@@ -122,12 +123,19 @@ function loadRecent(): void {
 
         if (!Array.isArray(parsed)) {
             recentItems.value = []
+
             return
         }
 
-        recentItems.value = (parsed as unknown[]).filter((i) => i && typeof i === 'object')
+        recentItems.value = (parsed as unknown[])
+            .filter((i) => i && typeof i === 'object')
             .map((i) => i as Partial<Item>)
-            .filter((i) => i.kind === 'record' && typeof i.href === 'string' && typeof i.title === 'string')
+            .filter(
+                (i) =>
+                    i.kind === 'record' &&
+                    typeof i.href === 'string' &&
+                    typeof i.title === 'string',
+            )
             .slice(0, recentLimit)
             .map((i) => ({ ...i, id: String(i.id ?? i.href) }) as Item)
     } catch {
@@ -141,6 +149,7 @@ function loadPinned(): void {
 
         if (!raw) {
             pinnedItems.value = []
+
             return
         }
 
@@ -148,12 +157,19 @@ function loadPinned(): void {
 
         if (!Array.isArray(parsed)) {
             pinnedItems.value = []
+
             return
         }
 
-        pinnedItems.value = (parsed as unknown[]).filter((i) => i && typeof i === 'object')
+        pinnedItems.value = (parsed as unknown[])
+            .filter((i) => i && typeof i === 'object')
             .map((i) => i as Partial<Item>)
-            .filter((i) => i.kind === 'record' && typeof i.href === 'string' && typeof i.title === 'string')
+            .filter(
+                (i) =>
+                    i.kind === 'record' &&
+                    typeof i.href === 'string' &&
+                    typeof i.title === 'string',
+            )
             .slice(0, recentLimit)
             .map((i) => ({ ...i, id: String(i.id ?? i.href) }) as Item)
     } catch {
@@ -171,7 +187,10 @@ function rememberRecent(item: Item): void {
     }
 
     if (isPinned(item)) {
-        const nextPinned = [item, ...pinnedItems.value.filter((i) => i.href !== item.href)].slice(0, recentLimit)
+        const nextPinned = [item, ...pinnedItems.value.filter((i) => i.href !== item.href)].slice(
+            0,
+            recentLimit,
+        )
 
         pinnedItems.value = nextPinned
 
@@ -184,7 +203,10 @@ function rememberRecent(item: Item): void {
         return
     }
 
-    const next = [item, ...recentItems.value.filter((i) => i.href !== item.href)].slice(0, recentLimit)
+    const next = [item, ...recentItems.value.filter((i) => i.href !== item.href)].slice(
+        0,
+        recentLimit,
+    )
 
     recentItems.value = next
 
@@ -202,7 +224,10 @@ function togglePin(item: Item): void {
 
     if (isPinned(item)) {
         const nextPinned = pinnedItems.value.filter((i) => i.href !== item.href)
-        const nextRecent = [item, ...recentItems.value.filter((i) => i.href !== item.href)].slice(0, recentLimit)
+        const nextRecent = [item, ...recentItems.value.filter((i) => i.href !== item.href)].slice(
+            0,
+            recentLimit,
+        )
 
         pinnedItems.value = nextPinned
         recentItems.value = nextRecent
@@ -217,7 +242,10 @@ function togglePin(item: Item): void {
         return
     }
 
-    const nextPinned = [item, ...pinnedItems.value.filter((i) => i.href !== item.href)].slice(0, recentLimit)
+    const nextPinned = [item, ...pinnedItems.value.filter((i) => i.href !== item.href)].slice(
+        0,
+        recentLimit,
+    )
     const nextRecent = recentItems.value.filter((i) => i.href !== item.href)
 
     pinnedItems.value = nextPinned
@@ -554,7 +582,9 @@ defineExpose({ show })
                             placeholder="Search screens and records…"
                         />
 
-                        <span v-if="searching" class="text-muted-foreground text-xs font-normal">…</span>
+                        <span v-if="searching" class="text-muted-foreground text-xs font-normal"
+                            >…</span
+                        >
                     </div>
 
                     <div ref="listEl" class="max-h-80 overflow-y-auto p-1">
@@ -592,7 +622,11 @@ defineExpose({ show })
                                     <span
                                         v-if="item.kind === 'record'"
                                         class="inline-flex h-6 items-center rounded border px-1.5 text-[10px] leading-none transition-colors hover:bg-accent"
-                                        :class="isPinned(item) ? 'border-amber-500/60 text-amber-600 dark:text-amber-500' : 'border-border text-muted-foreground'"
+                                        :class="
+                                            isPinned(item)
+                                                ? 'border-amber-500/60 text-amber-600 dark:text-amber-500'
+                                                : 'border-border text-muted-foreground'
+                                        "
                                         role="button"
                                         :aria-label="isPinned(item) ? 'Unpin' : 'Pin'"
                                         tabindex="-1"
@@ -619,7 +653,9 @@ defineExpose({ show })
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
                                         >
-                                            <path d="M14 2l-1 6 4 4 6-1-9 9-3-3-3 3-1-1 3-3-3-3 9-9z" />
+                                            <path
+                                                d="M14 2l-1 6 4 4 6-1-9 9-3-3-3 3-1-1 3-3-3-3 9-9z"
+                                            />
                                         </svg>
                                     </span>
                                 </span>

@@ -11,12 +11,12 @@ import { Link, usePage } from '@inertiajs/vue3'
 import { Search } from '@lucide/vue'
 import { computed } from 'vue'
 import { PkBoundary } from '@alxtexh-enterprise/panel'
+import { useSidebarLayout } from '../../composables/useSidebarLayout'
+import type { User } from '../../types'
 import AppLogo from './AppLogo.vue'
 import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
 import PanelLockButton from './PanelLockButton.vue'
 import TopNavUser from './TopNavUser.vue'
-import { useSidebarLayout } from '../../composables/useSidebarLayout'
-import type { User } from '../../types'
 
 defineSlots<{
     userMenu?(props: { user: User | null }): unknown

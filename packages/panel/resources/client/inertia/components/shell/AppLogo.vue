@@ -45,7 +45,12 @@ const { appearance } = useAppearance()
 const name = computed(() => {
     const panel = page.props.panel as { brand?: string | null } | null | undefined
 
-    return panel?.brand ?? (page.props.panelBrand as string | null) ?? (page.props.name as string | null) ?? 'Panel'
+    return (
+        panel?.brand ??
+        (page.props.panelBrand as string | null) ??
+        (page.props.name as string | null) ??
+        'Panel'
+    )
 })
 
 const logoLight = computed(() => (page.props.panelLogo as string | null) ?? null)
@@ -60,7 +65,9 @@ const logoLight = computed(() => (page.props.panelLogo as string | null) ?? null
  */
 const logoDark = computed(() => (page.props.panelLogoDark as string | null) ?? null)
 
-const logo = computed(() => (isDark(appearance.value) ? (logoDark.value ?? logoLight.value) : logoLight.value))
+const logo = computed(() =>
+    isDark(appearance.value) ? (logoDark.value ?? logoLight.value) : logoLight.value,
+)
 
 /**
  * Initials, for the collapsed rail where a name does not fit.

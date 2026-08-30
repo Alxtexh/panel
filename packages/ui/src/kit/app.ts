@@ -12,14 +12,15 @@
  * object is already set, so `??=` never assigns the shell.
  */
 import { createInertiaApp, router } from '@inertiajs/vue3'
-import { createApp, h, type DefineComponent } from 'vue'
+import { createApp, h } from 'vue'
+import type { DefineComponent } from 'vue'
+import { SettingsLayout } from '../../inertia'
 import {
     bootstrapAppearance,
     initializeAppearance,
     setAppearancePersister,
     syncAppearanceFromInertiaPage,
 } from '../index'
-import { SettingsLayout } from '../../inertia'
 import PanelLayout from './PanelLayout.vue'
 import './app.css'
 

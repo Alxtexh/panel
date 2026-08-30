@@ -88,11 +88,17 @@ describe('AuthLayout', () => {
     describe('split layout', () => {
         function splitWrapper(props: Record<string, unknown>) {
             page.props = props
-            return mount(AuthLayout, { props: { title: 'Log in', description: 'Enter your details' } })
+
+            return mount(AuthLayout, {
+                props: { title: 'Log in', description: 'Enter your details' },
+            })
         }
 
         it('renders the split layout when panel.authLayout is split', () => {
-            const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme', authLayout: 'split' } })
+            const wrapper = splitWrapper({
+                name: 'Acme',
+                panel: { brand: 'Acme', authLayout: 'split' },
+            })
             // The muted image panel renders.
             expect(wrapper.find('.bg-muted').exists()).toBe(true)
             // The form title renders as h1.
@@ -100,13 +106,19 @@ describe('AuthLayout', () => {
         })
 
         it('shows the brand name in the split image panel', () => {
-            const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme — Admin', authLayout: 'split' } })
+            const wrapper = splitWrapper({
+                name: 'Acme',
+                panel: { brand: 'Acme — Admin', authLayout: 'split' },
+            })
             // Desktop image panel contains the brand name link.
             expect(wrapper.find('.bg-muted a span').text()).toBe('Acme — Admin')
         })
 
         it('shows the form description in split layout', () => {
-            const wrapper = splitWrapper({ name: 'Acme', panel: { brand: 'Acme', authLayout: 'split' } })
+            const wrapper = splitWrapper({
+                name: 'Acme',
+                panel: { brand: 'Acme', authLayout: 'split' },
+            })
             const description = wrapper.find('.bg-background p')
             expect(description.text()).toBe('Enter your details')
             expect(description.classes()).toContain('font-normal')
@@ -122,7 +134,9 @@ describe('AuthLayout', () => {
     describe('card family (login-04)', () => {
         it('renders the inset card on a muted page', () => {
             page.props = { name: 'Acme', panel: { brand: 'Acme', authLayout: 'card' } }
-            const wrapper = mount(AuthLayout, { props: { title: 'Log in', description: 'Welcome back' } })
+            const wrapper = mount(AuthLayout, {
+                props: { title: 'Log in', description: 'Welcome back' },
+            })
 
             expect(wrapper.find('[data-slot="card"]').exists()).toBe(true)
             expect(wrapper.find('h1').text()).toBe('Log in')

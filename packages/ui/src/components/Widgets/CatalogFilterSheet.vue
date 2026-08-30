@@ -6,9 +6,9 @@
  * sheet stages a draft until Apply, the same rhythm as dashboard Filters.
  */
 import { computed, reactive, ref, watch } from 'vue'
+import PkSlideover from '../Overlay/PkSlideover.vue'
 import PkButton from '../primitives/PkButton.vue'
 import PkTextInput from '../primitives/PkTextInput.vue'
-import PkSlideover from '../Overlay/PkSlideover.vue'
 import { emptyCatalogFilters } from './catalogFilter'
 import type { CatalogFacet, CatalogFilters, CatalogRangeValue } from './catalogFilter'
 
@@ -189,11 +189,7 @@ function reset(): void {
                 />
             </label>
 
-            <section
-                v-for="facet in chipFacets"
-                :key="facet.key"
-                class="flex flex-col gap-2"
-            >
+            <section v-for="facet in chipFacets" :key="facet.key" class="flex flex-col gap-2">
                 <h3 class="text-sm font-semibold">{{ facet.label ?? facet.key }}</h3>
                 <div class="flex flex-wrap items-center gap-1.5">
                     <button
@@ -214,11 +210,7 @@ function reset(): void {
                 </div>
             </section>
 
-            <section
-                v-for="facet in rangeFacets"
-                :key="facet.key"
-                class="flex flex-col gap-2"
-            >
+            <section v-for="facet in rangeFacets" :key="facet.key" class="flex flex-col gap-2">
                 <h3 class="text-sm font-semibold">{{ facet.label ?? facet.key }}</h3>
                 <div class="flex flex-wrap items-center gap-1.5">
                     <PkTextInput

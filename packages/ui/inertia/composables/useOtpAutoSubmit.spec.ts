@@ -14,6 +14,7 @@ describe('useOtpAutoSubmit', () => {
         const Harness = defineComponent({
             setup() {
                 const { onOtpComplete } = useOtpAutoSubmit(formRef)
+
                 return { onOtpComplete }
             },
             template: '<button type="button" @click="onOtpComplete(\'123456\')">go</button>',
@@ -39,6 +40,7 @@ describe('useOtpAutoSubmit', () => {
                 const { onOtpComplete } = useOtpAutoSubmit(formRef, {
                     guard: () => false,
                 })
+
                 return { onOtpComplete }
             },
             template: '<button type="button" @click="onOtpComplete(\'123456\')">go</button>',

@@ -14,7 +14,8 @@ describe('UnsavedBar', () => {
             props: { show: true, message: 'New client', saveLabel: 'Create Client' },
             attachTo: document.body,
         })
-        await nextTick(); await nextTick()
+        await nextTick()
+        await nextTick()
         const frame = document.querySelector('[data-slot="unsaved-bar"]') as HTMLElement | null
         expect(frame).not.toBeNull()
         expect(shell.contains(frame)).toBe(true)
@@ -23,7 +24,8 @@ describe('UnsavedBar', () => {
         const chrome = frame!.firstElementChild as HTMLElement
         expect(chrome.className).toContain('max-w-7xl')
         expect(chrome.className).toContain(FORM_MEASURE.split(' ')[0])
-        wrapper.unmount(); shell.remove()
+        wrapper.unmount()
+        shell.remove()
     })
 
     it('clears the mobile bottom nav rather than painting under it', async () => {
@@ -32,7 +34,8 @@ describe('UnsavedBar', () => {
         document.body.appendChild(shell)
 
         const wrapper = mount(UnsavedBar, { props: { show: true }, attachTo: document.body })
-        await nextTick(); await nextTick()
+        await nextTick()
+        await nextTick()
         const frame = document.querySelector('[data-slot="unsaved-bar"]') as HTMLElement | null
         expect(frame).not.toBeNull()
         // PkBottomNav is `min-h-14` (3.5rem) and only renders `sm:hidden`, so
@@ -40,7 +43,8 @@ describe('UnsavedBar', () => {
         // the same breakpoint the nav disappears.
         expect(frame!.className).toContain('bottom-[calc(3.5rem+env(safe-area-inset-bottom))]')
         expect(frame!.className).toContain('sm:bottom-0')
-        wrapper.unmount(); shell.remove()
+        wrapper.unmount()
+        shell.remove()
     })
 
     it('actually removes the element when `show` flips back to false', async () => {
@@ -49,7 +53,8 @@ describe('UnsavedBar', () => {
         document.body.appendChild(shell)
 
         const wrapper = mount(UnsavedBar, { props: { show: true }, attachTo: document.body })
-        await nextTick(); await nextTick()
+        await nextTick()
+        await nextTick()
         expect(document.querySelector('[data-slot="unsaved-bar"]')).not.toBeNull()
 
         /*
@@ -66,13 +71,15 @@ describe('UnsavedBar', () => {
         await new Promise((resolve) => setTimeout(resolve, 250))
 
         expect(document.querySelector('[data-slot="unsaved-bar"]')).toBeNull()
-        wrapper.unmount(); shell.remove()
+        wrapper.unmount()
+        shell.remove()
     })
 
     it('falls back to sticky in-tree when the panel shell is absent', async () => {
         document.getElementById('pk-main')?.remove()
         const wrapper = mount(UnsavedBar, { props: { show: true }, attachTo: document.body })
-        await nextTick(); await nextTick()
+        await nextTick()
+        await nextTick()
         const frame = wrapper.find('[data-slot="unsaved-bar"]')
         expect(frame.classes()).toContain('sticky')
         expect(frame.classes()).not.toContain('fixed')

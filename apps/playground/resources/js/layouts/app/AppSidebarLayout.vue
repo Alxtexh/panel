@@ -28,7 +28,10 @@ useTenantTheme(
 <template>
     <AppShell variant="sidebar">
         <AppSidebar />
-        <AppContent variant="sidebar" class="min-h-0 overflow-x-hidden overflow-y-auto">
+        <AppContent
+            variant="sidebar"
+            class="min-h-0 overflow-x-hidden overflow-y-auto"
+        >
             <ImpersonationBanner />
             <AppSidebarHeader :breadcrumbs="breadcrumbs" />
             <slot />

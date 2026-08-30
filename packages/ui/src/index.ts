@@ -82,12 +82,7 @@ export { MUTED_COPY, MUTED_COPY_SNUG, MUTED_COPY_XS } from './lib/copyClasses'
 export { INPUT_COPY, INPUT_PLACEHOLDER, INPUT_TEXT } from './lib/inputClasses'
 export { packWidgetColumns } from './lib/packWidgetColumns'
 export type { WidgetColumnBand } from './lib/packWidgetColumns'
-export {
-    mergeLayoutItems,
-    parseWidgetId,
-    toPersistedLayout,
-    widgetId,
-} from './lib/dashboardLayout'
+export { mergeLayoutItems, parseWidgetId, toPersistedLayout, widgetId } from './lib/dashboardLayout'
 export type {
     DashboardLayout,
     DashboardLayoutEntry,
@@ -205,11 +200,7 @@ export { default as PlanGrid } from './components/Widgets/PlanGrid.vue'
 export { default as PlanEditor } from './components/Widgets/PlanEditor.vue'
 export { default as PlanPurchaseCard } from './components/Widgets/PlanPurchaseCard.vue'
 export type { PurchasablePlan } from './components/Widgets/PlanPurchaseCard.vue'
-export {
-    cycleLabel,
-    formatPerkValue,
-    perkGranted,
-} from './components/Widgets/planTypes'
+export { cycleLabel, formatPerkValue, perkGranted } from './components/Widgets/planTypes'
 export type {
     ExtraPerk,
     PlanLimitField,
@@ -305,10 +296,7 @@ export { actionColorTone } from './lib/actionColorTone'
 
 export { useColumnVisibility } from './composables/useColumnVisibility'
 export { useColumnWidths } from './composables/useColumnWidths'
-export {
-    DASHBOARD_HIDE_KEY,
-    DASHBOARD_HIDDEN_STORAGE_KEY,
-} from './composables/dashboardHide'
+export { DASHBOARD_HIDE_KEY, DASHBOARD_HIDDEN_STORAGE_KEY } from './composables/dashboardHide'
 export type { DashboardHide } from './composables/dashboardHide'
 export { useLiveUpdates } from './composables/useLiveUpdates'
 export type { LiveConfig, LiveUpdateOptions } from './composables/useLiveUpdates'
@@ -330,7 +318,13 @@ export {
 export { useTenantTheme } from './composables/useTenantTheme'
 export { useSchemaColumns, BADGE_VARIANTS, hasBadgeValue } from './composables/useSchemaColumns'
 
-export type { FilterSchema, FilterIndicator, GroupSchema, SortDirection, TableColumn } from './components/DataTable/types'
+export type {
+    FilterSchema,
+    FilterIndicator,
+    GroupSchema,
+    SortDirection,
+    TableColumn,
+} from './components/DataTable/types'
 export type { QueryField, QueryGroup, QueryRule } from './components/DataTable/PkQueryBuilder.vue'
 export type { BulkActionSchema } from './components/DataTable/BulkActions.vue'
 export type {

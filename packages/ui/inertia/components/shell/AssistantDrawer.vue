@@ -520,7 +520,9 @@ function ask(question: string) {
                                     @click="ask(s.text)"
                                 >
                                     <span class="text-sm">{{ s.text }}</span>
-                                    <span class="text-xs text-muted-foreground font-normal">{{ s.hint }}</span>
+                                    <span class="text-xs text-muted-foreground font-normal">{{
+                                        s.hint
+                                    }}</span>
                                 </button>
                             </div>
 

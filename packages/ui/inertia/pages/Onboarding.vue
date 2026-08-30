@@ -11,7 +11,14 @@ const InertiaLink = markRaw(Link)
 
 const props = defineProps<{
     pageHeading?: string
-    steps?: { key: string; label: string; done: boolean; href?: string | null; description?: string; actionLabel?: string }[]
+    steps?: {
+        key: string
+        label: string
+        done: boolean
+        href?: string | null
+        description?: string
+        actionLabel?: string
+    }[]
     dismissed?: boolean
 }>()
 

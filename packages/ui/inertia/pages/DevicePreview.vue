@@ -5,9 +5,9 @@
  * AN IFRAME, so media queries fire against the frame, not the outer window.
  * `url` is empty until the host page fills it (panel home).
  */
-import { PkDeviceFrame } from '@alxtexh-enterprise/panel'
 import { Head } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { PkDeviceFrame } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -25,9 +25,30 @@ const DEVICES: Device[] = [
     { id: 'iphone-13', label: 'iPhone 13', width: 390, height: 844, notch: true, kind: 'phone' },
     { id: 'pixel-7', label: 'Pixel 7', width: 412, height: 915, notch: false, kind: 'phone' },
     { id: 'ipad-mini', label: 'iPad mini', width: 744, height: 1000, notch: false, kind: 'phone' },
-    { id: 'laptop-13', label: '13" laptop', width: 1280, height: 800, notch: false, kind: 'laptop' },
-    { id: 'laptop-14', label: '14" laptop', width: 1440, height: 900, notch: false, kind: 'laptop' },
-    { id: 'laptop-16', label: '16" laptop', width: 1680, height: 1050, notch: false, kind: 'laptop' },
+    {
+        id: 'laptop-13',
+        label: '13" laptop',
+        width: 1280,
+        height: 800,
+        notch: false,
+        kind: 'laptop',
+    },
+    {
+        id: 'laptop-14',
+        label: '14" laptop',
+        width: 1440,
+        height: 900,
+        notch: false,
+        kind: 'laptop',
+    },
+    {
+        id: 'laptop-16',
+        label: '16" laptop',
+        width: 1680,
+        height: 1050,
+        notch: false,
+        kind: 'laptop',
+    },
 ]
 
 const props = withDefaults(
@@ -91,7 +112,9 @@ const frameKey = computed(() => `${device.value.id}-${landscape.value}-${src.val
         <header class="space-y-1">
             <h1 class="text-xl font-semibold">{{ pageHeading ?? 'Device preview' }}</h1>
             <p class="text-sm text-muted-foreground font-normal">
-                {{ pageDescription ?? 'The panel itself, at real device sizes. Navigate inside it.' }}
+                {{
+                    pageDescription ?? 'The panel itself, at real device sizes. Navigate inside it.'
+                }}
             </p>
         </header>
 

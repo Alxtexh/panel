@@ -1,6 +1,6 @@
 import type { CatalogItem } from './CatalogCard.vue';
-import type { LineItem } from './LineItems.vue';
 import type { CatalogFacet } from './catalogFilter';
+import type { LineItem } from './LineItems.vue';
 type __VLS_Props = {
     items: CatalogItem[];
     facets?: CatalogFacet[];

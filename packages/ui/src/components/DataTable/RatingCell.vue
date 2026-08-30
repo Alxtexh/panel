@@ -26,13 +26,7 @@ const current = computed(() => {
         :aria-label="`${current} of ${max}`"
         data-test="rating-cell"
     >
-        <svg
-            v-for="n in max"
-            :key="n"
-            class="size-3.5"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-        >
+        <svg v-for="n in max" :key="n" class="size-3.5" viewBox="0 0 24 24" aria-hidden="true">
             <path
                 d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L7 14.2l-5-4.9 6.9-1L12 2Z"
                 :fill="current >= n ? 'currentColor' : 'none'"

@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import PlanCard from './PlanCard.vue'
-import PlanGrid from './PlanGrid.vue'
 import PlanEditor from './PlanEditor.vue'
+import PlanGrid from './PlanGrid.vue'
 import { cycleLabel, formatPerkValue } from './planTypes'
 import type { PlanRecord } from './planTypes'
 

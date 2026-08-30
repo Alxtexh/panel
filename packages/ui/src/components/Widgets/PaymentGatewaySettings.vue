@@ -6,16 +6,16 @@
  * v-models the gateway list and never talks to a bank.
  */
 import { computed, ref } from 'vue'
+import PkSlideover from '../Overlay/PkSlideover.vue'
+import { iconPath } from '../primitives/icons'
 import PkButton from '../primitives/PkButton.vue'
 import PkHeading from '../primitives/PkHeading.vue'
 import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 import PkTextInput from '../primitives/PkTextInput.vue'
-import PkSlideover from '../Overlay/PkSlideover.vue'
-import { iconPath } from '../primitives/icons'
 import PaymentGateways from './PaymentGateways.vue'
 import type { PaymentGateway } from './PaymentGateways.vue'
 
-const props = withDefaults(
+withDefaults(
     defineProps<{
         title?: string
         description?: string | null
@@ -183,9 +183,7 @@ function setMode(mode: 'test' | 'live'): void {
                 <PkStatusBadge v-else-if="selected.connected" status="disabled">
                     Disabled
                 </PkStatusBadge>
-                <PkStatusBadge v-if="selected.isDefault" status="default">
-                    Default
-                </PkStatusBadge>
+                <PkStatusBadge v-if="selected.isDefault" status="default"> Default </PkStatusBadge>
                 <PkStatusBadge v-if="selected.connected && selected.mode" :status="selected.mode">
                     {{ selected.mode }}
                 </PkStatusBadge>
@@ -214,8 +212,8 @@ function setMode(mode: 'test' | 'live'): void {
             <div v-if="selected.connected" class="flex flex-col gap-2">
                 <p class="text-sm font-medium">Checkout</p>
                 <p class="text-muted-foreground text-xs font-normal">
-                    Disabled gateways stay connected but are not offered at checkout.
-                    Only one gateway can be the default tender.
+                    Disabled gateways stay connected but are not offered at checkout. Only one
+                    gateway can be the default tender.
                 </p>
                 <div class="flex flex-wrap items-center gap-2">
                     <PkButton

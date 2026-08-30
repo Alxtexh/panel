@@ -3,10 +3,10 @@
  * Full-page catalog item: gallery, facts, stock or occupancy, charts, cart.
  */
 import { computed, ref } from 'vue'
-import LineChart from './LineChart.vue'
-import MiniStatCard from './MiniStatCard.vue'
 import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 import type { CatalogItem } from './CatalogCard.vue'
+import LineChart from './LineChart.vue'
+import MiniStatCard from './MiniStatCard.vue'
 
 const props = defineProps<{
     item: CatalogItem
@@ -116,13 +116,17 @@ const showCart = computed(() => !isUnit.value && props.item.status !== 'out-of-s
 
                 <dl class="grid grid-cols-2 gap-3 text-sm">
                     <div v-if="item.sku" class="rounded-lg border p-3">
-                        <dt class="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                        <dt
+                            class="text-muted-foreground text-xs font-medium tracking-wide uppercase"
+                        >
                             SKU
                         </dt>
                         <dd class="mt-1 font-medium">{{ item.sku }}</dd>
                     </div>
                     <div class="rounded-lg border p-3">
-                        <dt class="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                        <dt
+                            class="text-muted-foreground text-xs font-medium tracking-wide uppercase"
+                        >
                             {{ isUnit ? 'Occupancy' : 'Stock' }}
                         </dt>
                         <dd class="mt-1 font-medium">

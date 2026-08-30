@@ -1,4 +1,4 @@
-import { type PlanRecord } from './planTypes';
+import type { PlanRecord } from './planTypes';
 type __VLS_Props = {
     plan: PlanRecord;
     /** Hide delete when the plan still has subscribers. */

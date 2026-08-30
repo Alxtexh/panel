@@ -94,7 +94,9 @@ function next(): void {
                 <ChevronRight class="size-4" />
             </button>
         </div>
-        <div class="text-muted-foreground mb-1 grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium uppercase">
+        <div
+            class="text-muted-foreground mb-1 grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium uppercase"
+        >
             <span v-for="d in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']" :key="d">{{ d }}</span>
         </div>
         <div class="grid grid-cols-7 gap-0.5">

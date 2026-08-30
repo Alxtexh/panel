@@ -494,6 +494,7 @@ function onResizeStart(col: TableColumn, event: PointerEvent) {
         } catch {
             // ignore
         }
+
         target.removeEventListener('pointermove', onMove)
         target.removeEventListener('pointerup', onUp)
         target.removeEventListener('pointercancel', onUp)
@@ -599,6 +600,7 @@ function onCheckboxClick(row: Record<string, unknown>, event: MouseEvent) {
             }
 
             lastSelectedId.value = id
+
             return
         }
     }
@@ -726,7 +728,9 @@ function summaryValue(key: string): string {
                          heading over a column of grips is noise. -->
                     <th v-if="reordering" class="w-8 border-b px-2 py-2.5" />
 
-                    <th v-if="selectable && !reordering" class="w-10 border-b px-3 py-2.5"
+                    <th
+                        v-if="selectable && !reordering"
+                        class="w-10 border-b px-3 py-2.5"
                         :class="stickyDataKey ? 'bg-muted/50 sticky left-0 z-[11]' : ''"
                     >
                         <input
@@ -796,20 +800,13 @@ function summaryValue(key: string): string {
                 class="transition-opacity"
             >
                 <tr v-for="n in 6" :key="`skel-${n}`" class="border-b">
-                    <td
-                        v-if="reordering"
-                        class="w-8 px-2 py-2.5"
-                    >
+                    <td v-if="reordering" class="w-8 px-2 py-2.5">
                         <PkSkeleton variant="circle" class="!size-4" />
                     </td>
                     <td v-if="selectable && !reordering" class="px-3 py-2.5">
                         <PkSkeleton variant="circle" class="!size-4" />
                     </td>
-                    <td
-                        v-for="col in visibleColumns"
-                        :key="col.key"
-                        class="px-3 py-2.5"
-                    >
+                    <td v-for="col in visibleColumns" :key="col.key" class="px-3 py-2.5">
                         <PkSkeleton variant="text" />
                     </td>
                     <td v-if="$slots.actions" class="px-2 py-2.5">
@@ -817,10 +814,7 @@ function summaryValue(key: string): string {
                     </td>
                 </tr>
             </tbody>
-            <tbody
-                v-else
-                :class="loading ? 'opacity-50 transition-opacity' : 'transition-opacity'"
-            >
+            <tbody v-else :class="loading ? 'opacity-50 transition-opacity' : 'transition-opacity'">
                 <template v-for="(row, index) in rows" :key="rowId(row) ?? `row-${index}`">
                     <!--
                         A heading whenever the value changes from the previous
@@ -909,7 +903,11 @@ function summaryValue(key: string): string {
                         <td
                             v-if="selectable && !reordering"
                             class="px-3 py-2"
-                            :class="stickyDataKey ? 'bg-background sticky left-0 z-[1] group-hover:bg-muted/50' : ''"
+                            :class="
+                                stickyDataKey
+                                    ? 'bg-background sticky left-0 z-[1] group-hover:bg-muted/50'
+                                    : ''
+                            "
                         >
                             <input
                                 :id="`${instanceId}-row-${rowId(row) ?? index}`"
@@ -958,7 +956,11 @@ function summaryValue(key: string): string {
                                         }}</span>
                                     </button>
                                 </span>
-                                <span v-else-if="row[col.key] == null || row[col.key] === ''" class="text-muted-foreground">None</span>
+                                <span
+                                    v-else-if="row[col.key] == null || row[col.key] === ''"
+                                    class="text-muted-foreground"
+                                    >None</span
+                                >
                                 <span v-else>{{ row[col.key] }}</span>
                             </slot>
                         </td>

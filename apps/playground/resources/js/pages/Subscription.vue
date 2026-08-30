@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Subscription from '@alxtexh-enterprise/panel/pages/Subscription.vue'
+import Subscription from '@alxtexh-enterprise/panel/pages/Subscription.vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>

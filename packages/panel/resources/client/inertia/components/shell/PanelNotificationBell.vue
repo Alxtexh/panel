@@ -23,15 +23,15 @@
  * version could not do - it wrote `/notifications` in its own source, so a
  * portal mounted at `/reseller` asked the wrong panel and got the wrong bell.
  */
-import { router, usePage } from '@inertiajs/vue3'
+import { usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import { PkSlideover } from '@alxtexh-enterprise/panel'
 import {
     followNotificationAction,
     linkedNotificationActions,
     notificationActionIsPost,
-    type NotificationAction,
 } from '../../lib/notificationActions'
+import type { NotificationAction } from '../../lib/notificationActions'
 
 /*
  * INLINE, NOT IMPORTED. A type imported into `defineProps` makes the SFC
@@ -470,11 +470,7 @@ function runNoteAction(note: Note, action: NotificationAction, event: Event): vo
                         />
 
                         <div class="min-w-0 flex-1">
-                            <button
-                                type="button"
-                                class="w-full text-left"
-                                @click="openNote(note)"
-                            >
+                            <button type="button" class="w-full text-left" @click="openNote(note)">
                                 <span class="block text-sm font-medium">{{ note.title }}</span>
                                 <span class="text-muted-foreground block text-xs">{{
                                     note.body

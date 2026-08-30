@@ -76,17 +76,19 @@ const form = useForm<{
 })
 
 const catalog = computed(() => props.eventsCatalog ?? [])
-const selected = computed(() =>
-    props.endpoints.find((row) => row.id === props.selectedEndpointId) ?? null,
+const selected = computed(
+    () => props.endpoints.find((row) => row.id === props.selectedEndpointId) ?? null,
 )
 
 function toggleEvent(event: string) {
     const set = new Set(form.events)
+
     if (set.has(event)) {
         set.delete(event)
     } else {
         set.add(event)
     }
+
     form.events = [...set]
 }
 
@@ -162,9 +164,11 @@ function statusLabel(row: DeliveryRow): string {
     if (row.error) {
         return row.error
     }
+
     if (row.status_code != null) {
         return String(row.status_code)
     }
+
     return 'Pending'
 }
 </script>
@@ -202,15 +206,16 @@ function statusLabel(row: DeliveryRow): string {
                     class="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
                     placeholder="https://example.com/hooks/panel"
                 />
-                <p v-if="form.errors.url" class="mt-1 text-xs text-destructive">{{ form.errors.url }}</p>
+                <p v-if="form.errors.url" class="mt-1 text-xs text-destructive">
+                    {{ form.errors.url }}
+                </p>
             </div>
 
             <fieldset>
                 <legend class="text-sm font-medium">Events</legend>
                 <p v-if="catalog.length === 0" class="mt-1 text-sm text-muted-foreground">
                     No events in
-                    <code class="font-mono">panel.webhooks.events</code>.
-                    Override
+                    <code class="font-mono">panel.webhooks.events</code>. Override
                     <code class="font-mono">WebhookEndpointsPage::events()</code>
                     or set the catalog.
                 </p>
@@ -235,7 +240,9 @@ function statusLabel(row: DeliveryRow): string {
                 <label class="text-sm font-medium" for="webhook-secret">
                     Secret
                     <span class="font-normal text-muted-foreground">
-                        ({{ editingId ? 'leave blank to keep' : 'optional, auto-generated if empty' }})
+                        ({{
+                            editingId ? 'leave blank to keep' : 'optional, auto-generated if empty'
+                        }})
                     </span>
                 </label>
                 <input
@@ -295,13 +302,22 @@ function statusLabel(row: DeliveryRow): string {
                         </p>
                         <p
                             class="mt-1 text-xs"
-                            :class="row.enabled ? 'text-muted-foreground' : 'text-amber-600 dark:text-amber-500'"
+                            :class="
+                                row.enabled
+                                    ? 'text-muted-foreground'
+                                    : 'text-amber-600 dark:text-amber-500'
+                            "
                         >
                             {{ row.enabled ? 'Enabled' : 'Disabled' }}
                         </p>
                     </button>
                     <div class="flex flex-wrap gap-2">
-                        <Button type="button" variant="outline" size="sm" @click="selectEndpoint(row.id)">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            @click="selectEndpoint(row.id)"
+                        >
                             Deliveries
                         </Button>
                         <Button type="button" variant="outline" size="sm" @click="sendPing(row.id)">
@@ -323,7 +339,9 @@ function statusLabel(row: DeliveryRow): string {
                 <h2 class="text-lg font-semibold tracking-tight">Delivery log</h2>
                 <p class="text-sm text-muted-foreground font-normal">
                     Recent deliveries for
-                    <span class="font-mono text-xs">{{ selected?.url ?? `endpoint #${selectedEndpointId}` }}</span>
+                    <span class="font-mono text-xs">{{
+                        selected?.url ?? `endpoint #${selectedEndpointId}`
+                    }}</span>
                     (last 50).
                 </p>
             </header>
@@ -342,7 +360,9 @@ function statusLabel(row: DeliveryRow): string {
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
+                        <thead
+                            class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground"
+                        >
                             <tr>
                                 <th class="px-3 py-2">Event</th>
                                 <th class="px-3 py-2">Status</th>
@@ -359,7 +379,9 @@ function statusLabel(row: DeliveryRow): string {
                                 <td class="px-3 py-2 font-mono text-xs">{{ row.event }}</td>
                                 <td
                                     class="px-3 py-2 text-xs"
-                                    :class="row.error ? 'text-destructive' : 'text-muted-foreground'"
+                                    :class="
+                                        row.error ? 'text-destructive' : 'text-muted-foreground'
+                                    "
                                 >
                                     {{ statusLabel(row) }}
                                 </td>

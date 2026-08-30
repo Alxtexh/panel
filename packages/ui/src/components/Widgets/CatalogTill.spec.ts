@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import CatalogTill from './CatalogTill.vue'
 import type { CatalogItem } from './CatalogCard.vue'
+import CatalogTill from './CatalogTill.vue'
 
 const mug: CatalogItem = {
     key: 'mug',

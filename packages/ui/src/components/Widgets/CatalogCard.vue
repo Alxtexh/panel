@@ -13,8 +13,8 @@
  * the page's: this emits `select` with the item key.
  */
 import { computed, ref } from 'vue'
-import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 import { iconPath } from '../primitives/icons'
+import PkStatusBadge from '../primitives/PkStatusBadge.vue'
 import type { SemanticTone } from '../primitives/statusTone'
 
 export interface CatalogItem {
@@ -145,9 +145,7 @@ function onCart(event: Event) {
         <div
             class="bg-muted relative overflow-hidden"
             :class="
-                layout === 'list'
-                    ? 'aspect-square w-20 shrink-0 sm:w-24'
-                    : 'aspect-[4/3] w-full'
+                layout === 'list' ? 'aspect-square w-20 shrink-0 sm:w-24' : 'aspect-[4/3] w-full'
             "
         >
             <img
@@ -198,10 +196,7 @@ function onCart(event: Event) {
                     <p v-if="item.caption" class="text-muted-foreground truncate text-xs">
                         {{ item.caption }}
                     </p>
-                    <p
-                        v-if="item.facts?.length"
-                        class="text-muted-foreground line-clamp-2 text-xs"
-                    >
+                    <p v-if="item.facts?.length" class="text-muted-foreground line-clamp-2 text-xs">
                         {{ item.facts.join(' · ') }}
                     </p>
                 </div>
@@ -209,38 +204,38 @@ function onCart(event: Event) {
             </div>
 
             <div class="mt-auto flex items-end justify-between gap-2 pt-1">
-            <div class="min-w-0">
-            <p
-                v-if="item.price"
-                class="text-sm font-semibold tabular-nums"
-            >
-                {{ item.price }}
-            </p>
-            <p v-if="stockLabel" class="text-muted-foreground text-xs font-normal tabular-nums">
-                {{ stockLabel }}
-            </p>
-            </div>
-            <button
-                v-if="showCart"
-                type="button"
-                class="text-foreground hover:bg-muted inline-flex size-8 shrink-0 items-center justify-center rounded-md border"
-                aria-label="Add to cart"
-                data-slot="catalog-cart"
-                @click="onCart"
-            >
-                <svg
-                    class="size-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
+                <div class="min-w-0">
+                    <p v-if="item.price" class="text-sm font-semibold tabular-nums">
+                        {{ item.price }}
+                    </p>
+                    <p
+                        v-if="stockLabel"
+                        class="text-muted-foreground text-xs font-normal tabular-nums"
+                    >
+                        {{ stockLabel }}
+                    </p>
+                </div>
+                <button
+                    v-if="showCart"
+                    type="button"
+                    class="text-foreground hover:bg-muted inline-flex size-8 shrink-0 items-center justify-center rounded-md border"
+                    aria-label="Add to cart"
+                    data-slot="catalog-cart"
+                    @click="onCart"
                 >
-                    <path :d="iconPath('cart')" />
-                </svg>
-            </button>
+                    <svg
+                        class="size-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path :d="iconPath('cart')" />
+                    </svg>
+                </button>
             </div>
 
             <div

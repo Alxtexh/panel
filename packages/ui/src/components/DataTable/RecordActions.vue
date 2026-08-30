@@ -66,7 +66,12 @@ export interface RecordActionItem {
      * `RecordAction::extraModalFooterActions()`. Links, not a second thing
      * the modal can submit - see that method's own docblock for why.
      */
-    extraFooterActions?: { label: string; url: string | null; color: string | null; icon: string | null }[]
+    extraFooterActions?: {
+        label: string
+        url: string | null
+        color: string | null
+        icon: string | null
+    }[]
 }
 
 export interface RecordActionGroup {
@@ -153,7 +158,10 @@ function trigger(action: RecordActionItem) {
  * without a resource declaring it twice. Examples: `mod+d`, `shift+e`, `e`.
  */
 function matchesBinding(event: KeyboardEvent, binding: string): boolean {
-    const parts = binding.toLowerCase().split('+').map((part) => part.trim())
+    const parts = binding
+        .toLowerCase()
+        .split('+')
+        .map((part) => part.trim())
     const key = parts.at(-1)
 
     if (!key || event.key.toLowerCase() !== key) {
@@ -163,9 +171,9 @@ function matchesBinding(event: KeyboardEvent, binding: string): boolean {
     const hasMod = event.ctrlKey || event.metaKey
 
     return (
-        hasMod === parts.includes('mod')
-        && event.shiftKey === parts.includes('shift')
-        && event.altKey === parts.includes('alt')
+        hasMod === parts.includes('mod') &&
+        event.shiftKey === parts.includes('shift') &&
+        event.altKey === parts.includes('alt')
     )
 }
 

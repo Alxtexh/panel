@@ -144,72 +144,72 @@ router.on('success', () => {
 
 <template>
     <div class="pk-shell relative flex h-svh flex-col overflow-hidden">
-    <!--
+        <!--
         FIRST IN THE DOCUMENT, because that is the only position that works. A
         skip link placed anywhere else is reached after the thing it exists to
         skip.
     -->
-    <a
-        href="#pk-main"
-        class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring"
-    >
-        Skip to content
-    </a>
+        <a
+            href="#pk-main"
+            class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-lg focus:ring-2 focus:ring-ring focus:outline-none"
+        >
+            Skip to content
+        </a>
 
-    <!--
+        <!--
         PADDING FOR THE BAR, so the last row of a table is not permanently
         underneath it. `sm:pb-0` because the bar itself disappears there.
     -->
-    <div class="flex min-h-0 flex-1 flex-col overflow-hidden pb-14 sm:pb-0">
-        <component :is="shell" :breadcrumbs="breadcrumbs">
-            <slot />
-        </component>
-    </div>
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden pb-14 sm:pb-0">
+            <component :is="shell" :breadcrumbs="breadcrumbs">
+                <slot />
+            </component>
+        </div>
 
-    <PkBottomNav
-        :items="bottomNavItems"
-        :current="page.url"
-        @more="openFullNav"
-    />
+        <PkBottomNav
+            :items="bottomNavItems"
+            :current="page.url"
+            @more="openFullNav"
+        />
 
-    <!--
+        <!--
         EVERY DESTINATION, when four slots are not enough.
 
         A sheet rather than a page: "more" is a disclosure, and navigating away
         to a menu loses the page somebody was reading. It closes on selection
         because the browser is about to replace the view anyway.
     -->
-    <PkModal
-        v-if="showAllNav"
-        :open="showAllNav"
-        title="Go to"
-        @close="showAllNav = false"
-    >
-        <nav class="flex flex-col">
-            <a
-                v-for="item in bottomNavItems"
-                :key="item.key"
-                :href="item.href"
-                class="-mx-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
-                :class="
-                    page.url === item.href ? 'font-medium text-primary' : ''
-                "
-                >{{ item.title }}</a
-            >
-        </nav>
+        <PkModal
+            v-if="showAllNav"
+            :open="showAllNav"
+            title="Go to"
+            @close="showAllNav = false"
+        >
+            <nav class="flex flex-col">
+                <a
+                    v-for="item in bottomNavItems"
+                    :key="item.key"
+                    :href="item.href"
+                    class="-mx-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+                    :class="
+                        page.url === item.href ? 'font-medium text-primary' : ''
+                    "
+                    >{{ item.title }}</a
+                >
+            </nav>
 
-        <template #footer>
-            <button
-                type="button"
-                class="text-sm text-muted-foreground hover:text-foreground"
-                @click="showAllNav = false"
-            >
-                Close
-            </button>
-        </template>
-    </PkModal>
+            <template #footer>
+                <button
+                    type="button"
+                    class="text-sm text-muted-foreground hover:text-foreground"
+                    @click="showAllNav = false"
+                >
+                    Close
+                </button>
+            </template>
+        </PkModal>
 
-    <!--
+        <!--
         SPA NAVIGATION IS SILENT to a screen reader: the URL changes, the DOM is
         replaced, and nothing is announced - so somebody who cannot see the page
         has no idea it changed. A polite live region carrying the page title is
@@ -218,17 +218,17 @@ router.on('success', () => {
         `polite` rather than `assertive` because a navigation is not an
         emergency; assertive would interrupt whatever is being read mid-word.
     -->
-    <div class="sr-only" role="status" aria-live="polite">
-        {{ announcement }}
-    </div>
+        <div class="sr-only" role="status" aria-live="polite">
+            {{ announcement }}
+        </div>
 
-    <!--
+        <!--
         Mounted once, for every panel page, rather than per screen.
 
         A stale session can be discovered on any click anywhere, so the dialog
         that reports it has to already exist wherever that click happened. It
         renders nothing until the router hook in `app.ts` trips it.
     -->
-    <SessionExpired />
+        <SessionExpired />
     </div>
 </template>

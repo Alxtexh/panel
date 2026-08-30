@@ -124,7 +124,10 @@ const ghostClass = buttonClasses({
         <div class="flex items-center gap-3">
             <p class="min-w-0 flex-1 text-sm">
                 <span class="font-medium">{{ next ? next.title : heading }}</span>
-                <span v-if="next?.detail" class="text-muted-foreground mt-0.5 block text-xs sm:mt-0 sm:inline sm:before:content-[':_']">
+                <span
+                    v-if="next?.detail"
+                    class="text-muted-foreground mt-0.5 block text-xs sm:mt-0 sm:inline sm:before:content-[':_']"
+                >
                     {{ next.detail }}
                 </span>
             </p>
@@ -172,7 +175,9 @@ const ghostClass = buttonClasses({
             />
             <div class="flex min-w-0 flex-col gap-0.5">
                 <p class="text-sm font-medium">{{ next.title }}</p>
-                <p v-if="next.detail" class="text-xs text-muted-foreground font-normal">{{ next.detail }}</p>
+                <p v-if="next.detail" class="text-xs text-muted-foreground font-normal">
+                    {{ next.detail }}
+                </p>
                 <component
                     :is="resolvedLink"
                     v-if="next.href"
@@ -215,7 +220,10 @@ const ghostClass = buttonClasses({
                     >
                         {{ item.title }}
                     </p>
-                    <p v-if="!item.done && item.detail" class="text-xs text-muted-foreground font-normal">
+                    <p
+                        v-if="!item.done && item.detail"
+                        class="text-xs text-muted-foreground font-normal"
+                    >
                         {{ item.detail }}
                     </p>
                 </div>

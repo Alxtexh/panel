@@ -8,16 +8,13 @@
  */
 import { computed, onMounted, ref, watch } from 'vue'
 import { PAGE_SHELL } from '../../lib/pageShell'
+import { TRANSPARENT_IMAGE_HELP, assertTransparentImage } from '../../lib/transparentImage'
+import PkDocument from '../Document/PkDocument.vue'
+import PkFileUpload from '../Form/PkFileUpload.vue'
+import type { UploadedFileValue } from '../Form/PkFileUpload.vue'
 import PkButton from '../primitives/PkButton.vue'
 import PkHeading from '../primitives/PkHeading.vue'
 import PkSignaturePad from '../primitives/PkSignaturePad.vue'
-import PkFileUpload from '../Form/PkFileUpload.vue'
-import PkDocument from '../Document/PkDocument.vue'
-import {
-    TRANSPARENT_IMAGE_HELP,
-    assertTransparentImage,
-} from '../../lib/transparentImage'
-import type { UploadedFileValue } from '../Form/PkFileUpload.vue'
 
 export type SavedMark = { id: string; name: string; dataUrl: string }
 
@@ -171,10 +168,7 @@ const preview = computed(() => {
 </script>
 
 <template>
-    <div
-        class="flex w-full flex-col gap-10"
-        :class="embedded ? '' : PAGE_SHELL"
-    >
+    <div class="flex w-full flex-col gap-10" :class="embedded ? '' : PAGE_SHELL">
         <PkHeading :title="title" :description="description ?? undefined" />
 
         <section class="grid gap-8 lg:grid-cols-2">
@@ -209,7 +203,11 @@ const preview = computed(() => {
                     :class="item.id === activeSignature ? 'ring-ring ring-2' : ''"
                     @click="activeSignature = item.id"
                 >
-                    <img :src="item.dataUrl" :alt="item.name" class="h-12 w-40 bg-white object-contain" />
+                    <img
+                        :src="item.dataUrl"
+                        :alt="item.name"
+                        class="h-12 w-40 bg-white object-contain"
+                    />
                 </button>
             </div>
         </section>

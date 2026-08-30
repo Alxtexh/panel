@@ -2,9 +2,9 @@
 /*
  * The panel's Notifications preferences screen, from @alxtexh-enterprise/panel/inertia.
  */
-import Notifications from '@alxtexh-enterprise/panel/pages/settings/Notifications.vue'
+import Notifications from '@alxtexh-enterprise/panel/pages/settings/Notifications.vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>

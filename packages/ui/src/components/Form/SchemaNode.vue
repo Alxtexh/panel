@@ -342,7 +342,11 @@ function uploadFor(key: string) {
     -->
     <section
         v-else-if="node.component === 'section' && conditionMet(node)"
-        :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
+        :class="
+            isRoot
+                ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                : ''
+        "
     >
         <header
             class="flex items-start justify-between gap-3"
@@ -410,7 +414,9 @@ function uploadFor(key: string) {
                 :depth="depth + 1"
                 :class="child.span && child.span >= 2 ? 'sm:col-span-2' : ''"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
-                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
+                @affix-action="
+                    (field: string, action: string) => emit('affix-action', field, action)
+                "
             />
         </div>
     </section>
@@ -441,7 +447,9 @@ function uploadFor(key: string) {
                 :discard="discard"
                 :depth="depth + 1"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
-                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
+                @affix-action="
+                    (field: string, action: string) => emit('affix-action', field, action)
+                "
             />
         </div>
     </section>
@@ -570,7 +578,9 @@ function uploadFor(key: string) {
                 :discard="discard"
                 :depth="depth + 1"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
-                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
+                @affix-action="
+                    (field: string, action: string) => emit('affix-action', field, action)
+                "
             />
         </div>
     </fieldset>
@@ -595,7 +605,11 @@ function uploadFor(key: string) {
     <!-- Tabs. -->
     <div
         v-else-if="node.component === 'tabs' && conditionMet(node)"
-        :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
+        :class="
+            isRoot
+                ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                : ''
+        "
     >
         <div
             class="bg-muted/30 flex gap-1 overflow-x-auto p-1"
@@ -650,7 +664,9 @@ function uploadFor(key: string) {
                 :discard="discard"
                 :depth="depth + 1"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
-                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
+                @affix-action="
+                    (field: string, action: string) => emit('affix-action', field, action)
+                "
             />
         </div>
     </div>
@@ -671,7 +687,11 @@ function uploadFor(key: string) {
     -->
     <div
         v-else-if="node.component === 'wizard' && conditionMet(node)"
-        :class="isRoot ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10' : ''"
+        :class="
+            isRoot
+                ? 'bg-card rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                : ''
+        "
     >
         <PkStepIndicator
             class="p-4"
@@ -702,7 +722,9 @@ function uploadFor(key: string) {
                 :discard="discard"
                 :depth="depth + 1"
                 @change="(key: string, value: unknown) => emit('change', key, value)"
-                @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
+                @affix-action="
+                    (field: string, action: string) => emit('affix-action', field, action)
+                "
             />
         </div>
 

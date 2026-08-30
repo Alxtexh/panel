@@ -118,7 +118,11 @@ describe('PkRepeater - rows, not cards', () => {
         await rows[2]!.trigger('drop')
 
         const emitted = wrapper.emitted('update:modelValue')
-        expect(emitted?.at(-1)?.[0]).toEqual([{ text: 'Second.' }, { text: 'Third.' }, { text: 'First.' }])
+        expect(emitted?.at(-1)?.[0]).toEqual([
+            { text: 'Second.' },
+            { text: 'Third.' },
+            { text: 'First.' },
+        ])
     })
 
     it('does not emit a drop onto the same row that started the drag', async () => {
@@ -275,7 +279,10 @@ describe('PkRepeater - addable, deletable, cloneable', () => {
 })
 
 describe('PkRepeater - table mode', () => {
-    function mountTable(value: Record<string, unknown>[] | null, extra: Record<string, unknown> = {}) {
+    function mountTable(
+        value: Record<string, unknown>[] | null,
+        extra: Record<string, unknown> = {},
+    ) {
         return mount(PkRepeater, {
             props: {
                 modelValue: value,

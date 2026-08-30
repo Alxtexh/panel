@@ -249,7 +249,10 @@ function remove(uid: number) {
                 Add {{ keyLabel.toLowerCase() }}
             </button>
 
-            <p v-if="maxPairs !== null" class="text-muted-foreground text-xs font-normal tabular-nums">
+            <p
+                v-if="maxPairs !== null"
+                class="text-muted-foreground text-xs font-normal tabular-nums"
+            >
                 {{ pairs.length }} of {{ maxPairs }}
             </p>
         </div>

@@ -6,9 +6,9 @@
  * values and emits them back.
  */
 import { ref, watch } from 'vue'
+import SchemaNode from '../Form/SchemaNode.vue'
 import PkModal from '../Overlay/PkModal.vue'
 import PkButton from '../primitives/PkButton.vue'
-import SchemaNode from '../Form/SchemaNode.vue'
 
 const props = withDefaults(
     defineProps<{

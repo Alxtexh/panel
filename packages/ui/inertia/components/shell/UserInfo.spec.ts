@@ -4,8 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('@alxtexh-enterprise/panel', () => ({
     Avatar: {
         inheritAttrs: false,
-        template:
-            '<div data-slot="user-avatar" v-bind="$attrs"><slot /></div>',
+        template: '<div data-slot="user-avatar" v-bind="$attrs"><slot /></div>',
     },
     AvatarImage: {
         props: ['src', 'alt'],

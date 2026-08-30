@@ -7,12 +7,7 @@
  */
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import {
-    PAGE_SHELL,
-    PkEmptyState,
-    PkPageHeader,
-    buttonClasses,
-} from '@alxtexh-enterprise/panel'
+import { PAGE_SHELL, PkEmptyState, PkPageHeader, buttonClasses } from '@alxtexh-enterprise/panel'
 
 interface BoardCard {
     id: number | string
@@ -75,15 +70,18 @@ const totalCards = computed(() => columns.value.reduce((n, col) => n + col.cards
 
 const purpose = computed(() => {
     const base = `${totalCards.value} cards across ${columns.value.length} columns`
+
     if (props.capped) {
         return `${base}. Showing first ${props.cardCap}.`
     }
+
     return base
 })
 
 function onDragStart(card: BoardCard, event: DragEvent) {
     if (!props.can.update || busy.value) {
         event.preventDefault()
+
         return
     }
 
@@ -178,6 +176,7 @@ async function onColumnDrop(columnValue: string, event: DragEvent) {
         if (!response.ok) {
             columns.value = previous
             error.value = 'Could not move that card.'
+
             return
         }
     } catch {
@@ -211,9 +210,7 @@ function openRecord(card: BoardCard) {
             role="status"
         >
             Showing first {{ cardCap }} cards
-            <span v-if="totalMatching != null">
-                of {{ totalMatching }} matching
-            </span>
+            <span v-if="totalMatching != null"> of {{ totalMatching }} matching </span>
             . Use the table view with filters to work beyond this cap.
         </p>
 
@@ -245,7 +242,9 @@ function openRecord(card: BoardCard) {
             >
                 <header class="border-border flex items-center justify-between border-b px-3 py-2">
                     <h2 class="text-sm font-medium">{{ col.label }}</h2>
-                    <span class="text-muted-foreground text-xs font-normal">{{ col.cards.length }}</span>
+                    <span class="text-muted-foreground text-xs font-normal">{{
+                        col.cards.length
+                    }}</span>
                 </header>
 
                 <ul class="flex flex-1 flex-col gap-2 overflow-y-auto p-2">

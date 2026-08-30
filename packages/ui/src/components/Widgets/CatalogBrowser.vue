@@ -5,19 +5,15 @@
  * DATA IS YOURS. Pass tabs (products, units, listings). Selecting a tile
  * emits `select`; the page visits the dedicated item route.
  */
-import { PAGE_SHELL } from '../../lib/pageShell'
 import { computed, ref, watch } from 'vue'
+import { PAGE_SHELL } from '../../lib/pageShell'
 import PkHeading from '../primitives/PkHeading.vue'
 import PkTextInput from '../primitives/PkTextInput.vue'
-import CatalogGrid from './CatalogGrid.vue'
-import CatalogFilterSheet from './CatalogFilterSheet.vue'
-import {
-    catalogFiltersActive,
-    emptyCatalogFilters,
-    matchCatalogItem,
-} from './catalogFilter'
-import type { CatalogFacet, CatalogFilters } from './catalogFilter'
 import type { CatalogItem } from './CatalogCard.vue'
+import { catalogFiltersActive, emptyCatalogFilters, matchCatalogItem } from './catalogFilter'
+import type { CatalogFacet, CatalogFilters } from './catalogFilter'
+import CatalogFilterSheet from './CatalogFilterSheet.vue'
+import CatalogGrid from './CatalogGrid.vue'
 
 export interface CatalogBrowserTab {
     key: string
@@ -121,10 +117,7 @@ function applyFilters(next: CatalogFilters): void {
 </script>
 
 <template>
-    <div
-        class="flex w-full flex-col gap-8"
-        :class="embedded ? '' : PAGE_SHELL"
-    >
+    <div class="flex w-full flex-col gap-8" :class="embedded ? '' : PAGE_SHELL">
         <PkHeading :title="title" :description="description ?? undefined" />
 
         <div
@@ -138,11 +131,7 @@ function applyFilters(next: CatalogFilters): void {
                 :key="tab.key"
                 type="button"
                 class="px-3 py-1.5 text-sm transition-colors"
-                :class="
-                    tabKey === tab.key
-                        ? 'bg-foreground text-background'
-                        : 'hover:bg-muted/60'
-                "
+                :class="tabKey === tab.key ? 'bg-foreground text-background' : 'hover:bg-muted/60'"
                 role="tab"
                 :aria-selected="tabKey === tab.key ? 'true' : 'false'"
                 @click="tabKey = tab.key"
@@ -203,9 +192,7 @@ function applyFilters(next: CatalogFilters): void {
                     type="button"
                     class="px-2.5 py-1.5 text-xs transition-colors"
                     :class="
-                        layout === 'grid'
-                            ? 'bg-foreground text-background'
-                            : 'hover:bg-muted/60'
+                        layout === 'grid' ? 'bg-foreground text-background' : 'hover:bg-muted/60'
                     "
                     :aria-pressed="layout === 'grid' ? 'true' : 'false'"
                     aria-label="Grid"
@@ -217,9 +204,7 @@ function applyFilters(next: CatalogFilters): void {
                     type="button"
                     class="px-2.5 py-1.5 text-xs transition-colors"
                     :class="
-                        layout === 'list'
-                            ? 'bg-foreground text-background'
-                            : 'hover:bg-muted/60'
+                        layout === 'list' ? 'bg-foreground text-background' : 'hover:bg-muted/60'
                     "
                     :aria-pressed="layout === 'list' ? 'true' : 'false'"
                     aria-label="List"

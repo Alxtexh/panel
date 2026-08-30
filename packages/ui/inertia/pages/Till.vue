@@ -4,11 +4,10 @@
  *
  * Items, facets and taxRate come from TillPage. No jurisdiction is assumed.
  */
-import {
-    PAGE_SHELL, CatalogTill } from '@alxtexh-enterprise/panel'
+import { Head, router } from '@inertiajs/vue3'
+import { PAGE_SHELL, CatalogTill } from '@alxtexh-enterprise/panel'
 import type { CatalogFacet, CatalogItem } from '@alxtexh-enterprise/panel'
 import { PanelWidgets } from '@alxtexh-enterprise/panel/inertia'
-import { Head, router } from '@inertiajs/vue3'
 
 defineOptions({ inheritAttrs: false })
 

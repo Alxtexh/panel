@@ -210,7 +210,9 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
             // Configured for broadcast but Echo is absent. Say so rather than
             // sitting silently on a table that will never update.
             status.value = 'connecting'
-            console.warn('[alxtexhpanel] broadcast driver configured but window.Echo is unavailable.')
+            console.warn(
+                '[alxtexhpanel] broadcast driver configured but window.Echo is unavailable.',
+            )
 
             return
         }

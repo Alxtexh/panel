@@ -1,7 +1,7 @@
+import { router } from '@inertiajs/vue3'
+import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { defineComponent, h } from 'vue'
-import { mount } from '@vue/test-utils'
-import { router } from '@inertiajs/vue3'
 import { useWidgetPoll } from './useWidgetPoll'
 
 vi.mock('@inertiajs/vue3', () => ({
@@ -15,11 +15,7 @@ type EchoMock = {
     leave: ReturnType<typeof vi.fn>
 }
 
-function mountPoll(
-    keys: string[],
-    intervalMs: number | null,
-    live: string | null,
-) {
+function mountPoll(keys: string[], intervalMs: number | null, live: string | null) {
     return mount(
         defineComponent({
             setup() {

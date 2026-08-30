@@ -180,11 +180,10 @@ const tenantId = ref<string>('')
 function backUpNow() {
     starting.value = true
 
-    router.post(
-        props.routes.run,
-        tenantId.value === '' ? {} : { tenant: tenantId.value },
-        { preserveScroll: true, onFinish: () => (starting.value = false) },
-    )
+    router.post(props.routes.run, tenantId.value === '' ? {} : { tenant: tenantId.value }, {
+        preserveScroll: true,
+        onFinish: () => (starting.value = false),
+    })
 }
 
 /* ------------------------------------------------------------------ *
@@ -415,7 +414,11 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
             <button
                 type="button"
                 class="rounded-md px-3 py-1.5 text-sm"
-                :class="tab === 'snapshots' ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent'"
+                :class="
+                    tab === 'snapshots'
+                        ? 'bg-accent font-medium'
+                        : 'text-muted-foreground hover:bg-accent'
+                "
                 @click="tab = 'snapshots'"
             >
                 Snapshots
@@ -423,7 +426,11 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
             <button
                 type="button"
                 class="rounded-md px-3 py-1.5 text-sm"
-                :class="tab === 'database' ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent'"
+                :class="
+                    tab === 'database'
+                        ? 'bg-accent font-medium'
+                        : 'text-muted-foreground hover:bg-accent'
+                "
                 @click="tab = 'database'"
             >
                 Database
@@ -439,7 +446,11 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                     class="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
                 >
                     <option value="">All organisations</option>
-                    <option v-for="tenant in props.tenants" :key="tenant.id" :value="String(tenant.id)">
+                    <option
+                        v-for="tenant in props.tenants"
+                        :key="tenant.id"
+                        :value="String(tenant.id)"
+                    >
                         {{ tenant.name }}
                     </option>
                 </select>
@@ -461,7 +472,9 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                     <div>
                         <h2 class="text-sm font-medium">
                             {{ db.name }}
-                            <span class="ml-1 font-normal text-muted-foreground">({{ db.driver }})</span>
+                            <span class="ml-1 font-normal text-muted-foreground"
+                                >({{ db.driver }})</span
+                            >
                         </h2>
                         <p class="text-xs text-muted-foreground font-normal">
                             {{ db.database ?? 'unnamed database' }}
@@ -498,30 +511,31 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
                 </div>
             </div>
 
-            <p v-if="!(props.databases?.length)" class="text-sm text-muted-foreground font-normal">
+            <p v-if="!props.databases?.length" class="text-sm text-muted-foreground font-normal">
                 No SQL connections were available to inspect.
             </p>
         </template>
 
         <template v-if="tab === 'snapshots'">
-
-        <!--
+            <!--
             THE OUTCOME OF THE LAST MANUAL RUN. A button that dispatches a job
             and says nothing afterwards is worse than no button: the operator
             believes a backup exists.
         -->
-        <div v-if="props.lastRun" class="rounded-lg border p-3 text-sm">
-            <span class="font-medium" :class="runTone[props.lastRun.state] ?? ''">
-                Last manual run: {{ props.lastRun.state }}
-            </span>
-            <span class="text-muted-foreground"> - {{ props.lastRun.message }}</span>
-            <span class="block text-xs text-muted-foreground">
-                {{ when(props.lastRun.at)
-                }}<template v-if="props.lastRun.by"> · started by {{ props.lastRun.by }}</template>
-            </span>
-        </div>
+            <div v-if="props.lastRun" class="rounded-lg border p-3 text-sm">
+                <span class="font-medium" :class="runTone[props.lastRun.state] ?? ''">
+                    Last manual run: {{ props.lastRun.state }}
+                </span>
+                <span class="text-muted-foreground"> - {{ props.lastRun.message }}</span>
+                <span class="block text-xs text-muted-foreground">
+                    {{ when(props.lastRun.at)
+                    }}<template v-if="props.lastRun.by">
+                        · started by {{ props.lastRun.by }}</template
+                    >
+                </span>
+            </div>
 
-        <!--
+            <!--
             THE BYPASS LINK, SHOWN ONCE AND PROMINENTLY.
 
             The panel goes down within the minute. This is the only way back in
@@ -529,228 +543,228 @@ const downloadUrl = (path: string) => `${props.routes.download}?path=${encodeURI
             second chance to read it - so it sits above the fold in its own
             block rather than in a toast that fades.
         -->
-        <div
-            v-if="props.restoreBypass"
-            class="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm"
-        >
-            <p class="font-medium">The panel will close while the database is restored.</p>
-            <p class="mt-1 text-xs text-muted-foreground">
-                Everyone else sees a maintenance page, so nothing is written to the database being
-                replaced. Open this link first - it is shown once and stops working when the restore
-                finishes.
-            </p>
-            <a
-                :href="`/${props.restoreBypass}`"
-                class="mt-2 inline-block font-mono text-xs underline"
-                target="_blank"
-                rel="noopener"
-                >/{{ props.restoreBypass }}</a
+            <div
+                v-if="props.restoreBypass"
+                class="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm"
             >
-        </div>
-
-        <!-- A restore is reported separately and permanently: it is the one
-             action here whose outcome somebody may need to account for. -->
-        <div v-if="props.lastRestore" class="rounded-lg border p-3 text-sm">
-            <span class="font-medium" :class="runTone[props.lastRestore.state] ?? ''">
-                Last restore: {{ props.lastRestore.state }}
-            </span>
-            <span class="text-muted-foreground"> - {{ props.lastRestore.message }}</span>
-            <span class="block text-xs text-muted-foreground">
-                {{ when(props.lastRestore.at) }}
-                <template v-if="props.lastRestore.by">
-                    · started by {{ props.lastRestore.by }}</template
+                <p class="font-medium">The panel will close while the database is restored.</p>
+                <p class="mt-1 text-xs text-muted-foreground">
+                    Everyone else sees a maintenance page, so nothing is written to the database
+                    being replaced. Open this link first - it is shown once and stops working when
+                    the restore finishes.
+                </p>
+                <a
+                    :href="`/${props.restoreBypass}`"
+                    class="mt-2 inline-block font-mono text-xs underline"
+                    target="_blank"
+                    rel="noopener"
+                    >/{{ props.restoreBypass }}</a
                 >
-            </span>
+            </div>
 
-            <!--
+            <!-- A restore is reported separately and permanently: it is the one
+             action here whose outcome somebody may need to account for. -->
+            <div v-if="props.lastRestore" class="rounded-lg border p-3 text-sm">
+                <span class="font-medium" :class="runTone[props.lastRestore.state] ?? ''">
+                    Last restore: {{ props.lastRestore.state }}
+                </span>
+                <span class="text-muted-foreground"> - {{ props.lastRestore.message }}</span>
+                <span class="block text-xs text-muted-foreground">
+                    {{ when(props.lastRestore.at) }}
+                    <template v-if="props.lastRestore.by">
+                        · started by {{ props.lastRestore.by }}</template
+                    >
+                </span>
+
+                <!--
                 ONLY WHEN A PHASE WAS ACTUALLY ENTERED. A refusal or a
                 missing snapshot is rejected before either phase starts, and
                 a step strip on a restore that never ran would claim it got
                 somewhere it did not.
             -->
-            <PkStepIndicator
-                v-if="props.lastRestore.step !== null"
-                class="mt-3"
-                :steps="RESTORE_STEPS"
-                :active-step="restoreActiveStep"
-                :failed-step="restoreFailedStep"
-                :interactive="false"
-            />
-        </div>
+                <PkStepIndicator
+                    v-if="props.lastRestore.step !== null"
+                    class="mt-3"
+                    :steps="RESTORE_STEPS"
+                    :active-step="restoreActiveStep"
+                    :failed-step="restoreFailedStep"
+                    :interactive="false"
+                />
+            </div>
 
-        <div
-            class="rounded-lg border p-4"
-            :class="
-                props.status.problem
-                    ? 'border-destructive/40 bg-destructive/5'
-                    : 'border-emerald-500/40 bg-emerald-500/5'
-            "
-        >
-            <p class="text-sm font-medium">
-                <template v-if="props.status.problem">{{ props.status.problem }}</template>
-                <template v-else-if="props.status.ageHours !== null">
-                    Newest backup is {{ props.status.ageHours }} hours old.
-                </template>
-                <template v-else>Backups look healthy.</template>
-            </p>
+            <div
+                class="rounded-lg border p-4"
+                :class="
+                    props.status.problem
+                        ? 'border-destructive/40 bg-destructive/5'
+                        : 'border-emerald-500/40 bg-emerald-500/5'
+                "
+            >
+                <p class="text-sm font-medium">
+                    <template v-if="props.status.problem">{{ props.status.problem }}</template>
+                    <template v-else-if="props.status.ageHours !== null">
+                        Newest backup is {{ props.status.ageHours }} hours old.
+                    </template>
+                    <template v-else>Backups look healthy.</template>
+                </p>
 
-            <p v-if="props.status.configured" class="mt-1 text-xs text-muted-foreground">
-                Disk <span class="font-mono">{{ props.status.disk }}</span> ·
-                {{ props.status.backups.length }} snapshot(s) ·
-                {{ mb(props.status.totalBytes) }} total
-            </p>
-        </div>
+                <p v-if="props.status.configured" class="mt-1 text-xs text-muted-foreground">
+                    Disk <span class="font-mono">{{ props.status.disk }}</span> ·
+                    {{ props.status.backups.length }} snapshot(s) ·
+                    {{ mb(props.status.totalBytes) }} total
+                </p>
+            </div>
 
-        <div v-if="props.status.backups.length" class="flex flex-col gap-2">
-            <!--
+            <div v-if="props.status.backups.length" class="flex flex-col gap-2">
+                <!--
                 THE BULK BAR SITS ABOVE THE TABLE, not inside it as a row. A
                 toolbar wedged into the table body shifts every row down the
                 moment something is ticked, and the row under the pointer is no
                 longer the row that was about to be clicked.
             -->
-            <div
-                v-if="selected.length"
-                class="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm"
-            >
-                <span>{{ selected.length }} selected</span>
+                <div
+                    v-if="selected.length"
+                    class="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm"
+                >
+                    <span>{{ selected.length }} selected</span>
 
-                <div class="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" @click="selected = []">Clear</Button>
-                    <Button
-                        v-if="props.can.manage"
-                        variant="destructive"
-                        size="sm"
-                        @click="askDelete(selected)"
-                    >
-                        <Trash2 class="size-4" />
-                        Delete selected
-                    </Button>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto rounded-lg border">
-                <table class="w-full text-sm">
-                    <thead class="bg-muted/50">
-                        <tr>
-                            <th class="w-10 px-3 py-2 text-left">
-                                <input
-                                    type="checkbox"
-                                    class="size-4 align-middle"
-                                    aria-label="Select every snapshot"
-                                    :checked="allSelected"
-                                    :indeterminate.prop="someSelected"
-                                    @change="toggleAll"
-                                />
-                            </th>
-                            <th class="px-3 py-2 text-left font-medium">Snapshot</th>
-                            <th class="px-3 py-2 text-left font-medium">Taken</th>
-                            <th class="px-3 py-2 text-right font-medium">Size</th>
-                            <th class="w-px px-3 py-2 text-right font-medium">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="b in props.status.backups"
-                            :key="b.path"
-                            class="border-t hover:bg-muted/30"
+                    <div class="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" @click="selected = []">Clear</Button>
+                        <Button
+                            v-if="props.can.manage"
+                            variant="destructive"
+                            size="sm"
+                            @click="askDelete(selected)"
                         >
-                            <td class="px-3 py-2">
-                                <input
-                                    type="checkbox"
-                                    class="size-4 align-middle"
-                                    :aria-label="`Select ${basename(b.path)}`"
-                                    :checked="selected.includes(b.path)"
-                                    @change="toggle(b.path)"
-                                />
-                            </td>
-                            <td class="px-3 py-2 font-mono text-xs">
-                                {{ b.path }}
-                            </td>
-                            <td class="px-3 py-2 whitespace-nowrap">
-                                {{ when(b.at) }}
-                            </td>
-                            <td class="px-3 py-2 text-right tabular-nums">
-                                {{ mb(b.bytes) }}
-                            </td>
-                            <td class="px-3 py-2">
-                                <div class="flex items-center justify-end gap-1">
-                                    <!--
+                            <Trash2 class="size-4" />
+                            Delete selected
+                        </Button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border">
+                    <table class="w-full text-sm">
+                        <thead class="bg-muted/50">
+                            <tr>
+                                <th class="w-10 px-3 py-2 text-left">
+                                    <input
+                                        type="checkbox"
+                                        class="size-4 align-middle"
+                                        aria-label="Select every snapshot"
+                                        :checked="allSelected"
+                                        :indeterminate.prop="someSelected"
+                                        @change="toggleAll"
+                                    />
+                                </th>
+                                <th class="px-3 py-2 text-left font-medium">Snapshot</th>
+                                <th class="px-3 py-2 text-left font-medium">Taken</th>
+                                <th class="px-3 py-2 text-right font-medium">Size</th>
+                                <th class="w-px px-3 py-2 text-right font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="b in props.status.backups"
+                                :key="b.path"
+                                class="border-t hover:bg-muted/30"
+                            >
+                                <td class="px-3 py-2">
+                                    <input
+                                        type="checkbox"
+                                        class="size-4 align-middle"
+                                        :aria-label="`Select ${basename(b.path)}`"
+                                        :checked="selected.includes(b.path)"
+                                        @change="toggle(b.path)"
+                                    />
+                                </td>
+                                <td class="px-3 py-2 font-mono text-xs">
+                                    {{ b.path }}
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    {{ when(b.at) }}
+                                </td>
+                                <td class="px-3 py-2 text-right tabular-nums">
+                                    {{ mb(b.bytes) }}
+                                </td>
+                                <td class="px-3 py-2">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <!--
                                         A REAL ANCHOR, not a router call. The
                                         response is a file stream, and Inertia
                                         would try to parse it as a page.
                                     -->
-                                    <a
-                                        :href="downloadUrl(b.path)"
-                                        class="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted"
-                                        :title="`Download ${basename(b.path)}`"
-                                        :aria-label="`Download ${basename(b.path)}`"
-                                    >
-                                        <Download class="size-4" />
-                                    </a>
+                                        <a
+                                            :href="downloadUrl(b.path)"
+                                            class="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted"
+                                            :title="`Download ${basename(b.path)}`"
+                                            :aria-label="`Download ${basename(b.path)}`"
+                                        >
+                                            <Download class="size-4" />
+                                        </a>
 
-                                    <button
-                                        v-if="props.can.manage"
-                                        type="button"
-                                        class="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted"
-                                        :title="`Restore from ${basename(b.path)}`"
-                                        :aria-label="`Restore from ${basename(b.path)}`"
-                                        @click="askRestore(b)"
-                                    >
-                                        <RotateCcw class="size-4" />
-                                    </button>
+                                        <button
+                                            v-if="props.can.manage"
+                                            type="button"
+                                            class="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted"
+                                            :title="`Restore from ${basename(b.path)}`"
+                                            :aria-label="`Restore from ${basename(b.path)}`"
+                                            @click="askRestore(b)"
+                                        >
+                                            <RotateCcw class="size-4" />
+                                        </button>
 
-                                    <button
-                                        v-if="props.can.manage"
-                                        type="button"
-                                        class="inline-flex size-8 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
-                                        :title="`Delete ${basename(b.path)}`"
-                                        :aria-label="`Delete ${basename(b.path)}`"
-                                        @click="askDelete([b.path])"
-                                    >
-                                        <Trash2 class="size-4" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                        <button
+                                            v-if="props.can.manage"
+                                            type="button"
+                                            class="inline-flex size-8 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
+                                            :title="`Delete ${basename(b.path)}`"
+                                            :aria-label="`Delete ${basename(b.path)}`"
+                                            @click="askDelete([b.path])"
+                                        >
+                                            <Trash2 class="size-4" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
 
-        <p
-            v-else-if="props.status.configured"
-            class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
-        >
-            No snapshots yet.
-        </p>
-        <!--
+            <p
+                v-else-if="props.status.configured"
+                class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
+            >
+                No snapshots yet.
+            </p>
+            <!--
             THE TRAIL, UNDER THE LIST IT DESCRIBES.
 
             A snapshot that vanished with nothing recording who removed it is
             indistinguishable from a snapshot that was never taken - and the
             moment somebody asks is the moment the answer matters.
         -->
-        <div v-if="props.history.length" class="flex flex-col gap-2">
-            <h2 class="text-sm font-medium">Recent backup activity</h2>
+            <div v-if="props.history.length" class="flex flex-col gap-2">
+                <h2 class="text-sm font-medium">Recent backup activity</h2>
 
-            <ul class="divide-y rounded-lg border text-sm">
-                <li
-                    v-for="(entry, i) in props.history"
-                    :key="i"
-                    class="flex flex-wrap gap-x-2 px-3 py-2"
-                >
-                    <span class="font-medium">{{ eventLabel(entry.event) }}</span>
-                    <span v-if="entry.snapshot" class="self-center font-mono text-xs">
-                        {{ entry.snapshot }}
-                    </span>
-                    <span class="ml-auto text-xs text-muted-foreground">
-                        {{ entry.actor ?? 'somebody'
-                        }}<template v-if="entry.ip"> · {{ entry.ip }}</template> ·
-                        {{ when(entry.at) }}
-                    </span>
-                </li>
-            </ul>
-        </div>
+                <ul class="divide-y rounded-lg border text-sm">
+                    <li
+                        v-for="(entry, i) in props.history"
+                        :key="i"
+                        class="flex flex-wrap gap-x-2 px-3 py-2"
+                    >
+                        <span class="font-medium">{{ eventLabel(entry.event) }}</span>
+                        <span v-if="entry.snapshot" class="self-center font-mono text-xs">
+                            {{ entry.snapshot }}
+                        </span>
+                        <span class="ml-auto text-xs text-muted-foreground">
+                            {{ entry.actor ?? 'somebody'
+                            }}<template v-if="entry.ip"> · {{ entry.ip }}</template> ·
+                            {{ when(entry.at) }}
+                        </span>
+                    </li>
+                </ul>
+            </div>
         </template>
     </div>
 

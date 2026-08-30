@@ -1,4 +1,4 @@
-import { type ComputedRef, type InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
 /**
  * Whether the shell will render AppPageFooter for this panel.
  *

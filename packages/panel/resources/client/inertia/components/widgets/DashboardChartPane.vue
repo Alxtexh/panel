@@ -9,9 +9,9 @@
  */
 import { Deferred } from '@inertiajs/vue3'
 import { ChartCard, PkBoundary, TrendBadge } from '@alxtexh-enterprise/panel'
+import { useWidgetPoll } from '../../composables/useWidgetPoll'
 import ChartBody from './ChartBody.vue'
 import type { Chart, Series } from './types'
-import { useWidgetPoll } from '../../composables/useWidgetPoll'
 
 const props = defineProps<{
     chart: Chart
@@ -45,7 +45,11 @@ useWidgetPoll(
                     :periods="periods"
                     :period="period"
                     :body-height="bodyHeight"
-                    :fit-body="chart.type === 'table' || chart.type === 'barcode' || chart.type === 'logtail'"
+                    :fit-body="
+                        chart.type === 'table' ||
+                        chart.type === 'barcode' ||
+                        chart.type === 'logtail'
+                    "
                     hideable
                     loading
                     @hide="$emit('hide')"
@@ -61,7 +65,11 @@ useWidgetPoll(
                     :period="period"
                     :error="series.error"
                     :body-height="bodyHeight"
-                    :fit-body="chart.type === 'table' || chart.type === 'barcode' || chart.type === 'logtail'"
+                    :fit-body="
+                        chart.type === 'table' ||
+                        chart.type === 'barcode' ||
+                        chart.type === 'logtail'
+                    "
                     hideable
                     @update:period="$emit('update:period', $event)"
                     @hide="$emit('hide')"

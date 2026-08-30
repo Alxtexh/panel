@@ -1,9 +1,9 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import CatalogCard from './CatalogCard.vue'
-import CatalogGrid from './CatalogGrid.vue'
-import { matchCatalogItem, findExactSku } from './catalogFilter'
 import type { CatalogItem } from './CatalogCard.vue'
+import { matchCatalogItem, findExactSku } from './catalogFilter'
+import CatalogGrid from './CatalogGrid.vue'
 
 describe('CatalogCard', () => {
     it('shows the label, price and a dedicated status pill', () => {
@@ -126,8 +126,12 @@ describe('matchCatalogItem', () => {
     })
 
     it('matches selected facets', () => {
-        expect(matchCatalogItem(item, { query: '', selected: { category: 'coffee' }, ranges: {} })).toBe(true)
-        expect(matchCatalogItem(item, { query: '', selected: { category: 'merch' }, ranges: {} })).toBe(false)
+        expect(
+            matchCatalogItem(item, { query: '', selected: { category: 'coffee' }, ranges: {} }),
+        ).toBe(true)
+        expect(
+            matchCatalogItem(item, { query: '', selected: { category: 'merch' }, ranges: {} }),
+        ).toBe(false)
     })
 
     it('matches numeric from–to ranges', () => {

@@ -66,7 +66,10 @@ export function normaliseStatus(status: string): string {
     return status.trim().toLowerCase().replace(/\s+/g, '-')
 }
 
-export function statusTone(status: string | null | undefined, tone?: SemanticTone | null): SemanticTone {
+export function statusTone(
+    status: string | null | undefined,
+    tone?: SemanticTone | null,
+): SemanticTone {
     if (tone) {
         return tone
     }

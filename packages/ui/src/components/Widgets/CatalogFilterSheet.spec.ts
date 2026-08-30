@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import CatalogFilterSheet from './CatalogFilterSheet.vue'
 import { emptyCatalogFilters } from './catalogFilter'
+import CatalogFilterSheet from './CatalogFilterSheet.vue'
 
 describe('CatalogFilterSheet', () => {
     it('applies staged chips on Apply', async () => {

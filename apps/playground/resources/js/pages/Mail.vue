@@ -11,9 +11,9 @@
  * KEEP THE TEMPLATE. An SFC with only a script block renders nothing at
  * all, silently, in a production build.
  */
-import Mail from '@alxtexh-enterprise/panel/pages/Mail.vue'
+import Mail from '@alxtexh-enterprise/panel/pages/Mail.vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>
@@ -24,5 +24,5 @@ defineOptions({ inheritAttrs: false })
         either way: these values arrive from the server as JSON and are
         typed where they are USED, inside the packaged component.
     -->
-    <Mail v-bind="($attrs as any)" />
+    <Mail v-bind="$attrs as any" />
 </template>

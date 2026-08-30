@@ -11,7 +11,8 @@
  */
 import { computed } from 'vue'
 import PkBadge from './PkBadge.vue'
-import { statusBadgeVariant, type SemanticTone } from './statusTone'
+import { statusBadgeVariant } from './statusTone'
+import type { SemanticTone } from './statusTone'
 
 const props = withDefaults(
     defineProps<{

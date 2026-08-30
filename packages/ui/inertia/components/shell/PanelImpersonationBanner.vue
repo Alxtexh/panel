@@ -46,7 +46,8 @@ function stop(): void {
         data-impersonation-banner
     >
         <span>
-            Viewing as <strong>{{ wearing }}</strong>. You are really {{ impersonating.name }}.
+            Viewing as <strong>{{ wearing }}</strong
+            >. You are really {{ impersonating.name }}.
         </span>
 
         <button

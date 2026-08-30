@@ -5,9 +5,6 @@
  * PNG / WebP WITH ALPHA. A JPEG (or a flattened PNG) stamps a white box on
  * invoices. The packaged screen still accepts JPEG; this demo refuses it.
  */
-import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
-import { toast } from 'vue-sonner';
 import type { UploadedFileValue } from '@alxtexh-enterprise/panel';
 import {
     PkButton as Button,
@@ -20,11 +17,16 @@ import {
 } from '@alxtexh-enterprise/panel';
 import AuthInputError from '@alxtexh-enterprise/panel/components/AuthInputError.vue';
 import { useGroupedSettingsCards } from '@alxtexh-enterprise/panel/composables/useGroupedSettingsCards';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 
 const page = usePage();
 const { sectionClass } = useGroupedSettingsCards();
 
-const base = computed(() => (page.props.panel as { path?: string } | undefined)?.path ?? '');
+const base = computed(
+    () => (page.props.panel as { path?: string } | undefined)?.path ?? '',
+);
 
 const at = (path: string) => `${base.value === '/' ? '' : base.value}${path}`;
 
@@ -73,7 +75,10 @@ function submit() {
     });
 }
 
-async function upload(file: File, onProgress: (percent: number) => void): Promise<UploadedFileValue> {
+async function upload(
+    file: File,
+    onProgress: (percent: number) => void,
+): Promise<UploadedFileValue> {
     await assertTransparentImage(file);
 
     return new Promise((resolve, reject) => {
@@ -145,7 +150,12 @@ function csrf(): string {
         <form class="space-y-6" @submit.prevent="submit">
             <div class="grid gap-2">
                 <Label for="org-name">Name</Label>
-                <Input id="org-name" v-model="form.name" required autocomplete="organization" />
+                <Input
+                    id="org-name"
+                    v-model="form.name"
+                    required
+                    autocomplete="organization"
+                />
                 <AuthInputError :message="form.errors.name" />
                 <p class="text-xs text-muted-foreground">
                     Shown in the sidebar and on every page of the panel.
@@ -166,12 +176,15 @@ function csrf(): string {
                 <AuthInputError :message="form.errors.logo" />
                 <p class="text-xs text-muted-foreground">
                     {{ TRANSPARENT_IMAGE_HELP }}
-                    When a logo is set it replaces the organisation name in the sidebar.
+                    When a logo is set it replaces the organisation name in the
+                    sidebar.
                 </p>
             </div>
 
             <div class="flex items-center gap-4">
-                <Button type="submit" :disabled="form.processing">Save changes</Button>
+                <Button type="submit" :disabled="form.processing"
+                    >Save changes</Button
+                >
             </div>
         </form>
     </div>

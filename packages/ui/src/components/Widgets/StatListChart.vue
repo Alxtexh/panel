@@ -70,7 +70,10 @@ const resolved = computed(() =>
                 ...s,
                 // A visible sliver rather than nothing, for a non-zero value
                 // too small to round to a pixel - see `SegmentedBar`.
-                width: s.value > 0 ? `max(2px, ${((Math.max(0, s.value) / denominator) * 100).toFixed(2)}%)` : '0px',
+                width:
+                    s.value > 0
+                        ? `max(2px, ${((Math.max(0, s.value) / denominator) * 100).toFixed(2)}%)`
+                        : '0px',
             })),
         }
     }),

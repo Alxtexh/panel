@@ -24,7 +24,7 @@ interface Row {
     at?: string | null
 }
 
-const props = withDefaults(
+withDefaults(
     defineProps<{
         pageHeading?: string
         pageDescription?: string | null
@@ -65,7 +65,10 @@ const props = withDefaults(
                         {{ item.label }}
                     </span>
                 </nav>
-                <p v-if="categories.length" class="text-muted-foreground text-xs font-normal uppercase">
+                <p
+                    v-if="categories.length"
+                    class="text-muted-foreground text-xs font-normal uppercase"
+                >
                     Labels
                 </p>
                 <nav v-if="categories.length" class="flex flex-col gap-1">
@@ -74,11 +77,18 @@ const props = withDefaults(
             </aside>
 
             <section>
-                <p v-if="messages.rows.length === 0" class="text-muted-foreground text-sm font-normal">
+                <p
+                    v-if="messages.rows.length === 0"
+                    class="text-muted-foreground text-sm font-normal"
+                >
                     No threads. Override MailPage::threads() to load your store.
                 </p>
                 <ul v-else class="divide-y rounded-md border">
-                    <li v-for="row in messages.rows" :key="String(row.id ?? row.subject)" class="px-3 py-2">
+                    <li
+                        v-for="row in messages.rows"
+                        :key="String(row.id ?? row.subject)"
+                        class="px-3 py-2"
+                    >
                         <p class="font-medium">{{ row.subject ?? 'Untitled' }}</p>
                         <p class="text-muted-foreground text-xs font-normal">
                             {{ row.from }}

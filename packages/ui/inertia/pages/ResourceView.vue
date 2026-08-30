@@ -55,10 +55,10 @@ import {
 } from '@alxtexh-enterprise/panel'
 import type { SchemaColumn } from '@alxtexh-enterprise/panel'
 import AuditTimeline from '../components/AuditTimeline.vue'
-import WorkflowHistory from '../components/WorkflowHistory.vue'
 import CommentsSection from '../components/CommentsSection.vue'
 import RecordPresence from '../components/RecordPresence.vue'
 import RenderHook from '../components/RenderHook.vue'
+import WorkflowHistory from '../components/WorkflowHistory.vue'
 import { formatMoney } from '../lib/money'
 
 const props = defineProps<{
@@ -148,7 +148,10 @@ const title = computed(() => String(props.record.name ?? `#${props.record.id}`))
 const page = usePage()
 
 const presenceTenantId = computed(() => {
-    const workspaces = (page.props as any).workspaces as { current?: { id?: string | number } } | null
+    const workspaces = (page.props as any).workspaces as {
+        current?: { id?: string | number }
+    } | null
+
     if (workspaces?.current?.id != null) {
         return workspaces.current.id
     }
@@ -322,6 +325,7 @@ function relationQuery(key: string, cursor: string | null = null): string {
             for (const item of value) {
                 params.append(`${filterKey}[]`, String(item))
             }
+
             continue
         }
 
@@ -330,8 +334,10 @@ function relationQuery(key: string, cursor: string | null = null): string {
                 if (subValue === null || subValue === undefined || subValue === '') {
                     continue
                 }
+
                 params.set(`${filterKey}[${subKey}]`, String(subValue))
             }
+
             continue
         }
 
@@ -422,7 +428,9 @@ function applyRelationFilters(key: string, next: Record<string, unknown>) {
 
 function clearRelationFilters(key: string) {
     const current = relationState(key)
-    current.filters = Object.fromEntries(Object.keys(current.filters).map((filterKey) => [filterKey, null]))
+    current.filters = Object.fromEntries(
+        Object.keys(current.filters).map((filterKey) => [filterKey, null]),
+    )
     current.search = ''
     reloadRelation(key)
 }
@@ -609,20 +617,17 @@ async function runWorkflowTransition(action: { key: string; label: string; confi
         const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
         const token = match ? decodeURIComponent(match[1]) : ''
 
-        const response = await fetch(
-            `${props.schema.routes.index}/${props.record.id}/action`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-XSRF-TOKEN': token,
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({ action: action.key }),
+        const response = await fetch(`${props.schema.routes.index}/${props.record.id}/action`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': token,
             },
-        )
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: action.key }),
+        })
 
         if (!response.ok) {
             const body = await response.json().catch(() => null)
@@ -697,7 +702,10 @@ function destroy() {
 
     <div :class="[PAGE_SHELL_COMPACT, 'flex flex-col gap-4']">
         <PkPageHeader :title="title" :purpose="schema.label">
-            <template v-if="statusColumn && (workflow?.current || record[statusColumn.key] != null)" #status>
+            <template
+                v-if="statusColumn && (workflow?.current || record[statusColumn.key] != null)"
+                #status
+            >
                 <Badge :variant="statusVariant as any">
                     {{ statusLabel }}
                 </Badge>
@@ -749,18 +757,29 @@ function destroy() {
         <div :class="FORM_MEASURE">
             <!-- Layout tree: tabs and sections, same components the form uses. -->
             <template v-if="hasLayout">
-                <InfoNode v-for="(node, i) in schema.infolist" :key="i" :node="node" :record="record" @action="runInfolistAction" />
+                <InfoNode
+                    v-for="(node, i) in schema.infolist"
+                    :key="i"
+                    :node="node"
+                    :record="record"
+                    @action="runInfolistAction"
+                />
             </template>
 
             <!-- Fallback: a definition list. One record's attributes read better as
                  labelled pairs than as a table row turned on its side. -->
-            <dl v-else class="bg-card divide-y rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+            <dl
+                v-else
+                class="bg-card divide-y rounded-xl border shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+            >
                 <div
                     v-for="column in schema.table.columns"
                     :key="column.key"
                     class="grid grid-cols-1 gap-1 px-4 py-3.5 sm:grid-cols-3 sm:gap-4 sm:px-5"
                 >
-                    <dt class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase sm:pt-0.5">
+                    <dt
+                        class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase sm:pt-0.5"
+                    >
                         {{ column.label }}
                     </dt>
                     <dd class="text-foreground text-sm font-medium sm:col-span-2">
@@ -833,11 +852,13 @@ function destroy() {
                                     :key="k"
                                     class="grid grid-cols-3 gap-2 px-3 py-2 text-sm"
                                 >
-                                    <dt class="text-muted-foreground truncate font-medium">{{ k }}</dt>
+                                    <dt class="text-muted-foreground truncate font-medium">
+                                        {{ k }}
+                                    </dt>
                                     <dd class="col-span-2 break-words">{{ v }}</dd>
                                 </div>
                             </dl>
-                                <span v-else class="text-muted-foreground font-normal">None</span>
+                            <span v-else class="text-muted-foreground font-normal">None</span>
                         </div>
 
                         <ImageCell
@@ -870,10 +891,7 @@ function destroy() {
 
         <!-- Related lists: tabs outside, TableShell chrome inside RelationPanel. -->
         <section v-if="relations.length" class="flex flex-col gap-3">
-            <div
-                v-if="relations.length > 1"
-                class="bg-muted/40 flex w-fit gap-1 rounded-md p-1"
-            >
+            <div v-if="relations.length > 1" class="bg-muted/40 flex w-fit gap-1 rounded-md p-1">
                 <button
                     v-for="relation in relations"
                     :key="relation.key"
@@ -914,10 +932,7 @@ function destroy() {
                     @clear-filters="clearRelationFilters(relation.key)"
                     @clear-filter="(filterKey) => clearRelationFilter(relation.key, filterKey)"
                 >
-                    <template
-                        v-if="relationPages(relation) || relation.canCreate"
-                        #actions
-                    >
+                    <template v-if="relationPages(relation) || relation.canCreate" #actions>
                         <Link
                             v-if="relationPages(relation)"
                             :href="relationPages(relation)!"
@@ -951,9 +966,7 @@ function destroy() {
             :open="!!creating"
             :title="creating ? `Add ${creating.label}` : 'Add'"
             :form="creating?.form ?? null"
-            :form-options="
-                creating ? (relationFormOptions?.[creating.key] ?? {}) : {}
-            "
+            :form-options="creating ? (relationFormOptions?.[creating.key] ?? {}) : {}"
             :processing="createProcessing"
             :errors="createErrors"
             :search-options="searchRelationOptions"

@@ -4,8 +4,7 @@
  */
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
-import {
-    PAGE_SHELL_STACK, PkButton as Button } from '@alxtexh-enterprise/panel'
+import { PAGE_SHELL_STACK, PkButton as Button } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -102,7 +101,9 @@ function roleLabel(roleId: string): string {
                     type="email"
                     class="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
                 />
-                <p v-if="form.errors.email" class="mt-1 text-xs text-destructive">{{ form.errors.email }}</p>
+                <p v-if="form.errors.email" class="mt-1 text-xs text-destructive">
+                    {{ form.errors.email }}
+                </p>
             </div>
 
             <div>
@@ -129,7 +130,9 @@ function roleLabel(roleId: string): string {
         </form>
 
         <section>
-            <p v-if="pending.length === 0" class="text-sm text-muted-foreground font-normal">No pending invites.</p>
+            <p v-if="pending.length === 0" class="text-sm text-muted-foreground font-normal">
+                No pending invites.
+            </p>
             <ul v-else class="divide-y rounded-md border">
                 <li
                     v-for="row in pending"
@@ -138,7 +141,9 @@ function roleLabel(roleId: string): string {
                 >
                     <div>
                         <p class="font-medium">{{ row.email }}</p>
-                        <p class="text-xs text-muted-foreground font-normal">{{ roleLabel(row.role_id) }}</p>
+                        <p class="text-xs text-muted-foreground font-normal">
+                            {{ roleLabel(row.role_id) }}
+                        </p>
                     </div>
                     <Button type="button" variant="ghost" @click="revoke(row.id)">Revoke</Button>
                 </li>

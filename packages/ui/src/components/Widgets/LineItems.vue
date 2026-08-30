@@ -13,9 +13,9 @@
  * `editable` IS THE CART. A receipt still prints ×qty; a live till needs a
  * stepper and a remove control. The row still does not price itself.
  */
+import { iconPath } from '../primitives/icons'
 import PkQtyStepper from '../primitives/PkQtyStepper.vue'
 import PkStatusBadge from '../primitives/PkStatusBadge.vue'
-import { iconPath } from '../primitives/icons'
 import type { SemanticTone } from '../primitives/statusTone'
 
 export interface LineItem {

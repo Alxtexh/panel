@@ -1,5 +1,6 @@
-import { computed, provide, type ComputedRef, type InjectionKey } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import { computed, provide } from 'vue'
+import type { ComputedRef, InjectionKey } from 'vue'
 
 /**
  * Whether the shell will render AppPageFooter for this panel.
@@ -7,7 +8,8 @@ import { usePage } from '@inertiajs/vue3'
  * PROVIDED so a page that also imports the component can skip its own copy.
  * The shell still renders at most one when `panel.pageFooter` is true.
  */
-export const PAGE_FOOTER_FROM_SHELL: InjectionKey<ComputedRef<boolean>> = Symbol('pkPageFooterFromShell')
+export const PAGE_FOOTER_FROM_SHELL: InjectionKey<ComputedRef<boolean>> =
+    Symbol('pkPageFooterFromShell')
 
 export function useShellPageFooter(): ComputedRef<boolean> {
     const page = usePage()

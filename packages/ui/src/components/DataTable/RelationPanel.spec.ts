@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import RelationPanel from './RelationPanel.vue'
 import type { SchemaColumn } from '../../composables/useSchemaColumns'
+import RelationPanel from './RelationPanel.vue'
 
 const columns: SchemaColumn[] = [
     { key: 'title', label: 'Title', type: 'text' },
@@ -68,12 +68,16 @@ describe('RelationPanel', () => {
                 columns,
                 rows: [{ id: 1, title: 'One', note: 'a' }],
                 loaded: true,
-                filterSchema: [{ key: 'status', label: 'Status', type: 'select', options: ['online'] }],
+                filterSchema: [
+                    { key: 'status', label: 'Status', type: 'select', options: ['online'] },
+                ],
                 filters: { status: null },
             },
         })
 
-        expect(wrapper.find('input[type="search"], input[placeholder*="Search"]').exists()).toBe(true)
+        expect(wrapper.find('input[type="search"], input[placeholder*="Search"]').exists()).toBe(
+            true,
+        )
         expect(wrapper.text()).toMatch(/Filters|Tools/)
     })
 })

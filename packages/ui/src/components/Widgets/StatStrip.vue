@@ -198,7 +198,7 @@ const stripRows = computed(() => {
 function toggle() {
     const hide = anyMasked.value === false
 
-    revealAll.value = ! hide
+    revealAll.value = !hide
     revealed.value = new Set()
 
     emit('toggle', hide)
@@ -212,7 +212,7 @@ function toggle() {
  * re-renders, which looks like a dead click.
  */
 function toggleSegment(segment: StatSegment) {
-    if (! isSensitive(segment)) {
+    if (!isSensitive(segment)) {
         return
     }
 
@@ -264,78 +264,80 @@ function display(value: string | number): string {
         Leftover cards skip that container so empty tracks stay transparent.
     -->
     <div class="flex flex-col gap-3">
-    <div
-        v-for="row in stripRows"
-        :key="row.key"
-        class="relative shrink-0"
-        :class="row.joined ? 'bg-border overflow-hidden rounded-xl border' : ''"
-        :data-slot="row.joined ? 'stat-packed' : 'stat-leftover'"
-    >
-        <!--
+        <div
+            v-for="row in stripRows"
+            :key="row.key"
+            class="relative shrink-0"
+            :class="row.joined ? 'bg-border overflow-hidden rounded-xl border' : ''"
+            :data-slot="row.joined ? 'stat-packed' : 'stat-leftover'"
+        >
+            <!--
             One control, floated over the corner rather than given a header row
             of its own - a header would push the strip taller for a single
             button and break the flush, four-across look the whole component is
             for.
         -->
-        <button
-            v-if="maskable && hasSensitive && row.key === stripRows[0]?.key"
-            type="button"
-            class="text-muted-foreground hover:text-foreground absolute top-3 right-3 z-10 rounded p-1 transition-colors"
-            :aria-pressed="anyMasked"
-            :aria-label="anyMasked ? 'Show all values' : 'Hide all values'"
-            :title="anyMasked ? 'Show all values' : 'Hide all values'"
-            @click="toggle"
-        >
-            <!--
+            <button
+                v-if="maskable && hasSensitive && row.key === stripRows[0]?.key"
+                type="button"
+                class="text-muted-foreground hover:text-foreground absolute top-3 right-3 z-10 rounded p-1 transition-colors"
+                :aria-pressed="anyMasked"
+                :aria-label="anyMasked ? 'Show all values' : 'Hide all values'"
+                :title="anyMasked ? 'Show all values' : 'Hide all values'"
+                @click="toggle"
+            >
+                <!--
                 Drawn inline rather than imported. This package carries no icon
                 dependency on purpose (§4): it is the rendering layer, and
                 pulling a whole icon set in for two glyphs would make every
                 consumer install it.
             -->
-            <svg
-                class="size-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-                <template v-if="anyMasked">
-                    <path d="M10.7 6.2A9 9 0 0 1 12 6c5 0 9 4.5 9 6a12 12 0 0 1-2.2 3" />
-                    <path d="M6.6 6.9A13 13 0 0 0 3 12c0 1.5 4 6 9 6a9 9 0 0 0 3.7-.8" />
-                    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
-                    <path d="m3 3 18 18" />
-                </template>
-                <template v-else>
-                    <path d="M3 12s3.6-6 9-6 9 6 9 6-3.6 6-9 6-9-6-9-6Z" />
-                    <circle cx="12" cy="12" r="3" />
-                </template>
-            </svg>
-        </button>
+                <svg
+                    class="size-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <template v-if="anyMasked">
+                        <path d="M10.7 6.2A9 9 0 0 1 12 6c5 0 9 4.5 9 6a12 12 0 0 1-2.2 3" />
+                        <path d="M6.6 6.9A13 13 0 0 0 3 12c0 1.5 4 6 9 6a9 9 0 0 0 3.7-.8" />
+                        <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                        <path d="m3 3 18 18" />
+                    </template>
+                    <template v-else>
+                        <path d="M3 12s3.6-6 9-6 9 6 9 6-3.6 6-9 6-9-6-9-6Z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </template>
+                </svg>
+            </button>
 
-        <div class="grid" :class="[row.joined ? 'gap-px' : 'gap-3', grid]">
-            <div
-                v-for="segment in row.segments"
-                :key="segment.key"
-                class="bg-card flex flex-col gap-2 p-4"
-                :class="row.joined ? '' : 'overflow-hidden rounded-xl border'"
-            >
-                <p class="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-                    {{ segment.label }}
-                </p>
+            <div class="grid" :class="[row.joined ? 'gap-px' : 'gap-3', grid]">
+                <div
+                    v-for="segment in row.segments"
+                    :key="segment.key"
+                    class="bg-card flex flex-col gap-2 p-4"
+                    :class="row.joined ? '' : 'overflow-hidden rounded-xl border'"
+                >
+                    <p
+                        class="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase"
+                    >
+                        {{ segment.label }}
+                    </p>
 
-                <!--
+                    <!--
                     The skeleton, the mask and the value all occupy the same
                     height, so a strip does not reflow as data lands or as it is
                     revealed - a row that jumps under the pointer is how you
                     click the wrong thing.
                 -->
-                <div class="flex h-8 items-center">
-                    <PkSkeleton v-if="loading" variant="number" />
+                    <div class="flex h-8 items-center">
+                        <PkSkeleton v-if="loading" variant="number" />
 
-                    <!--
+                        <!--
                         `role="img"` IS LOAD-BEARING, not decoration. A plain
                         `<span>` has no accessible-name-supporting role, so
                         `aria-label` on it is dropped by assistive tech - the
@@ -344,50 +346,50 @@ function display(value: string | number): string {
                         thing with a text alternative, the same contract an
                         `<img alt="...">` has.
                     -->
-                    <!--
+                        <!--
                         THE DOTS ARE THE BUTTON. Clicking the cell you are
                         already looking at is shorter than travelling to an icon
                         in the corner, and it is the gesture people try first.
                         `aria-label` still carries the whole meaning, because
                         five dots announce as nothing on their own.
                     -->
-                    <button
-                        v-else-if="isMasked(segment)"
-                        type="button"
-                        class="hover:bg-muted/60 -mx-1 flex items-center gap-1.5 rounded px-1 py-1 transition-colors"
-                        :aria-label="`${segment.label} hidden. Show it.`"
-                        :title="`Show ${segment.label}`"
-                        @click="toggleSegment(segment)"
-                    >
-                        <span
-                            v-for="dot in 5"
-                            :key="dot"
-                            class="bg-muted-foreground/70 size-1.5 rounded-full"
-                        ></span>
-                    </button>
+                        <button
+                            v-else-if="isMasked(segment)"
+                            type="button"
+                            class="hover:bg-muted/60 -mx-1 flex items-center gap-1.5 rounded px-1 py-1 transition-colors"
+                            :aria-label="`${segment.label} hidden. Show it.`"
+                            :title="`Show ${segment.label}`"
+                            @click="toggleSegment(segment)"
+                        >
+                            <span
+                                v-for="dot in 5"
+                                :key="dot"
+                                class="bg-muted-foreground/70 size-1.5 rounded-full"
+                            ></span>
+                        </button>
 
-                    <!--
+                        <!--
                         A REVEALED SENSITIVE CELL STAYS CLICKABLE, so the way
                         back is the way in. A cell that was never sensitive is
                         plain text - making it look pressable would promise a
                         behaviour it does not have.
                     -->
-                    <button
-                        v-else-if="isSensitive(segment)"
-                        type="button"
-                        class="hover:bg-muted/60 -mx-1 truncate rounded px-1 text-2xl font-semibold tabular-nums transition-colors"
-                        :aria-label="`${segment.label}, ${display(segment.value)}. Hide it.`"
-                        :title="`Hide ${segment.label}`"
-                        @click="toggleSegment(segment)"
-                    >
-                        {{ display(segment.value) }}
-                    </button>
+                        <button
+                            v-else-if="isSensitive(segment)"
+                            type="button"
+                            class="hover:bg-muted/60 -mx-1 truncate rounded px-1 text-2xl font-semibold tabular-nums transition-colors"
+                            :aria-label="`${segment.label}, ${display(segment.value)}. Hide it.`"
+                            :title="`Hide ${segment.label}`"
+                            @click="toggleSegment(segment)"
+                        >
+                            {{ display(segment.value) }}
+                        </button>
 
-                    <span v-else class="truncate text-2xl font-semibold tabular-nums">
-                        {{ display(segment.value) }}
-                    </span>
+                        <span v-else class="truncate text-2xl font-semibold tabular-nums">
+                            {{ display(segment.value) }}
+                        </span>
 
-                    <!--
+                        <!--
                         THE TREND SITS BESIDE THE NUMBER, not under it, so the
                         row keeps its fixed height. A badge on its own line
                         would make cells with a trend taller than cells without
@@ -398,36 +400,36 @@ function display(value: string | number): string {
                         40%" tells the person behind you nearly as much as the
                         figure does.
                     -->
-                    <TrendBadge
-                        v-if="segment.trend && !loading && !isMasked(segment)"
-                        :direction="segment.trend.direction"
-                        :percentage="segment.trend.percentage"
-                        :inverted="segment.inverted"
-                        class="ml-2 shrink-0"
-                    />
-                </div>
+                        <TrendBadge
+                            v-if="segment.trend && !loading && !isMasked(segment)"
+                            :direction="segment.trend.direction"
+                            :percentage="segment.trend.percentage"
+                            :inverted="segment.inverted"
+                            class="ml-2 shrink-0"
+                        />
+                    </div>
 
-                <!--
+                    <!--
                     THE SPARKLINE IS THE LAST THING AND THE FIRST TO GO. It is
                     the least precise part of the cell, so it yields its space
                     to the value and the trend rather than competing with them -
                     and it is covered with them, since its shape carries the
                     same story the number does.
                 -->
-                <Sparkline
-                    v-if="segment.sparkline?.length && !loading && !isMasked(segment)"
-                    :data="segment.sparkline"
-                    :height="24"
-                />
+                    <Sparkline
+                        v-if="segment.sparkline?.length && !loading && !isMasked(segment)"
+                        :data="segment.sparkline"
+                        :height="24"
+                    />
 
-                <p
-                    v-if="segment.caption || (segment.comparison && segment.trend)"
-                    class="text-muted-foreground truncate text-xs"
-                >
-                    {{ segment.caption ?? segment.comparison }}
-                </p>
+                    <p
+                        v-if="segment.caption || (segment.comparison && segment.trend)"
+                        class="text-muted-foreground truncate text-xs"
+                    >
+                        {{ segment.caption ?? segment.comparison }}
+                    </p>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 </template>

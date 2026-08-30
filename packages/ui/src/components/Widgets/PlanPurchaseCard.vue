@@ -11,8 +11,8 @@
  * highlighted plans get `border-primary`, included features get a check.
  */
 import { computed } from 'vue'
-import PkButton from '../primitives/PkButton.vue'
 import { iconPath } from '../primitives/icons'
+import PkButton from '../primitives/PkButton.vue'
 
 export interface PurchasablePlan {
     id: string
@@ -69,8 +69,8 @@ const highlighted = computed(() => Boolean(props.plan.recommended) && !props.pla
             highlighted
                 ? 'border-primary shadow-lg ring-1 ring-primary/20'
                 : plan.current
-                    ? 'border-primary/40'
-                    : ''
+                  ? 'border-primary/40'
+                  : ''
         "
         data-slot="plan-purchase-card"
         :data-current="plan.current ? 'true' : undefined"
@@ -101,13 +101,20 @@ const highlighted = computed(() => Boolean(props.plan.recommended) && !props.pla
                 <span class="text-4xl font-bold tracking-tight tabular-nums">{{ price }}</span>
                 <span class="text-muted-foreground text-sm font-normal">/ {{ period }}</span>
             </p>
-            <p v-if="plan.description" class="text-muted-foreground text-sm font-normal text-pretty">
+            <p
+                v-if="plan.description"
+                class="text-muted-foreground text-sm font-normal text-pretty"
+            >
                 {{ plan.description }}
             </p>
         </header>
 
         <ul v-if="plan.features?.length" class="flex flex-1 flex-col gap-2 text-sm">
-            <li v-for="(feature, index) in plan.features" :key="index" class="flex items-start gap-2">
+            <li
+                v-for="(feature, index) in plan.features"
+                :key="index"
+                class="flex items-start gap-2"
+            >
                 <span class="text-success mt-0.5 shrink-0" aria-hidden="true">
                     <svg
                         class="size-4"

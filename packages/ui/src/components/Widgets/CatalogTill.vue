@@ -9,11 +9,8 @@
 import { computed, ref } from 'vue'
 import PkButton from '../primitives/PkButton.vue'
 import PkHeading from '../primitives/PkHeading.vue'
-import CatalogGrid from './CatalogGrid.vue'
-import CatalogFilterSheet from './CatalogFilterSheet.vue'
 import CartPanel from './CartPanel.vue'
 import type { CatalogItem } from './CatalogCard.vue'
-import type { LineItem } from './LineItems.vue'
 import {
     catalogFiltersActive,
     emptyCatalogFilters,
@@ -21,6 +18,9 @@ import {
     matchCatalogItem,
 } from './catalogFilter'
 import type { CatalogFacet, CatalogFilters } from './catalogFilter'
+import CatalogFilterSheet from './CatalogFilterSheet.vue'
+import CatalogGrid from './CatalogGrid.vue'
+import type { LineItem } from './LineItems.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -117,9 +117,7 @@ function addToCart(key: string): void {
 
     if (existing) {
         cart.value = cart.value.map((line) =>
-            line.key === key
-                ? rewriteLine(line, Number(line.qty ?? 1) + 1, unit)
-                : line,
+            line.key === key ? rewriteLine(line, Number(line.qty ?? 1) + 1, unit) : line,
         )
 
         return
@@ -141,9 +139,7 @@ function setQty(key: string, qty: number): void {
     const product = props.items.find((item) => item.key === key)
     const unit = unitPrice(product)
 
-    cart.value = cart.value.map((line) =>
-        line.key === key ? rewriteLine(line, qty, unit) : line,
-    )
+    cart.value = cart.value.map((line) => (line.key === key ? rewriteLine(line, qty, unit) : line))
 }
 
 function removeLine(key: string): void {
@@ -159,33 +155,25 @@ const subtotalValue = computed(() =>
 )
 
 const discountValue = computed(() =>
-    props.discountRate > 0
-        ? Math.round(subtotalValue.value * props.discountRate)
-        : 0,
+    props.discountRate > 0 ? Math.round(subtotalValue.value * props.discountRate) : 0,
 )
 
 const taxValue = computed(() =>
     Math.round((subtotalValue.value - discountValue.value) * props.taxRate),
 )
 
-const subtotal = computed(() =>
-    cart.value.length ? props.formatMoney(subtotalValue.value) : null,
-)
+const subtotal = computed(() => (cart.value.length ? props.formatMoney(subtotalValue.value) : null))
 const discount = computed(() =>
     cart.value.length && discountValue.value > 0
         ? `−${props.formatMoney(discountValue.value)}`
         : null,
 )
 const tax = computed(() =>
-    cart.value.length && props.taxRate > 0
-        ? props.formatMoney(taxValue.value)
-        : null,
+    cart.value.length && props.taxRate > 0 ? props.formatMoney(taxValue.value) : null,
 )
 const total = computed(() =>
     cart.value.length
-        ? props.formatMoney(
-              subtotalValue.value - discountValue.value + taxValue.value,
-          )
+        ? props.formatMoney(subtotalValue.value - discountValue.value + taxValue.value)
         : null,
 )
 
@@ -273,11 +261,7 @@ function pay(): void {
         >
             <template #pay>
                 <slot name="pay" :cart="cart" :paid="paid" :pay="pay">
-                    <PkButton
-                        class="w-full"
-                        :disabled="cart.length === 0"
-                        @click="pay"
-                    >
+                    <PkButton class="w-full" :disabled="cart.length === 0" @click="pay">
                         {{ paid ? 'Paid' : 'Pay' }}
                     </PkButton>
                 </slot>

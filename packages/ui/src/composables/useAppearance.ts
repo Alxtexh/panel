@@ -627,9 +627,7 @@ export function bootstrapAppearance(): void {
  *
  * When `appearance` is null the visitor signed out: keep the local guest theme.
  */
-export function syncAppearanceFromInertiaPage(page: {
-    props?: Record<string, unknown>
-}): void {
+export function syncAppearanceFromInertiaPage(page: { props?: Record<string, unknown> }): void {
     const appearance = page?.props?.appearance
 
     if (appearance === null || appearance === undefined) {

@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import PaymentGatewaySettings from './PaymentGatewaySettings.vue'
 import type { PaymentGateway } from './PaymentGateways.vue'
+import PaymentGatewaySettings from './PaymentGatewaySettings.vue'
 
 const seed: PaymentGateway[] = [
     {

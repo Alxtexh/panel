@@ -114,7 +114,10 @@ function switchTo(workspace: Workspace) {
                 >
                     <div class="min-w-0">
                         <span class="text-sm font-medium">{{ workspace.name }}</span>
-                        <span v-if="workspace.current" class="ml-2 text-xs font-medium text-primary">
+                        <span
+                            v-if="workspace.current"
+                            class="ml-2 text-xs font-medium text-primary"
+                        >
                             Current
                         </span>
                         <span

@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import PlanPurchaseCard, { type PurchasablePlan } from './PlanPurchaseCard.vue'
+import PlanPurchaseCard from './PlanPurchaseCard.vue'
+import type { PurchasablePlan } from './PlanPurchaseCard.vue'
 
 const starter: PurchasablePlan = {
     id: 'starter',

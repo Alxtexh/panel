@@ -90,7 +90,9 @@ function logout(): void {
 
                 <div class="grid gap-4 rounded-2xl border bg-muted/30 p-4 sm:grid-cols-2">
                     <div class="space-y-1">
-                        <p class="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                        <p
+                            class="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground"
+                        >
                             {{ t('billing.plan') }}
                         </p>
                         <p class="text-sm font-medium text-foreground">
@@ -102,19 +104,27 @@ function logout(): void {
                     </div>
 
                     <div class="space-y-1">
-                        <p class="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                        <p
+                            class="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground"
+                        >
                             {{ t('billing.status_heading') }}
                         </p>
                         <p class="text-sm font-medium text-foreground">
                             {{ statusLabel ?? t('billing.status.fallback') }}
                         </p>
-                        <p v-if="dueMessage || renewalMessage" class="text-sm text-muted-foreground font-normal">
+                        <p
+                            v-if="dueMessage || renewalMessage"
+                            class="text-sm text-muted-foreground font-normal"
+                        >
                             {{ dueMessage ?? renewalMessage }}
                         </p>
                     </div>
                 </div>
 
-                <div v-if="reason" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+                <div
+                    v-if="reason"
+                    class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"
+                >
                     {{ reason }}
                 </div>
 
@@ -139,7 +149,10 @@ function logout(): void {
 
                 <p v-if="supportEmail" class="text-sm text-muted-foreground font-normal">
                     {{ t('billing.need_help') }}
-                    <a :href="`mailto:${supportEmail}`" class="font-medium text-foreground underline underline-offset-4">
+                    <a
+                        :href="`mailto:${supportEmail}`"
+                        class="font-medium text-foreground underline underline-offset-4"
+                    >
                         {{ supportEmail }}
                     </a>
                     .

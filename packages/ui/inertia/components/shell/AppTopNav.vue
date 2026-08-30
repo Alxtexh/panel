@@ -24,9 +24,9 @@ import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
 import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
-import PanelQuickCreate from './PanelQuickCreate.vue'
-import NotificationBell from './PanelNotificationBell.vue'
 import PanelLockButton from './PanelLockButton.vue'
+import NotificationBell from './PanelNotificationBell.vue'
+import PanelQuickCreate from './PanelQuickCreate.vue'
 import TopNavUser from './TopNavUser.vue'
 
 withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[] }>(), {

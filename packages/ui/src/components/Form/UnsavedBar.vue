@@ -105,7 +105,9 @@ function onEnter(el: Element, done: () => void): void {
 
 function onLeave(el: Element, done: () => void): void {
     const node = el as HTMLElement
-    Object.assign(node.style, SHOWN, { transition: 'opacity 150ms ease-in, transform 150ms ease-in' })
+    Object.assign(node.style, SHOWN, {
+        transition: 'opacity 150ms ease-in, transform 150ms ease-in',
+    })
     requestAnimationFrame(() => {
         Object.assign(node.style, HIDDEN)
     })
@@ -115,11 +117,7 @@ function onLeave(el: Element, done: () => void): void {
 
 <template>
     <Teleport :to="teleportTo" :disabled="teleportDisabled">
-        <Transition
-            :css="false"
-            @enter="onEnter"
-            @leave="onLeave"
-        >
+        <Transition :css="false" @enter="onEnter" @leave="onLeave">
             <div
                 v-if="show"
                 :class="frameClass"

@@ -3,18 +3,18 @@ import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { AppearanceDrawer, useAppearance } from '@alxtexh-enterprise/panel'
 import { SidebarTrigger } from '@alxtexh-enterprise/panel'
-import type { BreadcrumbItem } from '../../types'
-import AssistantDrawer from './AssistantDrawer.vue'
-import Breadcrumbs from './Breadcrumbs.vue'
-import PanelCommandPalette from './PanelCommandPalette.vue'
-import PanelQuickCreate from './PanelQuickCreate.vue'
-import NotificationBell from './PanelNotificationBell.vue'
-import PanelLockButton from './PanelLockButton.vue'
-import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
-import TopNavUser from './TopNavUser.vue'
 import { PkBoundary } from '@alxtexh-enterprise/panel'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'
+import type { BreadcrumbItem } from '../../types'
 import type { User } from '../../types'
+import AssistantDrawer from './AssistantDrawer.vue'
+import Breadcrumbs from './Breadcrumbs.vue'
+import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
+import PanelCommandPalette from './PanelCommandPalette.vue'
+import PanelLockButton from './PanelLockButton.vue'
+import NotificationBell from './PanelNotificationBell.vue'
+import PanelQuickCreate from './PanelQuickCreate.vue'
+import TopNavUser from './TopNavUser.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -116,7 +116,11 @@ const trail = computed<BreadcrumbItem[]>(() =>
             <AssistantDrawer />
             <NotificationBell />
             <slot name="actions" />
-            <PkBoundary v-if="chrome.topNavUser && !chrome.siteHeader" label="The account menu" silent>
+            <PkBoundary
+                v-if="chrome.topNavUser && !chrome.siteHeader"
+                label="The account menu"
+                silent
+            >
                 <TopNavUser>
                     <template #menu="{ user }">
                         <slot name="userMenu" :user="user">

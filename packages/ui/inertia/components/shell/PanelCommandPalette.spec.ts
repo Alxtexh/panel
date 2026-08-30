@@ -24,7 +24,7 @@ const pinnedKey = 'alxtexhpanel.command-palette.pinned./panel-search'
 
 beforeAll(() => {
     // JSDOM does not implement layout APIs used by the palette.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     ;(Element.prototype as any).scrollIntoView = vi.fn()
 })
 
@@ -62,7 +62,8 @@ describe('PanelCommandPalette', () => {
         expect(openCandidates.length).toBeGreaterThan(0)
 
         const openActive = openCandidates.find(
-            (el) => el.getAttribute('data-active') === 'true' || el.getAttribute('data-active') === '1',
+            (el) =>
+                el.getAttribute('data-active') === 'true' || el.getAttribute('data-active') === '1',
         )
 
         expect(openActive?.textContent).toContain('Recent Record')
@@ -77,7 +78,8 @@ describe('PanelCommandPalette', () => {
         expect(typingCandidates.length).toBeGreaterThan(0)
 
         const typingActive = typingCandidates.find(
-            (el) => el.getAttribute('data-active') === 'true' || el.getAttribute('data-active') === '1',
+            (el) =>
+                el.getAttribute('data-active') === 'true' || el.getAttribute('data-active') === '1',
         )
 
         expect(typingActive?.textContent).toContain('Page Alpha')
@@ -173,7 +175,8 @@ describe('PanelCommandPalette', () => {
         expect(openCandidates.length).toBeGreaterThanOrEqual(2)
 
         const active1 = openCandidates.find(
-            (el) => el.getAttribute('data-active') === 'true' || el.getAttribute('data-active') === '1',
+            (el) =>
+                el.getAttribute('data-active') === 'true' || el.getAttribute('data-active') === '1',
         )
         expect(active1?.textContent).toContain('Zeta One')
 
@@ -181,7 +184,8 @@ describe('PanelCommandPalette', () => {
         await nextTick()
 
         const active2 = Array.from(document.querySelectorAll('button[data-active]')).find(
-            (el) => el.getAttribute('data-active') === 'true' || el.getAttribute('data-active') === '1',
+            (el) =>
+                el.getAttribute('data-active') === 'true' || el.getAttribute('data-active') === '1',
         )
         expect(active2?.textContent).toContain('Zeta Two')
 
@@ -202,7 +206,9 @@ describe('PanelCommandPalette', () => {
 
         await nextTick()
 
-        const searchButton = document.querySelector('button[aria-label="Search"]') as HTMLButtonElement
+        const searchButton = document.querySelector(
+            'button[aria-label="Search"]',
+        ) as HTMLButtonElement
         searchButton.click()
         await nextTick()
 
@@ -214,4 +220,3 @@ describe('PanelCommandPalette', () => {
         wrapper.unmount()
     })
 })
-

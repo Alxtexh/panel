@@ -1,4 +1,5 @@
-import { nextTick, type Ref } from 'vue'
+import { nextTick } from 'vue'
+import type { Ref } from 'vue'
 
 export type OtpFormHandle = {
     submit: () => void
@@ -19,6 +20,7 @@ export function useOtpAutoSubmit(
 
     async function onOtpComplete(code: string): Promise<void> {
         const form = formRef.value
+
         if (!form || form.processing) {
             return
         }

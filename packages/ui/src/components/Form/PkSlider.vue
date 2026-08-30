@@ -98,7 +98,9 @@ function emitNumber(raw: string) {
                 :disabled="disabled"
                 @input="emitNumber(($event.target as HTMLInputElement).value)"
             />
-            <span v-if="field.unit" class="text-muted-foreground text-sm font-normal">{{ field.unit }}</span>
+            <span v-if="field.unit" class="text-muted-foreground text-sm font-normal">{{
+                field.unit
+            }}</span>
         </div>
     </div>
 </template>

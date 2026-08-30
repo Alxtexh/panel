@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, useSlots } from 'vue'
-import PkSkeleton from '../primitives/PkSkeleton.vue'
 import { iconPath } from '../primitives/icons'
+import PkSkeleton from '../primitives/PkSkeleton.vue'
 /**
  * The frame around a chart: title, period selector, trend, and the chart slot.
  *

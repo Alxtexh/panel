@@ -11,7 +11,9 @@ describe('ChartCard', () => {
 
         expect(wrapper.text()).toContain('plot')
         expect(wrapper.get('[data-slot="chart-card"]').attributes('data-collapsed')).toBe('false')
-        expect(wrapper.get('[aria-label="Collapse Sessions"] svg').classes()).toContain('rotate-180')
+        expect(wrapper.get('[aria-label="Collapse Sessions"] svg').classes()).toContain(
+            'rotate-180',
+        )
 
         await wrapper.get('[aria-label="Collapse Sessions"]').trigger('click')
 
@@ -19,7 +21,9 @@ describe('ChartCard', () => {
         expect(wrapper.find('[data-slot="chart-card-body"]').exists()).toBe(false)
         expect(wrapper.text()).not.toContain('plot')
         expect(wrapper.get('[data-slot="chart-card"]').attributes('data-collapsed')).toBe('true')
-        expect(wrapper.get('[aria-label="Expand Sessions"] svg').classes()).not.toContain('rotate-180')
+        expect(wrapper.get('[aria-label="Expand Sessions"] svg').classes()).not.toContain(
+            'rotate-180',
+        )
     })
 
     it('emits hide when hideable', async () => {

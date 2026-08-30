@@ -28,7 +28,9 @@ defineProps<{
             <div class="flex flex-col gap-4 rounded-xl border bg-card p-6 sm:p-8">
                 <dl class="grid gap-4 text-sm">
                     <div v-if="email" class="grid gap-1">
-                        <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        <dt
+                            class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                        >
                             Email
                         </dt>
                         <dd>
@@ -42,7 +44,9 @@ defineProps<{
                     </div>
 
                     <div v-if="phone" class="grid gap-1">
-                        <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        <dt
+                            class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                        >
                             Phone
                         </dt>
                         <dd>
@@ -56,7 +60,9 @@ defineProps<{
                     </div>
 
                     <div v-if="address" class="grid gap-1">
-                        <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        <dt
+                            class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                        >
                             Address
                         </dt>
                         <dd class="text-pretty text-muted-foreground">{{ address }}</dd>

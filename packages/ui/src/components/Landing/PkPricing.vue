@@ -73,7 +73,9 @@ function priceOf(tier: Tier): string | undefined {
                     </button>
                 </div>
 
-                <p v-if="annualNote" class="text-xs text-muted-foreground font-normal">{{ annualNote }}</p>
+                <p v-if="annualNote" class="text-xs text-muted-foreground font-normal">
+                    {{ annualNote }}
+                </p>
             </div>
 
             <ul class="grid gap-4 md:grid-cols-3">
@@ -89,9 +91,11 @@ function priceOf(tier: Tier): string | undefined {
                             <span class="text-3xl font-semibold tracking-tight">{{
                                 priceOf(tier)
                             }}</span>
-                            <span v-if="tier.period" class="text-sm text-muted-foreground font-normal">{{
-                                tier.period
-                            }}</span>
+                            <span
+                                v-if="tier.period"
+                                class="text-sm text-muted-foreground font-normal"
+                                >{{ tier.period }}</span
+                            >
                         </p>
                         <p v-if="tier.body" class="text-sm text-pretty text-muted-foreground">
                             {{ tier.body }}

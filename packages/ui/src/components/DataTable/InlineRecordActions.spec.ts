@@ -90,7 +90,9 @@ describe('InlineRecordActions', () => {
         const wrapper = mount(InlineRecordActions, {
             props: {
                 title: 'Ada',
-                groups: [{ actions: [{ key: 'open', label: 'Open', link: true, url: '/records/1' }] }],
+                groups: [
+                    { actions: [{ key: 'open', label: 'Open', link: true, url: '/records/1' }] },
+                ],
             },
         })
 

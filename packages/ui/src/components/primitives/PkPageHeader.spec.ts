@@ -46,4 +46,3 @@ describe('PkPageHeader', () => {
         expect(wrapper.text()).toContain('Acme Fibre')
     })
 })
-

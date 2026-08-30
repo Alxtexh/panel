@@ -1,4 +1,4 @@
-import { type CatalogItem } from './CatalogCard.vue';
+import type { CatalogItem } from './CatalogCard.vue';
 import type { CatalogFacet, CatalogFilters } from './catalogFilter';
 type __VLS_Props = {
     items: CatalogItem[];

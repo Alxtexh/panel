@@ -2,10 +2,9 @@
 /**
  * Inertia host for PlanSetupPage: grid on the index, editor on create/edit.
  */
-import { computed } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
-import {
-    PAGE_SHELL, PlanEditor, PlanGrid } from '@alxtexh-enterprise/panel'
+import { computed } from 'vue'
+import { PAGE_SHELL, PlanEditor, PlanGrid } from '@alxtexh-enterprise/panel'
 import type { PlanLimitField, PlanModuleOption, PlanRecord } from '@alxtexh-enterprise/panel'
 
 defineOptions({
@@ -51,9 +50,13 @@ function save(plan: PlanRecord) {
 }
 
 function destroy(id: string) {
-    router.post(props.destroyHref ?? `${props.indexHref ?? '/settings/plans'}/destroy`, { id }, {
-        preserveScroll: true,
-    })
+    router.post(
+        props.destroyHref ?? `${props.indexHref ?? '/settings/plans'}/destroy`,
+        { id },
+        {
+            preserveScroll: true,
+        },
+    )
 }
 </script>
 

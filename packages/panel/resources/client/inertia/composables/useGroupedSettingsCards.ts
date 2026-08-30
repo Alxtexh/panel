@@ -1,5 +1,5 @@
-import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
 /**
  * `Panel::groupedSettingsCards()`. Bordered cards on the multi-section
@@ -26,7 +26,9 @@ export function useGroupedSettingsCards() {
     )
 
     /** A section with its own `<Heading>`: the whole block gets the card. */
-    const sectionClass = computed(() => (grouped.value ? 'space-y-6 rounded-lg border p-6' : 'space-y-6'))
+    const sectionClass = computed(() =>
+        grouped.value ? 'space-y-6 rounded-lg border p-6' : 'space-y-6',
+    )
 
     /** A section whose child already draws its own `<Heading>` and `space-y-6`. */
     const wrapClass = computed(() => (grouped.value ? 'rounded-lg border p-6' : ''))

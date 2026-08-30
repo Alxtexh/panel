@@ -37,10 +37,10 @@ const brand = computed(() => {
     const panel = page.props.panel as { brand?: string | null } | null | undefined
 
     return (
-        panel?.brand
-        || (page.props.panelBrand as string | null)
-        || (page.props.name as string | null)
-        || 'Panel'
+        panel?.brand ||
+        (page.props.panelBrand as string | null) ||
+        (page.props.name as string | null) ||
+        'Panel'
     )
 })
 
@@ -50,7 +50,10 @@ const links = computed<FooterLink[]>(() => {
     return Array.isArray(panel?.footerLinks) ? panel.footerLinks : []
 })
 
-const fromShell = inject(PAGE_FOOTER_FROM_SHELL, computed(() => false))
+const fromShell = inject(
+    PAGE_FOOTER_FROM_SHELL,
+    computed(() => false),
+)
 
 const suppressed = computed(() => !props.host && unref(fromShell) === true)
 </script>

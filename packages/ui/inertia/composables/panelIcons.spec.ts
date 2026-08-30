@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import { Package, Settings } from '@lucide/vue'
+import { describe, expect, it } from 'vitest'
 import { PANEL_ICONS, resolvePanelIcon } from './panelIcons'
 
 /**

@@ -28,6 +28,12 @@ export default [
         // tsconfig claims them - `tsconfig.json` covers what the package emits
         // - so the typed rules can only report them as parsing errors, which is
         // noise rather than a finding.
-        ignores: ['node_modules', 'dist', 'vitest.config.ts', 'vitest.setup.ts'],
+        ignores: [
+            'node_modules',
+            'dist',
+            'vitest.config.ts',
+            'vitest.setup.ts',
+            'vite.kit.config.ts',
+        ],
     },
 ]

@@ -5,6 +5,8 @@
  * DYNAMIC IMPORT on mount so forms and dashboards without a map never load
  * Leaflet. OSM tiles by default; host apps can theme later.
  */
+import type { CircleMarker, LeafletMouseEvent, Map as LeafletMap } from 'leaflet'
+import type * as Leaflet from 'leaflet'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 defineOptions({ inheritAttrs: false })
@@ -44,9 +46,9 @@ const props = withDefaults(
 const emit = defineEmits<{ (e: 'update:modelValue', value: Record<string, number> | null): void }>()
 
 const root = ref<HTMLElement | null>(null)
-let map: import('leaflet').Map | null = null
-let pickMarker: import('leaflet').CircleMarker | null = null
-let Lref: typeof import('leaflet') | null = null
+let map: LeafletMap | null = null
+let pickMarker: CircleMarker | null = null
+let Lref: typeof Leaflet | null = null
 
 const resolvedCenter = computed(() => {
     const lat = props.modelValue?.[props.latKey]
@@ -79,7 +81,9 @@ async function boot(): Promise<void> {
     Lref = leaflet
 
     // Vite/bundlers sometimes miss default marker icons; use CDN-free circle markers.
-    map = leaflet.map(root.value).setView([resolvedCenter.value.lat, resolvedCenter.value.lng], props.zoom)
+    map = leaflet
+        .map(root.value)
+        .setView([resolvedCenter.value.lat, resolvedCenter.value.lng], props.zoom)
 
     leaflet
         .tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -92,7 +96,7 @@ async function boot(): Promise<void> {
     syncPick()
 
     if (props.pickable && !props.disabled) {
-        map.on('click', (event: import('leaflet').LeafletMouseEvent) => {
+        map.on('click', (event: LeafletMouseEvent) => {
             emit('update:modelValue', {
                 [props.latKey]: Number(event.latlng.lat.toFixed(6)),
                 [props.lngKey]: Number(event.latlng.lng.toFixed(6)),
@@ -115,7 +119,9 @@ function syncMarkers(): void {
         }).addTo(map)
 
         if (marker.label || marker.popup) {
-            pin.bindPopup(`<strong>${marker.label ?? ''}</strong>${marker.popup ? `<br>${marker.popup}` : ''}`)
+            pin.bindPopup(
+                `<strong>${marker.label ?? ''}</strong>${marker.popup ? `<br>${marker.popup}` : ''}`,
+            )
         }
     }
 }

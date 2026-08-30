@@ -17,5 +17,5 @@ onMounted(() => {
 </script>
 
 <template>
-    <p class="text-muted-foreground p-4 text-sm">Opening payment settings…</p>
+    <p class="p-4 text-sm text-muted-foreground">Opening payment settings…</p>
 </template>

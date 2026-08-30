@@ -126,8 +126,7 @@ onMounted(() => {
         }
 
         const autofilled =
-            field.value.matches(':-webkit-autofill') ||
-            field.value.matches(':autofill')
+            field.value.matches(':-webkit-autofill') || field.value.matches(':autofill')
 
         if (autofilled || document.activeElement === field.value) {
             syncFromDom()

@@ -5,9 +5,9 @@
  * Written when a resource opts in via Resource::workflow(). panel:update also
  * mirrors this for hosts that upgrade into the feature.
  */
-import ResourceWorkflow from '@alxtexh-enterprise/panel/pages/ResourceWorkflow.vue'
+import ResourceWorkflow from '@alxtexh-enterprise/panel/pages/ResourceWorkflow.vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>

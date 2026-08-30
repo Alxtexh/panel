@@ -65,16 +65,26 @@ function next(): void {
 <template>
     <div class="flex flex-col gap-3">
         <div class="flex items-center justify-between gap-2">
-            <button type="button" class="text-muted-foreground hover:text-foreground text-sm" @click="prev">
+            <button
+                type="button"
+                class="text-muted-foreground hover:text-foreground text-sm"
+                @click="prev"
+            >
                 Prev
             </button>
             <p class="text-sm font-medium">{{ label }}</p>
-            <button type="button" class="text-muted-foreground hover:text-foreground text-sm" @click="next">
+            <button
+                type="button"
+                class="text-muted-foreground hover:text-foreground text-sm"
+                @click="next"
+            >
                 Next
             </button>
         </div>
         <div class="text-muted-foreground grid grid-cols-7 gap-1 text-center text-[10px] uppercase">
-            <span v-for="d in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="d">{{ d }}</span>
+            <span v-for="d in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="d">{{
+                d
+            }}</span>
         </div>
         <div class="grid grid-cols-7 gap-1">
             <div

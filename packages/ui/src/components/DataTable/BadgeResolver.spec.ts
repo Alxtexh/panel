@@ -36,7 +36,9 @@ describe('BadgeResolver', () => {
 
     it('emits the picked value and not a no-op on the current one', async () => {
         const wrapper = await open()
-        const items = [...document.body.querySelectorAll('[role="menuitem"]')] as HTMLButtonElement[]
+        const items = [
+            ...document.body.querySelectorAll('[role="menuitem"]'),
+        ] as HTMLButtonElement[]
         const pending = items.find((el) => el.textContent?.includes('Pending'))
 
         expect(pending).toBeTruthy()

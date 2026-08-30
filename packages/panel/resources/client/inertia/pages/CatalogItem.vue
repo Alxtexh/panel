@@ -3,8 +3,7 @@
  * Inertia catalog item. Cart visits `cartHref` (a till, a quote, a basket).
  */
 import { Head, router } from '@inertiajs/vue3'
-import {
-    PAGE_SHELL, CatalogItemView } from '@alxtexh-enterprise/panel'
+import { PAGE_SHELL, CatalogItemView } from '@alxtexh-enterprise/panel'
 import type { CatalogItem } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
@@ -24,10 +23,6 @@ function addToCart(): void {
     <Head :title="item.label" />
 
     <div :class="PAGE_SHELL">
-        <CatalogItemView
-            :item="item"
-            :catalog-href="catalogHref ?? '/catalog'"
-            @cart="addToCart"
-        />
+        <CatalogItemView :item="item" :catalog-href="catalogHref ?? '/catalog'" @cart="addToCart" />
     </div>
 </template>

@@ -1,0 +1,1 @@
+import{$n as e,k as t,mt as n,v as r,z as i}from"./runtime-core.esm-bundler-CaODJcyn.js";import{E as a}from"./inertia-D4GNw6PV.js";import{t as o}from"./app-B557LU_C.js";var s=t({layout:o,inheritAttrs:!1,__name:`DocumentPrint`,setup(t){return(t,o)=>(n(),r(a,e(i(t.$attrs)),null,16))}});export{s as default};

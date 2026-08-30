@@ -5,11 +5,11 @@
  * THE HREF IS A STRING. This package does not import Inertia, so the back
  * control is a plain link. The page owns cart: emit, then visit a till.
  */
-import CatalogItemDetail from './CatalogItemDetail.vue'
 import { PAGE_SHELL } from '../../lib/pageShell'
 import type { CatalogItem } from './CatalogCard.vue'
+import CatalogItemDetail from './CatalogItemDetail.vue'
 
-const props = withDefaults(
+withDefaults(
     defineProps<{
         item: CatalogItem
         catalogHref?: string
@@ -29,10 +29,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div
-        class="flex w-full flex-col gap-8"
-        :class="embedded ? '' : PAGE_SHELL"
-    >
+    <div class="flex w-full flex-col gap-8" :class="embedded ? '' : PAGE_SHELL">
         <a
             :href="catalogHref"
             class="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1.5 text-sm"

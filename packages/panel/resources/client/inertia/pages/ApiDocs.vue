@@ -8,10 +8,10 @@
  */
 import '@scalar/api-reference/style.css'
 
-import { useAppearance } from '@alxtexh-enterprise/panel'
 import { Head } from '@inertiajs/vue3'
 import { ApiReference } from '@scalar/api-reference'
 import { computed } from 'vue'
+import { useAppearance } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -28,7 +28,9 @@ const props = withDefaults(
 
 const { appearance } = useAppearance()
 
-const hasSpec = computed(() => typeof props.openapiUrl === 'string' && props.openapiUrl.trim() !== '')
+const hasSpec = computed(
+    () => typeof props.openapiUrl === 'string' && props.openapiUrl.trim() !== '',
+)
 
 const configuration = computed(() => ({
     url: props.openapiUrl as string,
@@ -41,7 +43,10 @@ const configuration = computed(() => ({
 <template>
     <Head :title="pageHeading ?? 'API docs'" />
 
-    <div v-if="!hasSpec" class="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
+    <div
+        v-if="!hasSpec"
+        class="flex h-full flex-col items-center justify-center gap-2 p-8 text-center"
+    >
         <h1 class="text-lg font-semibold">{{ pageHeading ?? 'API docs' }}</h1>
         <p class="max-w-md text-sm text-muted-foreground">
             No OpenAPI document is configured. Enable

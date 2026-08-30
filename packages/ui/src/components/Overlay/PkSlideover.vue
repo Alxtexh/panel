@@ -25,12 +25,8 @@
  * action in a long filter form is never scrolled out of reach.
  */
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import {
-    OVERLAY_FORM_MEASURE,
-    SLIDEOVER_BODY,
-    SLIDEOVER_WIDTH,
-    type SlideoverSize,
-} from '../../lib/pageShell'
+import { OVERLAY_FORM_MEASURE, SLIDEOVER_BODY, SLIDEOVER_WIDTH } from '../../lib/pageShell'
+import type { SlideoverSize } from '../../lib/pageShell'
 
 const props = withDefaults(
     defineProps<{

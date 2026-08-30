@@ -1,4 +1,4 @@
-import { type SlideoverSize } from '../../lib/pageShell';
+import type { SlideoverSize } from '../../lib/pageShell';
 type __VLS_Props = {
     open: boolean;
     title: string;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import type { FormField } from '../components/Form/types'
 import { CreateOptionError, fieldErrorsFromPayload } from './createOptionError'
 import { createOptionActionLabel, createOptionTitle } from './createOptionTitle'
-import type { FormField } from '../components/Form/types'
 
 describe('createOptionError', () => {
     it('carries field errors from a Laravel 422 body', () => {
@@ -36,9 +36,9 @@ describe('createOptionTitle', () => {
     })
 
     it('prefers an explicit createOptionLabel from the schema', () => {
-        expect(
-            createOptionTitle({ ...field, createOptionLabel: 'Add a new article' }),
-        ).toBe('Add a new article')
+        expect(createOptionTitle({ ...field, createOptionLabel: 'Add a new article' })).toBe(
+            'Add a new article',
+        )
     })
 
     it('derives the dropdown action label', () => {

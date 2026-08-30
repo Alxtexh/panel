@@ -52,7 +52,9 @@ const base = computed(() => (props.prefix === '/' ? '' : props.prefix))
                 class="bg-card hover:border-muted-foreground/40 flex flex-col gap-1 rounded-lg border p-4 transition-colors"
             >
                 <span class="font-medium">{{ kind.label }}</span>
-                <span class="text-muted-foreground text-sm font-normal">{{ kind.description }}</span>
+                <span class="text-muted-foreground text-sm font-normal">{{
+                    kind.description
+                }}</span>
                 <span class="text-muted-foreground mt-2 text-xs">
                     {{
                         kind.version === null

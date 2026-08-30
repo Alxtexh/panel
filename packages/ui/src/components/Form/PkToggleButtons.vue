@@ -125,8 +125,12 @@ function buttonClass(option: Option): string {
     return [
         FOCUS_RING,
         'inline-flex items-center justify-center gap-1.5 border px-3 py-1.5 text-sm font-medium transition-colors',
-        grouped.value ? 'rounded-none first:rounded-l-md last:rounded-r-md -ml-px first:ml-0' : 'rounded-md',
-        selected ? (TONE_SELECTED[tone] ?? TONE_SELECTED.primary) : (TONE_IDLE[tone] ?? TONE_IDLE.primary),
+        grouped.value
+            ? 'rounded-none first:rounded-l-md last:rounded-r-md -ml-px first:ml-0'
+            : 'rounded-md',
+        selected
+            ? (TONE_SELECTED[tone] ?? TONE_SELECTED.primary)
+            : (TONE_IDLE[tone] ?? TONE_IDLE.primary),
         props.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
     ].join(' ')
 }

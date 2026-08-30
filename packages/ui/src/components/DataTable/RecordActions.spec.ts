@@ -84,7 +84,9 @@ describe('RecordActions key bindings', () => {
         const wrapper = mount(RecordActions, {
             props: {
                 title: 'Ada',
-                groups: [{ actions: [{ key: 'duplicate', label: 'Duplicate', keyBindings: ['mod+d'] }] }],
+                groups: [
+                    { actions: [{ key: 'duplicate', label: 'Duplicate', keyBindings: ['mod+d'] }] },
+                ],
             },
             attachTo: document.body,
         })
@@ -101,7 +103,9 @@ describe('RecordActions key bindings', () => {
         const wrapper = mount(RecordActions, {
             props: {
                 title: 'Ada',
-                groups: [{ actions: [{ key: 'duplicate', label: 'Duplicate', keyBindings: ['mod+d'] }] }],
+                groups: [
+                    { actions: [{ key: 'duplicate', label: 'Duplicate', keyBindings: ['mod+d'] }] },
+                ],
             },
             attachTo: document.body,
         })
@@ -120,7 +124,9 @@ describe('RecordActions key bindings', () => {
             props: {
                 title: 'Ada',
                 busy: 'duplicate',
-                groups: [{ actions: [{ key: 'duplicate', label: 'Duplicate', keyBindings: ['e'] }] }],
+                groups: [
+                    { actions: [{ key: 'duplicate', label: 'Duplicate', keyBindings: ['e'] }] },
+                ],
             },
             attachTo: document.body,
         })
@@ -146,7 +152,13 @@ describe('RecordActions key bindings', () => {
                 groups: [
                     {
                         actions: [
-                            { key: 'open', label: 'Open', link: true, url: '/records/1', keyBindings: ['o'] },
+                            {
+                                key: 'open',
+                                label: 'Open',
+                                link: true,
+                                url: '/records/1',
+                                keyBindings: ['o'],
+                            },
                         ],
                     },
                 ],

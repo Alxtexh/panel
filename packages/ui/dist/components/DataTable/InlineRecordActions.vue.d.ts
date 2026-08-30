@@ -1,4 +1,4 @@
-import { type RecordActionGroup, type RecordActionItem } from './RecordActions.vue';
+import type { RecordActionGroup, RecordActionItem } from './RecordActions.vue';
 type __VLS_Props = {
     groups: RecordActionGroup[];
     title: string;

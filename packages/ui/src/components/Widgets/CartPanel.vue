@@ -6,7 +6,8 @@
  * rounding — the page (or a pricing service) does, and hands over strings.
  * Quantity and remove emit so the page can rewrite those strings.
  */
-import LineItems, { type LineItem } from './LineItems.vue'
+import LineItems from './LineItems.vue'
+import type { LineItem } from './LineItems.vue'
 
 withDefaults(
     defineProps<{

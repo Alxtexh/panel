@@ -13,7 +13,9 @@ describe('PkToggleButtons', () => {
             props: { field: { key: 'status' }, modelValue: null, options: OPTIONS },
         })
 
-        expect(wrapper.find('[data-test="toggle-buttons-field"]').attributes('role')).toBe('radiogroup')
+        expect(wrapper.find('[data-test="toggle-buttons-field"]').attributes('role')).toBe(
+            'radiogroup',
+        )
         expect(wrapper.findAll('input[type="radio"]')).toHaveLength(2)
     })
 

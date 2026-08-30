@@ -75,7 +75,11 @@ describe('PkSubNav', () => {
         const wrapper = mount(PkSubNav, {
             props: {
                 items: [
-                    { key: 'profile', title: 'Profile', href: 'http://example.test/settings/profile' },
+                    {
+                        key: 'profile',
+                        title: 'Profile',
+                        href: 'http://example.test/settings/profile',
+                    },
                     { key: 'smtp', title: 'SMTP', href: 'http://example.test/settings/smtp' },
                 ],
             },

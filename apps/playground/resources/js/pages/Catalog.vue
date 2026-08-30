@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Catalog from '@alxtexh-enterprise/panel/pages/Catalog.vue'
+import Catalog from '@alxtexh-enterprise/panel/pages/Catalog.vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>

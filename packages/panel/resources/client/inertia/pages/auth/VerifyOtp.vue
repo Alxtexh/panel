@@ -21,7 +21,8 @@ import { PkButton as Button, PkOtpInput, PkSpinner as Spinner } from '@alxtexh-e
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import SocialLoginButtons from '../../components/SocialLoginButtons.vue'
-import { useOtpAutoSubmit, type OtpFormHandle } from '../../composables/useOtpAutoSubmit'
+import { useOtpAutoSubmit } from '../../composables/useOtpAutoSubmit'
+import type { OtpFormHandle } from '../../composables/useOtpAutoSubmit'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{

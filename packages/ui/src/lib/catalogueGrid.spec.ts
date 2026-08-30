@@ -9,12 +9,8 @@ import {
 describe('catalogueGrid', () => {
     it('scales columns from content pane width via container queries', () => {
         expect(CATALOGUE_CONTAINER).toBe('@container min-w-0')
-        expect(CATALOGUE_GRID).toBe(
-            'grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3',
-        )
-        expect(CATALOGUE_GRID_TIGHT).toBe(
-            'grid grid-cols-1 gap-2 @lg:grid-cols-2 @3xl:grid-cols-3',
-        )
+        expect(CATALOGUE_GRID).toBe('grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3')
+        expect(CATALOGUE_GRID_TIGHT).toBe('grid grid-cols-1 gap-2 @lg:grid-cols-2 @3xl:grid-cols-3')
         expect(CATALOGUE_GRID_TILES).toBe(
             'grid grid-cols-1 gap-4 @lg:grid-cols-2 @lg:gap-5 @3xl:grid-cols-3',
         )

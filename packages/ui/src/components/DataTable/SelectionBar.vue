@@ -41,10 +41,7 @@ const format = (n: number) => new Intl.NumberFormat().format(n)
 </script>
 
 <template>
-    <div
-        class="flex flex-wrap items-center gap-3 text-sm"
-        role="status"
-    >
+    <div class="flex flex-wrap items-center gap-3 text-sm" role="status">
         <!-- Desktop bulk actions stay inline. -->
         <div class="hidden items-center gap-2 md:flex">
             <slot name="actions" />

@@ -713,7 +713,13 @@ onBeforeUnmount(() => {
                 :record-id="record?.id"
             />
 
-            <div :class="formSchema.nodes?.length ? '' : 'bg-card rounded-xl border p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10'">
+            <div
+                :class="
+                    formSchema.nodes?.length
+                        ? ''
+                        : 'bg-card rounded-xl border p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10'
+                "
+            >
                 <RecordForm
                     :model-value="formValues"
                     :nodes="formSchema.nodes"
@@ -726,7 +732,11 @@ onBeforeUnmount(() => {
                     :upload="upload"
                     :discard="discardUpload"
                     :picker-base="schema.routes.index"
-                    :return-url="typeof window === 'undefined' ? schema.routes.index : window.location.pathname"
+                    :return-url="
+                        typeof window === 'undefined'
+                            ? schema.routes.index
+                            : window.location.pathname
+                    "
                     :create-option="createOption"
                     @change="onFieldChange"
                     @affix-action="onAffixAction"

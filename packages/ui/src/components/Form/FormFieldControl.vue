@@ -23,15 +23,15 @@
 
 import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { fieldControl } from '../../composables/useFieldControls'
+import { MUTED_COPY_SNUG } from '../../lib/copyClasses'
 import { CreateOptionError } from '../../lib/createOptionError'
 import { createOptionActionLabel, createOptionTitle } from '../../lib/createOptionTitle'
 import { FOCUS_RING, FOCUS_RING_WITHIN } from '../../lib/focusRing'
-import { MUTED_COPY_SNUG } from '../../lib/copyClasses'
 import { INPUT_COPY } from '../../lib/inputClasses'
 import PkMultiSelect from '../primitives/PkMultiSelect.vue'
-import CreateOptionDialog from './CreateOptionDialog.vue'
 import { Checkbox } from '../shadcn/checkbox'
 import { Switch } from '../shadcn/switch'
+import CreateOptionDialog from './CreateOptionDialog.vue'
 import PkFileUpload from './PkFileUpload.vue'
 import type { UploadedFileValue } from './PkFileUpload.vue'
 import PkKeyValue from './PkKeyValue.vue'
@@ -315,11 +315,9 @@ function affixAction(action: FormField['suffixAction']): void {
     }
 }
 
-const inputClass =
-    `border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50 ${INPUT_COPY} ${FOCUS_RING}`
+const inputClass = `border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50 ${INPUT_COPY} ${FOCUS_RING}`
 
-const affixedInputClass =
-    `bg-background h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-sm focus-visible:ring-0 focus-visible:outline-none disabled:opacity-50 ${INPUT_COPY}`
+const affixedInputClass = `bg-background h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-sm focus-visible:ring-0 focus-visible:outline-none disabled:opacity-50 ${INPUT_COPY}`
 
 /* ------------------------------------------------------------------- chips */
 
@@ -525,7 +523,10 @@ function insertChip(token: string) {
                 :id="`f-${field.key}-type`"
                 :value="morphValue.type ?? ''"
                 :disabled="field.disabled || processing"
-                :class="['border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50', FOCUS_RING]"
+                :class="[
+                    'border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50',
+                    FOCUS_RING,
+                ]"
                 @change="setMorphType(($event.target as HTMLSelectElement).value)"
             >
                 <option value="">Type</option>
@@ -536,7 +537,10 @@ function insertChip(token: string) {
             <div v-if="morphValue.type && searchOptions" class="relative">
                 <button
                     type="button"
-                    :class="['border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm disabled:opacity-50', FOCUS_RING]"
+                    :class="[
+                        'border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm disabled:opacity-50',
+                        FOCUS_RING,
+                    ]"
                     :disabled="field.disabled || processing"
                     @click="openSearch"
                 >
@@ -574,7 +578,10 @@ function insertChip(token: string) {
         <div v-else-if="field.type === 'select' && searchOptions" class="relative">
             <button
                 type="button"
-                :class="['border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm disabled:opacity-50', FOCUS_RING]"
+                :class="[
+                    'border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm disabled:opacity-50',
+                    FOCUS_RING,
+                ]"
                 :disabled="field.disabled || processing"
                 :aria-invalid="!!error"
                 @click="openSearch"
@@ -646,7 +653,10 @@ function insertChip(token: string) {
             :value="value ?? ''"
             :disabled="field.disabled || processing"
             :aria-invalid="!!error"
-            :class="['border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50', FOCUS_RING]"
+            :class="[
+                'border-input bg-background h-9 rounded-md border px-3 text-sm disabled:opacity-50',
+                FOCUS_RING,
+            ]"
             @change="emit('change', ($event.target as HTMLSelectElement).value || null)"
         >
             <option value="">-</option>
@@ -693,7 +703,11 @@ function insertChip(token: string) {
             :placeholder="field.placeholder"
             :disabled="field.disabled || processing"
             :aria-invalid="!!error"
-            :class="['border-input bg-background rounded-md border px-3 py-2 text-sm disabled:opacity-50', INPUT_COPY, FOCUS_RING]"
+            :class="[
+                'border-input bg-background rounded-md border px-3 py-2 text-sm disabled:opacity-50',
+                INPUT_COPY,
+                FOCUS_RING,
+            ]"
             @input="emit('change', ($event.target as HTMLTextAreaElement).value)"
         />
 
@@ -708,7 +722,8 @@ function insertChip(token: string) {
             <span
                 v-if="field.prefix || field.prefixIcon"
                 class="bg-muted text-muted-foreground flex items-center px-2 text-sm"
-            >{{ field.prefix ?? field.prefixIcon }}</span>
+                >{{ field.prefix ?? field.prefixIcon }}</span
+            >
             <button
                 v-if="field.prefixAction"
                 type="button"
@@ -726,13 +741,17 @@ function insertChip(token: string) {
                 :placeholder="field.placeholder"
                 :disabled="field.disabled || processing"
                 :aria-invalid="!!error"
-                :class="['min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm focus-visible:outline-none', INPUT_COPY]"
+                :class="[
+                    'min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm focus-visible:outline-none',
+                    INPUT_COPY,
+                ]"
                 @input="emit('change', ($event.target as HTMLTextAreaElement).value)"
             />
             <span
                 v-if="field.suffix || field.suffixIcon"
                 class="bg-muted text-muted-foreground flex items-center px-2 text-sm"
-            >{{ field.suffix ?? field.suffixIcon }}</span>
+                >{{ field.suffix ?? field.suffixIcon }}</span
+            >
             <button
                 v-if="field.suffixAction"
                 type="button"
@@ -781,7 +800,8 @@ function insertChip(token: string) {
             <span
                 v-if="field.prefix || field.prefixIcon"
                 class="bg-muted text-muted-foreground flex items-center px-2 text-sm"
-            >{{ field.prefix ?? field.prefixIcon }}</span>
+                >{{ field.prefix ?? field.prefixIcon }}</span
+            >
             <button
                 v-if="field.prefixAction"
                 type="button"
@@ -818,7 +838,8 @@ function insertChip(token: string) {
             <span
                 v-if="field.suffix || field.suffixIcon"
                 class="bg-muted text-muted-foreground flex items-center px-2 text-sm"
-            >{{ field.suffix ?? field.suffixIcon }}</span>
+                >{{ field.suffix ?? field.suffixIcon }}</span
+            >
             <button
                 v-if="field.suffixAction"
                 type="button"

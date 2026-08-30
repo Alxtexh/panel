@@ -11,4 +11,4 @@
  * `''`, so a caller comparing a link against the current path gets a string
  * either way rather than an `undefined` that silently never matches.
  */
-export { cn, toUrl } from '@alxtexh-enterprise/panel'
+export { cn, toUrl } from '@alxtexh-enterprise/panel';

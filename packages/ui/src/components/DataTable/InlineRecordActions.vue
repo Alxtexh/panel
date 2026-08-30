@@ -34,7 +34,8 @@
 import { computed, ref } from 'vue'
 import { iconPath, resolveActionIcon } from '../primitives/icons'
 import PkDropdown from '../primitives/PkDropdown.vue'
-import RecordActions, { type RecordActionGroup, type RecordActionItem } from './RecordActions.vue'
+import RecordActions from './RecordActions.vue'
+import type { RecordActionGroup, RecordActionItem } from './RecordActions.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -106,7 +107,10 @@ defineExpose({ openContextMenu })
 <template>
     <div class="flex items-center justify-end gap-1">
         <div class="hidden items-center gap-1 sm:flex">
-            <template v-for="action in [...standaloneOrdinary, ...standaloneDestructive]" :key="action.key">
+            <template
+                v-for="action in [...standaloneOrdinary, ...standaloneDestructive]"
+                :key="action.key"
+            >
                 <a
                     v-if="action.link"
                     :href="action.url ?? '#'"
@@ -214,7 +218,11 @@ defineExpose({ openContextMenu })
                                 type="button"
                                 role="menuitem"
                                 class="hover:bg-accent focus:bg-accent flex w-full items-center gap-2.5 rounded px-2.5 py-2 text-left text-sm focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                                :class="action.destructive ? 'text-destructive hover:bg-destructive/10 focus:bg-destructive/10' : tone(action)"
+                                :class="
+                                    action.destructive
+                                        ? 'text-destructive hover:bg-destructive/10 focus:bg-destructive/10'
+                                        : tone(action)
+                                "
                                 :disabled="busy === action.key"
                                 @click="run(action)"
                             >
@@ -229,7 +237,14 @@ defineExpose({ openContextMenu })
                                     aria-hidden="true"
                                     :class="busy === action.key && 'animate-pulse'"
                                 >
-                                    <path :d="resolveActionIcon({ ...action, destructive: action.destructive })" />
+                                    <path
+                                        :d="
+                                            resolveActionIcon({
+                                                ...action,
+                                                destructive: action.destructive,
+                                            })
+                                        "
+                                    />
                                 </svg>
                                 <span class="min-w-0 flex-1 truncate">{{ action.label }}</span>
                             </button>

@@ -12,9 +12,10 @@
  */
 import { computed, reactive, ref, watch } from 'vue'
 import { CATALOGUE_CONTAINER, CATALOGUE_GRID_TILES } from '../../lib/catalogueGrid'
-import PkTextInput from '../primitives/PkTextInput.vue'
 import { iconPath } from '../primitives/icons'
-import CatalogCard, { type CatalogItem } from './CatalogCard.vue'
+import PkTextInput from '../primitives/PkTextInput.vue'
+import CatalogCard from './CatalogCard.vue'
+import type { CatalogItem } from './CatalogCard.vue'
 import type { CatalogFacet, CatalogFilters, CatalogRangeValue } from './catalogFilter'
 
 const props = withDefaults(
@@ -109,7 +110,9 @@ function onSearchKeydown(event: KeyboardEvent): void {
     emit('scan', query.value.trim())
 }
 
-const chipFacets = computed(() => props.facets.filter((facet) => (facet.kind ?? 'chips') === 'chips'))
+const chipFacets = computed(() =>
+    props.facets.filter((facet) => (facet.kind ?? 'chips') === 'chips'),
+)
 const rangeFacets = computed(() => props.facets.filter((facet) => facet.kind === 'range'))
 
 const showToolbar = computed(
@@ -277,15 +280,13 @@ function goTo(next: number) {
             </div>
         </div>
 
-        <p v-if="items.length === 0" class="text-muted-foreground text-sm font-normal">No matching items.</p>
+        <p v-if="items.length === 0" class="text-muted-foreground text-sm font-normal">
+            No matching items.
+        </p>
 
         <div
             v-else
-            :class="
-                layout === 'list'
-                    ? 'flex flex-col gap-3'
-                    : CATALOGUE_GRID_TILES
-            "
+            :class="layout === 'list' ? 'flex flex-col gap-3' : CATALOGUE_GRID_TILES"
             :data-slot="layout === 'list' ? 'catalog-list' : 'catalog-grid'"
         >
             <CatalogCard

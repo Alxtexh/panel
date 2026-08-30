@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-    mergeLayoutItems,
-    parseWidgetId,
-    toPersistedLayout,
-    widgetId,
-} from './dashboardLayout'
+import { mergeLayoutItems, parseWidgetId, toPersistedLayout, widgetId } from './dashboardLayout'
 
 describe('dashboardLayout', () => {
     it('parses and builds widget ids', () => {
@@ -46,12 +41,9 @@ describe('dashboardLayout', () => {
     })
 
     it('falls back to declaration order when layout is empty', () => {
-        const merged = mergeLayoutItems(
-            [{ key: 'a' }],
-            [{ key: 'b', span: 2 }],
-            [{ key: 'c' }],
-            { widgets: [] },
-        )
+        const merged = mergeLayoutItems([{ key: 'a' }], [{ key: 'b', span: 2 }], [{ key: 'c' }], {
+            widgets: [],
+        })
 
         expect(merged.map((item) => item.id)).toEqual(['stat:a', 'chart:b', 'table:c'])
         expect(merged[1].span).toBe(2)

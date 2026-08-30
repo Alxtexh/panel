@@ -46,7 +46,12 @@ describe('SocialLoginButtons', () => {
         const wrapper = mount(SocialLoginButtons, {
             props: {
                 providers: [
-                    { key: 'github', label: 'GitHub', url: '/auth/github/redirect', configured: true },
+                    {
+                        key: 'github',
+                        label: 'GitHub',
+                        url: '/auth/github/redirect',
+                        configured: true,
+                    },
                 ],
             },
         })

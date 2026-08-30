@@ -4,10 +4,9 @@
  *
  * Pass `tabs`, or the older `products` + `units` pair the demo still sends.
  */
-import { computed } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
-import {
-    PAGE_SHELL, CatalogBrowser } from '@alxtexh-enterprise/panel'
+import { computed } from 'vue'
+import { PAGE_SHELL, CatalogBrowser } from '@alxtexh-enterprise/panel'
 import type { CatalogBrowserTab, CatalogItem } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })

@@ -126,7 +126,7 @@ function onFieldChange(key: string, value: unknown) {
 function submit() {
     const url =
         props.mode === 'create'
-            ? props.schema.routes.store ?? props.baseUrl
+            ? (props.schema.routes.store ?? props.baseUrl)
             : `${props.baseUrl}/${props.recordId}`
 
     const method = props.mode === 'create' ? 'post' : 'put'
@@ -160,13 +160,7 @@ function formatCell(column: any, row: Record<string, any>): string {
 </script>
 
 <template>
-    <PkSlideover
-        :open="open"
-        :title="title"
-        size="xl"
-        :busy="busy"
-        @close="emit('close')"
-    >
+    <PkSlideover :open="open" :title="title" size="xl" :busy="busy" @close="emit('close')">
         <div v-if="loading" class="text-muted-foreground text-sm">Loading…</div>
 
         <form
@@ -213,14 +207,22 @@ function formatCell(column: any, row: Record<string, any>): string {
 
         <template #footer>
             <template v-if="mode !== 'view'">
-                <Button variant="ghost" size="sm" type="button" :disabled="busy" @click="emit('close')">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    :disabled="busy"
+                    @click="emit('close')"
+                >
                     Cancel
                 </Button>
                 <Button size="sm" type="submit" form="pk-crud-modal-form" :disabled="busy">
                     {{ form.processing ? 'Saving…' : 'Save' }}
                 </Button>
             </template>
-            <Button v-else variant="ghost" size="sm" type="button" @click="emit('close')">Close</Button>
+            <Button v-else variant="ghost" size="sm" type="button" @click="emit('close')"
+                >Close</Button
+            >
         </template>
     </PkSlideover>
 </template>

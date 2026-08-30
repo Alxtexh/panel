@@ -132,7 +132,8 @@ describe('InfoNode - dedicated view entries', () => {
     })
 
     it('renders a registered ViewEntry component', async () => {
-        const { registerEntryView, resetEntryViews } = await import('../../composables/useEntryViews')
+        const { registerEntryView, resetEntryViews } =
+            await import('../../composables/useEntryViews')
         const { defineComponent } = await import('vue')
 
         resetEntryViews()

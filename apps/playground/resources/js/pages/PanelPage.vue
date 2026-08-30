@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import PanelPage from '@alxtexh-enterprise/panel/pages/PanelPage.vue'
+import PanelPage from '@alxtexh-enterprise/panel/pages/PanelPage.vue';
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>

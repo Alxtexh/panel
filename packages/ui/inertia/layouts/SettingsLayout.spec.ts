@@ -47,7 +47,8 @@ describe('SettingsLayout', () => {
                     key: 'security',
                     title: 'Security',
                     href: '/security',
-                    description: 'Password, two-factor authentication, passkeys and signed-in devices.',
+                    description:
+                        'Password, two-factor authentication, passkeys and signed-in devices.',
                 },
             ],
         }
@@ -57,7 +58,9 @@ describe('SettingsLayout', () => {
         expect(wrapper.find('[data-test="description"]').text()).toBe(
             'Password, two-factor authentication, passkeys and signed-in devices.',
         )
-        expect(wrapper.text()).not.toContain('Organisation, roles, payments and the rest of this portal.')
+        expect(wrapper.text()).not.toContain(
+            'Organisation, roles, payments and the rest of this portal.',
+        )
     })
 
     it('falls back to a generic description only when the entry supplies none', () => {

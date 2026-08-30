@@ -72,7 +72,9 @@ function when(iso: string | null): string {
 
                     <div class="min-w-0 flex-1 pb-1">
                         <p class="text-sm leading-snug">
-                            <span class="font-medium">{{ entry.actor ?? t('workflow.system') }}</span>
+                            <span class="font-medium">{{
+                                entry.actor ?? t('workflow.system')
+                            }}</span>
                             {{ t('workflow.history_moved') }}
                             <span class="font-medium">{{ labelFor(entry.from) }}</span>
                             <span aria-hidden="true"> → </span>

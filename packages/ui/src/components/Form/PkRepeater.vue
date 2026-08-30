@@ -329,6 +329,7 @@ const dragUid = ref<number | null>(null)
 function onHandleDragStart(uid: number, event: DragEvent) {
     if (props.disabled) {
         event.preventDefault()
+
         return
     }
 
@@ -473,7 +474,11 @@ function onRowDrop(targetUid: number, event: DragEvent) {
                     v-if="collapsible"
                     type="button"
                     class="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors"
-                    :aria-label="isCollapsed(row.uid) ? `Expand ${itemLabel} ${index + 1}` : `Collapse ${itemLabel} ${index + 1}`"
+                    :aria-label="
+                        isCollapsed(row.uid)
+                            ? `Expand ${itemLabel} ${index + 1}`
+                            : `Collapse ${itemLabel} ${index + 1}`
+                    "
                     @click="toggleCollapsed(row.uid)"
                 >
                     <svg
@@ -690,7 +695,11 @@ function onRowDrop(targetUid: number, event: DragEvent) {
                             class="min-w-[8rem] px-2 py-1.5 align-top"
                         >
                             <FormFieldControl
-                                :field="{ ...child, disabled: child.disabled || disabled, labelHidden: true }"
+                                :field="{
+                                    ...child,
+                                    disabled: child.disabled || disabled,
+                                    labelHidden: true,
+                                }"
                                 :value="row.data[child.key]"
                                 :error="errorFor(index, child.key)"
                                 :options="childOptions[child.key] ?? []"

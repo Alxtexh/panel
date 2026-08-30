@@ -289,9 +289,7 @@ describe('SchemaNode - position persisted in the query string', () => {
 
         const lengthBefore = window.history.length
 
-        const secondTabButton = wrapper
-            .findAll('button')
-            .find((b) => b.text().trim() === 'Second')
+        const secondTabButton = wrapper.findAll('button').find((b) => b.text().trim() === 'Second')
 
         await secondTabButton?.trigger('click')
 
@@ -307,9 +305,7 @@ describe('SchemaNode - position persisted in the query string', () => {
             props: { node: { ...tabs, persistInQueryString: undefined }, values: {} },
         })
 
-        const secondTabButton = wrapper
-            .findAll('button')
-            .find((b) => b.text().trim() === 'Second')
+        const secondTabButton = wrapper.findAll('button').find((b) => b.text().trim() === 'Second')
 
         await secondTabButton?.trigger('click')
 
@@ -503,5 +499,4 @@ describe('SchemaNode - field value changes', () => {
         expect(wrapper.emitted('update')).toBeUndefined()
         expect(wrapper.emitted('change')).toEqual([['reason', 'Device left unattended']])
     })
-
 })

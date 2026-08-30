@@ -46,11 +46,13 @@ const items = computed<QuickItem[]>(
  */
 const sections = computed<QuickSection[]>(() => {
     const list = items.value
+
     if (list.length === 0) {
         return []
     }
 
     const hasGroups = list.some((item) => Boolean(item.group))
+
     if (!hasGroups) {
         return [{ name: null, items: list }]
     }
@@ -60,20 +62,25 @@ const sections = computed<QuickSection[]>(() => {
 
     for (const item of list) {
         const name = item.group?.trim() ? item.group.trim() : null
+
         if (!buckets.has(name)) {
             buckets.set(name, [])
+
             if (name !== null) {
                 order.push(name)
             }
         }
+
         buckets.get(name)!.push(item)
     }
 
     const result: QuickSection[] = []
     const ungrouped = buckets.get(null)
+
     if (ungrouped?.length) {
         result.push({ name: null, items: ungrouped })
     }
+
     for (const name of order) {
         result.push({ name, items: buckets.get(name) ?? [] })
     }

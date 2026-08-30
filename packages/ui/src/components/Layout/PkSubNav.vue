@@ -23,11 +23,11 @@
  * both the dropdown trigger and the desktop rail showing nothing selected the
  * moment a settings screen has a sub-route of its own.
  */
-import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import { buttonClasses } from '../primitives/buttonClasses'
 import { iconPath } from '../primitives/icons'
 import PkDropdown from '../primitives/PkDropdown.vue'
-import { buttonClasses } from '../primitives/buttonClasses'
 
 /*
  * THE RAIL BELOW SWITCHES ON AT `lg` (1024px), NOT `md` (768px) - one
