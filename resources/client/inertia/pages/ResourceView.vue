@@ -103,6 +103,8 @@ const props = defineProps<{
     /** Workflow transitions available on this record, when the resource declares one. */
     workflow?: {
         column: string
+        /** `Workflow::groupLabel()` - defaults to "Status". */
+        group: string
         current: string
         currentLabel: string
         currentColor: string

@@ -589,7 +589,7 @@ function putWorkflow(closeEditor: boolean) {
     saving.value = true
     saveError.value = ''
 
-    router.put(
+    router.put<Record<string, any>>(
         props.saveUrl,
         {
             group_label: editing.value ? editGroupLabel.value : (props.workflow.group ?? 'Status'),
@@ -1164,27 +1164,29 @@ const edgePaths = computed(() => {
 const canUndo = computed(() => undoStack.value.length > 0)
 
 const previewPath = computed(() => {
-    if (!edgeDrag.value) {
+    const drag = edgeDrag.value
+
+    if (!drag) {
         return null
     }
 
-    let x1 = edgeDrag.value.x
-    let y1 = edgeDrag.value.y
+    let x1 = drag.x
+    let y1 = drag.y
 
-    if (edgeDrag.value.mode === 'create') {
-        const from = nodePositions[edgeDrag.value.fromId] ?? { x: 0, y: 0 }
+    if (drag.mode === 'create') {
+        const from = nodePositions[drag.fromId] ?? { x: 0, y: 0 }
         x1 = from.x + NODE_WIDTH
         y1 = from.y + NODE_HEIGHT / 2
-    } else if (edgeDrag.value.mode === 'reconnect-source') {
-        const transition = boardTransitions.value.find((t) => t.key === edgeDrag.value!.edgeKey)
+    } else if (drag.mode === 'reconnect-source') {
+        const transition = boardTransitions.value.find((t) => t.key === drag.edgeKey)
         const toId = transition?.to
         const to = toId ? (nodePositions[toId] ?? { x: 0, y: 0 }) : { x: 0, y: 0 }
 
         return {
-            d: bezierPath(edgeDrag.value.x, edgeDrag.value.y, to.x, to.y + NODE_HEIGHT / 2),
+            d: bezierPath(drag.x, drag.y, to.x, to.y + NODE_HEIGHT / 2),
         }
     } else {
-        const transition = boardTransitions.value.find((t) => t.key === edgeDrag.value!.edgeKey)
+        const transition = boardTransitions.value.find((t) => t.key === drag.edgeKey)
         const fromId = transition?.from[0]
         const from = fromId ? (nodePositions[fromId] ?? { x: 0, y: 0 }) : { x: 0, y: 0 }
         x1 = from.x + NODE_WIDTH
@@ -1192,7 +1194,7 @@ const previewPath = computed(() => {
     }
 
     return {
-        d: bezierPath(x1, y1, edgeDrag.value.x, edgeDrag.value.y),
+        d: bezierPath(x1, y1, drag.x, drag.y),
     }
 })
 
@@ -1265,7 +1267,7 @@ function colorClass(color: string): string {
                 with this save. Column and model stay fixed from the PHP definition.
             </p>
 
-            <PkAlertError v-if="saveError" class="mb-4">{{ saveError }}</PkAlertError>
+            <PkAlertError v-if="saveError" :errors="[saveError]" class="mb-4" />
 
             <div class="mb-4">
                 <label class="text-foreground mb-1 block text-xs font-medium">Group label</label>
@@ -1464,7 +1466,7 @@ function colorClass(color: string): string {
             </template>
         </p>
 
-        <PkAlertError v-if="saveError && !editing" class="mb-0">{{ saveError }}</PkAlertError>
+        <PkAlertError v-if="saveError && !editing" :errors="[saveError]" class="mb-0" />
 
         <PkEmptyState
             v-if="visibleNodes.length === 0 && !editing"

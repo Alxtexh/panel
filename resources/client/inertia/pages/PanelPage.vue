@@ -8,7 +8,7 @@
 import { Head, useForm } from '@inertiajs/vue3'
 import { computed, watch } from 'vue'
 import { PAGE_SHELL, SchemaNode } from '@alxtexh-enterprise/panel'
-import type { SchemaNode as SchemaNodeType } from '@alxtexh-enterprise/panel'
+import type { SchemaNodeShape as SchemaNodeType } from '@alxtexh-enterprise/panel'
 import { PanelWidgets } from '@alxtexh-enterprise/panel/inertia'
 
 const props = withDefaults(
@@ -37,7 +37,7 @@ const props = withDefaults(
 
 const nodes = computed(() => props.pageLayout?.nodes ?? [])
 
-const form = useForm<Record<string, unknown>>({ ...props.values })
+const form = useForm<Record<string, any>>({ ...props.values })
 
 watch(
     () => props.values,

@@ -17,7 +17,7 @@ export type SupportEntry = {
     category: string
     title: string
     body: string
-    meta: Record<string, unknown>
+    meta: Record<string, any>
     sort: number
     published: boolean
 }

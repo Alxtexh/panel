@@ -28,9 +28,9 @@ const visible = computed(() =>
 
 let channel: {
     leave?: () => void
-    here?: (members: Member[]) => void
-    joining?: (member: Member) => void
-    leaving?: (member: Member) => void
+    here?: (callback: (members: Member[]) => void) => void
+    joining?: (callback: (member: Member) => void) => void
+    leaving?: (callback: (member: Member) => void) => void
 } | null = null
 
 onMounted(() => {

@@ -65,7 +65,12 @@ import {
     hasBadgeValue,
     useSchemaColumns,
 } from '@alxtexh-enterprise/panel'
-import type { RecordActionGroup, RecordActionItem, SchemaColumn } from '@alxtexh-enterprise/panel'
+import type {
+    FormField,
+    RecordActionGroup,
+    RecordActionItem,
+    SchemaColumn,
+} from '@alxtexh-enterprise/panel'
 import ImportDialog from '../components/ImportDialog.vue'
 import RenderHook from '../components/RenderHook.vue'
 import ResourceCrudModal from '../components/ResourceCrudModal.vue'
@@ -159,8 +164,12 @@ interface ResourceSchema {
             form?: { nodes: unknown[] } | null
         }[]
     }
-    /** Only the count matters here; the form pages own the field shapes. */
-    form: { columns: number; fields: unknown[] }
+    /**
+     * Mostly the count only - the form pages own the field shapes - but the
+     * modal-presentation path (`ResourceCrudModal`) reuses this same schema
+     * to render the form for real, so the shape has to be true.
+     */
+    form: { columns: number; fields: FormField[] }
 }
 
 const props = defineProps<
@@ -426,7 +435,6 @@ function openCrudModal(mode: 'create' | 'edit' | 'view', row?: Record<string, an
 function onCrudSaved() {
     router.reload({
         only: ['records', 'total', 'tabCounts', 'summary', 'filters', 'filterOptions'],
-        preserveScroll: true,
     })
 }
 

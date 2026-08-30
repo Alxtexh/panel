@@ -85,6 +85,16 @@ const props = defineProps<{
 
 const isEdit = computed(() => props.record !== null)
 
+/**
+ * `window` IS RESOLVED HERE, NOT IN THE TEMPLATE. A bare `window` inside a
+ * Vue template compiles to `_ctx.window` - it is not in the compiler's
+ * global allowlist - so the SSR-safety check silently always took the
+ * "undefined" branch and `window.location.pathname` was dead code.
+ */
+const returnUrl = computed(() =>
+    typeof window === 'undefined' ? props.schema.routes.index : window.location.pathname,
+)
+
 const definingField = ref(false)
 
 const form = useForm<Record<string, any>>({ ...withDownloadUrls(props.values) })
@@ -732,11 +742,7 @@ onBeforeUnmount(() => {
                     :upload="upload"
                     :discard="discardUpload"
                     :picker-base="schema.routes.index"
-                    :return-url="
-                        typeof window === 'undefined'
-                            ? schema.routes.index
-                            : window.location.pathname
-                    "
+                    :return-url="returnUrl"
                     :create-option="createOption"
                     @change="onFieldChange"
                     @affix-action="onAffixAction"
