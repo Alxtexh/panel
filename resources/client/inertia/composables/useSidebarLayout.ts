@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/vue3'
-import { computed, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue'
+import { computed, toValue } from 'vue'
+import type { ComputedRef, MaybeRefOrGetter } from 'vue'
 
 /**
  * Sidebar design families (shadcn-vue block patterns, kit AppSidebar).
@@ -204,12 +205,14 @@ export function useSidebarLayout(force?: MaybeRefOrGetter<string | null | undefi
 
     const layout = computed<SidebarLayout>(() => {
         const forcedArg = toValue(force)
+
         if (forcedArg != null && forcedArg !== '') {
             return resolveName(forcedArg)
         }
 
         const props = page.props as Record<string, unknown>
         const forced = props.forceSidebarLayout
+
         if (forced != null && forced !== '') {
             return resolveName(forced)
         }

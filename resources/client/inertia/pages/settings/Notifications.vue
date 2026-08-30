@@ -8,10 +8,7 @@
 import { Head, useForm, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { toast } from 'vue-sonner'
-import {
-    PkButton as Button,
-    PkHeading as Heading,
-} from '@alxtexh-enterprise/panel'
+import { PkButton as Button, PkHeading as Heading } from '@alxtexh-enterprise/panel'
 import { useGroupedSettingsCards } from '../../composables/useGroupedSettingsCards'
 
 type Props = {

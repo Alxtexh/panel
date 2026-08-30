@@ -2,7 +2,12 @@
 import { usePage } from '@inertiajs/vue3'
 import { ChevronsUpDown } from '@lucide/vue'
 import { computed } from 'vue'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, useAppearance } from '@alxtexh-enterprise/panel'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+    useAppearance,
+} from '@alxtexh-enterprise/panel'
 import {
     SidebarMenu,
     SidebarMenuButton,
@@ -79,7 +84,9 @@ const menuSide = computed<'left' | 'right' | 'bottom'>(() => {
                             a place the checker stops looking.
                         -->
                         <UserInfo v-if="user" :user="user" :show-name="showDetails" />
-                        <ChevronsUpDown class="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
+                        <ChevronsUpDown
+                            class="ml-auto size-4 group-data-[collapsible=icon]:hidden"
+                        />
                     </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent

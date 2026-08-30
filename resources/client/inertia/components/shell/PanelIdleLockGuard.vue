@@ -19,8 +19,8 @@ const { warningOpen, warningSecondsLeft, dismissWarning } = usePanelIdleLock()
         @close="dismissWarning"
     >
         <p class="text-sm text-muted-foreground font-normal">
-            Move the mouse or press a key to stay signed in. If nobody does,
-            the panel locks and asks for your password.
+            Move the mouse or press a key to stay signed in. If nobody does, the panel locks and
+            asks for your password.
         </p>
 
         <template #footer>

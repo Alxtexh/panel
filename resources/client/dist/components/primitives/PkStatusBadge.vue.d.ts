@@ -1,4 +1,4 @@
-import { type SemanticTone } from './statusTone';
+import type { SemanticTone } from './statusTone';
 type __VLS_Props = {
     status?: string | null;
     tone?: SemanticTone | null;

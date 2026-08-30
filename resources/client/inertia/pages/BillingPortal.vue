@@ -49,6 +49,7 @@ const actionEntries = computed(() => Object.entries(props.billingActions ?? {}))
 function cell(row: Record<string, unknown>, keys: string[]): string {
     for (const key of keys) {
         const value = row[key]
+
         if (value != null && value !== '') {
             return String(value)
         }
@@ -64,10 +65,7 @@ function cell(row: Record<string, unknown>, keys: string[]): string {
     <div :class="PAGE_SHELL_STACK">
         <PkPageHeader
             :title="pageHeading ?? t('billing.portal.title')"
-            :purpose="
-                pageDescription ??
-                t('billing.portal.host_extension')
-            "
+            :purpose="pageDescription ?? t('billing.portal.host_extension')"
         />
 
         <PkEmptyState
@@ -77,17 +75,16 @@ function cell(row: Record<string, unknown>, keys: string[]): string {
             icon="file-text"
         />
 
-        <section
-            v-if="subscription"
-            class="space-y-2 rounded-xl border bg-card p-4"
-        >
+        <section v-if="subscription" class="space-y-2 rounded-xl border bg-card p-4">
             <h2 class="text-sm font-medium">{{ t('billing.portal.subscription') }}</h2>
             <dl class="grid gap-3 sm:grid-cols-2 text-sm">
                 <div v-for="(value, key) in subscription" :key="String(key)">
                     <dt class="text-muted-foreground text-xs font-normal uppercase tracking-wide">
                         {{ key }}
                     </dt>
-                    <dd class="font-medium">{{ value == null || value === '' ? '-' : String(value) }}</dd>
+                    <dd class="font-medium">
+                        {{ value == null || value === '' ? '-' : String(value) }}
+                    </dd>
                 </div>
             </dl>
         </section>
@@ -101,7 +98,9 @@ function cell(row: Record<string, unknown>, keys: string[]): string {
             </p>
             <div v-else class="overflow-x-auto">
                 <table class="min-w-full text-sm">
-                    <thead class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
+                    <thead
+                        class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground"
+                    >
                         <tr>
                             <th class="px-3 py-2">Reference</th>
                             <th class="px-3 py-2">Status</th>
@@ -133,10 +132,7 @@ function cell(row: Record<string, unknown>, keys: string[]): string {
             </div>
         </TableShell>
 
-        <section
-            v-if="paymentMethods.length > 0 || hasData"
-            class="space-y-3"
-        >
+        <section v-if="paymentMethods.length > 0 || hasData" class="space-y-3">
             <h2 class="text-sm font-medium">{{ t('billing.portal.payment_methods') }}</h2>
             <p v-if="paymentMethods.length === 0" class="text-muted-foreground text-sm font-normal">
                 {{ t('billing.portal.no_methods') }}
@@ -164,7 +160,7 @@ function cell(row: Record<string, unknown>, keys: string[]): string {
             <h2 class="text-sm font-medium">{{ t('billing.portal.actions') }}</h2>
             <div class="flex flex-wrap gap-2">
                 <a
-                    v-for="([key, action]) in actionEntries"
+                    v-for="[key, action] in actionEntries"
                     :key="key"
                     :href="action?.href || undefined"
                     :aria-disabled="!action?.href"

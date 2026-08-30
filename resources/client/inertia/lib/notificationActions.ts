@@ -1,7 +1,8 @@
-import { h, type VNode } from 'vue'
 import { router } from '@inertiajs/vue3'
-import { toast } from 'vue-sonner'
 import { CircleCheckIcon, InfoIcon, OctagonXIcon, TriangleAlertIcon } from '@lucide/vue'
+import { h } from 'vue'
+import type { VNode } from 'vue'
+import { toast } from 'vue-sonner'
 
 /**
  * Buttons on an Inertia flash toast or a bell row.
@@ -81,7 +82,9 @@ export function followNotificationAction(action: NotificationAction): void {
     window.location.assign(action.href)
 }
 
-export function linkedNotificationActions(actions: NotificationAction[] | undefined): NotificationAction[] {
+export function linkedNotificationActions(
+    actions: NotificationAction[] | undefined,
+): NotificationAction[] {
     return (actions ?? []).filter((action) => typeof action.href === 'string' && action.href !== '')
 }
 

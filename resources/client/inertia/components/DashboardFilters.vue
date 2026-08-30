@@ -204,7 +204,10 @@ function apply() {
                 </div>
 
                 <p v-if="invalid" class="text-xs text-destructive">Choose a start date as well.</p>
-                <p v-else-if="draft.from && !draft.to" class="text-xs text-muted-foreground font-normal">
+                <p
+                    v-else-if="draft.from && !draft.to"
+                    class="text-xs text-muted-foreground font-normal"
+                >
                     Leaving “To” empty means everything since that date.
                 </p>
                 <p v-else-if="draft.from" class="text-xs text-muted-foreground font-normal">

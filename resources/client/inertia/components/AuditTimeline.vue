@@ -144,7 +144,10 @@ function when(iso: string): string {
                 </button>
             </p>
 
-            <p v-else-if="loading && entries.length === 0" class="text-muted-foreground text-sm font-normal">
+            <p
+                v-else-if="loading && entries.length === 0"
+                class="text-muted-foreground text-sm font-normal"
+            >
                 Loading…
             </p>
 

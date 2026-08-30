@@ -213,8 +213,8 @@ defineOptions({
         />
 
         <p class="text-muted-foreground text-sm font-normal">
-            Turn this on if you would rather receive a code at your address than
-            use an authenticator app. You can keep both.
+            Turn this on if you would rather receive a code at your address than use an
+            authenticator app. You can keep both.
         </p>
 
         <Form
@@ -364,11 +364,9 @@ defineOptions({
             v-if="!canListOtherDevices"
             class="rounded-lg border border-dashed p-6 text-sm text-muted-foreground"
         >
-            Other signed-in devices cannot be listed with the current session
-            driver. Set
+            Other signed-in devices cannot be listed with the current session driver. Set
             <code class="text-xs">SESSION_DRIVER=database</code>
-            and run the sessions migration to list and revoke them. This device
-            still appears above.
+            and run the sessions migration to list and revoke them. This device still appears above.
         </div>
 
         <div

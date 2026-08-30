@@ -244,7 +244,12 @@ const toPath = (url: string): string => url.replace(/^https?:\/\/[^/]+/, '') || 
 
 const supportNavItems = computed<NavItem[]>(() => {
     const panel = page.props.panel as
-        | { help?: string | null; faq?: string | null; about?: string | null; whatsNew?: string | null }
+        | {
+              help?: string | null
+              faq?: string | null
+              about?: string | null
+              whatsNew?: string | null
+          }
         | null
         | undefined
 
@@ -543,6 +548,12 @@ function focusGroup(name: string) {
     focusedPath.value = [...focusedPath.value, name]
 }
 
+/** Drilling straight into a nested group: both levels focused in one click. */
+function focusGroupPair(name: string, subName: string) {
+    focusGroup(name)
+    focusGroup(subName)
+}
+
 function unfocusGroup() {
     focusedPath.value = focusedPath.value.slice(0, -1)
 }
@@ -627,10 +638,7 @@ watch(
 
         <SidebarContent>
             <SidebarMiniCalendar v-if="sidebarChrome.calendarChrome && !isCollapsed" />
-            <SidebarSeparator
-                v-if="sidebarChrome.calendarChrome && !isCollapsed"
-                class="mx-0"
-            />
+            <SidebarSeparator v-if="sidebarChrome.calendarChrome && !isCollapsed" class="mx-0" />
 
             <!--
                 HIDDEN WHILE DRILLED IN. The top-level list and a focused
@@ -674,7 +682,10 @@ watch(
                                 :aria-label="group.name"
                                 :title="group.name"
                             >
-                                <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4" />
+                                <component
+                                    :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                                    class="size-4"
+                                />
                             </button>
                         </template>
 
@@ -689,7 +700,10 @@ watch(
                             <p
                                 class="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground"
                             >
-                                <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" />
+                                <component
+                                    :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                                    class="size-4 shrink-0"
+                                />
                                 {{ group.name }}
                             </p>
 
@@ -791,7 +805,11 @@ watch(
                         <p
                             class="flex w-full items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground"
                         >
-                            <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
+                            <component
+                                :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                                class="size-4 shrink-0"
+                                aria-hidden="true"
+                            />
                             <span class="flex-1 text-left">{{ group.name }}</span>
                         </p>
 
@@ -802,8 +820,12 @@ watch(
                             <button
                                 type="button"
                                 class="flex w-full items-center gap-2 rounded-md py-1.5 pl-4 text-sm transition-colors hover:bg-sidebar-accent"
-                                :class="groupIsActive(sub.items) ? 'bg-sidebar-accent font-medium' : 'text-muted-foreground hover:text-foreground'"
-                                @click="focusGroup(group.name); focusGroup(sub.name)"
+                                :class="
+                                    groupIsActive(sub.items)
+                                        ? 'bg-sidebar-accent font-medium'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                "
+                                @click="focusGroupPair(group.name, sub.name)"
                             >
                                 <span class="flex-1 text-left">{{ sub.name }}</span>
                                 <ChevronRight class="size-3.5 shrink-0" aria-hidden="true" />
@@ -815,10 +837,18 @@ watch(
                         v-else
                         type="button"
                         class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sidebar-accent"
-                        :class="groupContainsActive(group) ? 'bg-sidebar-accent font-medium' : 'text-muted-foreground hover:text-foreground'"
+                        :class="
+                            groupContainsActive(group)
+                                ? 'bg-sidebar-accent font-medium'
+                                : 'text-muted-foreground hover:text-foreground'
+                        "
                         @click="focusGroup(group.name)"
                     >
-                        <component :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon" class="size-4 shrink-0" aria-hidden="true" />
+                        <component
+                            :is="group.items[0]?.icon ?? group.groups[0]?.items[0]?.icon"
+                            class="size-4 shrink-0"
+                            aria-hidden="true"
+                        />
                         <span class="flex-1 text-left">{{ group.name }}</span>
                         <ChevronRight class="size-3.5 shrink-0" aria-hidden="true" />
                     </button>
@@ -849,7 +879,11 @@ watch(
                         <button
                             type="button"
                             class="flex w-full items-center gap-2 rounded-md py-1.5 pl-4 text-sm transition-colors hover:bg-sidebar-accent"
-                            :class="groupIsActive(sub.items) ? 'bg-sidebar-accent font-medium' : 'text-muted-foreground hover:text-foreground'"
+                            :class="
+                                groupIsActive(sub.items)
+                                    ? 'bg-sidebar-accent font-medium'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            "
                             @click="focusGroup(sub.name)"
                         >
                             <span class="flex-1 text-left">{{ sub.name }}</span>
@@ -887,10 +921,17 @@ watch(
                     <SidebarMenu v-if="!collapsed.has(group.name)" class="gap-0.5 px-2">
                         <SidebarMenuItem v-for="item in group.items" :key="item.title">
                             <SidebarMenuButton as-child :is-active="isCurrentUrl(item.href)">
-                                <Link :href="item.href" prefetch="hover" cache-for="30s" @click="closeOnMobile">
+                                <Link
+                                    :href="item.href"
+                                    prefetch="hover"
+                                    cache-for="30s"
+                                    @click="closeOnMobile"
+                                >
                                     <Check
                                         class="size-3.5 shrink-0"
-                                        :class="isCurrentUrl(item.href) ? 'opacity-100' : 'opacity-0'"
+                                        :class="
+                                            isCurrentUrl(item.href) ? 'opacity-100' : 'opacity-0'
+                                        "
                                         aria-hidden="true"
                                     />
                                     <span>{{ item.title }}</span>
@@ -901,10 +942,19 @@ watch(
                             <SidebarGroupLabel class="mt-1">{{ sub.name }}</SidebarGroupLabel>
                             <SidebarMenuItem v-for="item in sub.items" :key="item.title">
                                 <SidebarMenuButton as-child :is-active="isCurrentUrl(item.href)">
-                                    <Link :href="item.href" prefetch="hover" cache-for="30s" @click="closeOnMobile">
+                                    <Link
+                                        :href="item.href"
+                                        prefetch="hover"
+                                        cache-for="30s"
+                                        @click="closeOnMobile"
+                                    >
                                         <Check
                                             class="size-3.5 shrink-0"
-                                            :class="isCurrentUrl(item.href) ? 'opacity-100' : 'opacity-0'"
+                                            :class="
+                                                isCurrentUrl(item.href)
+                                                    ? 'opacity-100'
+                                                    : 'opacity-0'
+                                            "
                                             aria-hidden="true"
                                         />
                                         <span>{{ item.title }}</span>
@@ -923,13 +973,19 @@ watch(
                     <button
                         type="button"
                         class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sidebar-accent"
-                        :class="groupContainsActive(group) ? 'bg-sidebar-accent/60 font-medium' : 'text-sidebar-foreground'"
+                        :class="
+                            groupContainsActive(group)
+                                ? 'bg-sidebar-accent/60 font-medium'
+                                : 'text-sidebar-foreground'
+                        "
                         :aria-expanded="!group.collapsible || !collapsed.has(group.name)"
                         @click="group.collapsible && toggleGroup(group.name, group.collapsible)"
                     >
                         <component
                             :is="
-                                !group.collapsible || !collapsed.has(group.name) ? FolderOpen : Folder
+                                !group.collapsible || !collapsed.has(group.name)
+                                    ? FolderOpen
+                                    : Folder
                             "
                             class="size-4 shrink-0 text-amber-600 dark:text-amber-400"
                             aria-hidden="true"
@@ -972,7 +1028,9 @@ watch(
                             >
                                 <component
                                     :is="
-                                        collapsed.has(`${group.name}/${sub.name}`) ? Folder : FolderOpen
+                                        collapsed.has(`${group.name}/${sub.name}`)
+                                            ? Folder
+                                            : FolderOpen
                                     "
                                     class="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
                                     aria-hidden="true"
@@ -1028,8 +1086,16 @@ watch(
                             </button>
                             <SidebarMenuSub v-if="!collapsed.has(group.name)">
                                 <SidebarMenuSubItem v-for="item in group.items" :key="item.title">
-                                    <SidebarMenuSubButton as-child :is-active="isCurrentUrl(item.href)">
-                                        <Link :href="item.href" prefetch="hover" cache-for="30s" @click="closeOnMobile">
+                                    <SidebarMenuSubButton
+                                        as-child
+                                        :is-active="isCurrentUrl(item.href)"
+                                    >
+                                        <Link
+                                            :href="item.href"
+                                            prefetch="hover"
+                                            cache-for="30s"
+                                            @click="closeOnMobile"
+                                        >
                                             {{ item.title }}
                                         </Link>
                                     </SidebarMenuSubButton>
@@ -1039,10 +1105,14 @@ watch(
                                         <button
                                             type="button"
                                             class="text-sidebar-foreground flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent"
-                                            :aria-expanded="!collapsed.has(`${group.name}/${sub.name}`)"
+                                            :aria-expanded="
+                                                !collapsed.has(`${group.name}/${sub.name}`)
+                                            "
                                             @click="toggleGroup(`${group.name}/${sub.name}`, true)"
                                         >
-                                            <span class="flex-1 truncate text-left">{{ sub.name }}</span>
+                                            <span class="flex-1 truncate text-left">{{
+                                                sub.name
+                                            }}</span>
                                             <Plus
                                                 v-if="collapsed.has(`${group.name}/${sub.name}`)"
                                                 class="size-3.5 shrink-0"
@@ -1060,7 +1130,12 @@ watch(
                                                 :is-active="isCurrentUrl(item.href)"
                                                 class="pl-6"
                                             >
-                                                <Link :href="item.href" prefetch="hover" cache-for="30s" @click="closeOnMobile">
+                                                <Link
+                                                    :href="item.href"
+                                                    prefetch="hover"
+                                                    cache-for="30s"
+                                                    @click="closeOnMobile"
+                                                >
                                                     {{ item.title }}
                                                 </Link>
                                             </SidebarMenuSubButton>

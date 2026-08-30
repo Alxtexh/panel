@@ -4,9 +4,9 @@
  *
  * Domain-neutral samples only. Not the playground ISP demo.
  */
-import { PkBadge, TagsCell } from '@alxtexh-enterprise/panel'
 import { Head } from '@inertiajs/vue3'
 import { computed } from 'vue'
+import { PkBadge, TagsCell } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -54,7 +54,9 @@ function cell(row: Record<string, unknown>, key: string): unknown {
 
     <div class="flex h-full min-h-0 flex-col gap-8 overflow-auto p-6">
         <header class="max-w-3xl space-y-2">
-            <h1 class="text-2xl font-semibold tracking-tight">{{ pageHeading ?? 'Kit showcase' }}</h1>
+            <h1 class="text-2xl font-semibold tracking-tight">
+                {{ pageHeading ?? 'Kit showcase' }}
+            </h1>
             <p class="text-muted-foreground text-sm font-normal leading-relaxed">
                 {{
                     pageDescription ??
@@ -65,8 +67,8 @@ function cell(row: Record<string, unknown>, key: string): unknown {
                 Enable with
                 <code class="rounded bg-muted px-1 py-0.5">Panel::kitShowcase()</code>
                 or
-                <code class="rounded bg-muted px-1 py-0.5">apps(['showcase'])</code>.
-                Keep your vertical demo on separate host pages.
+                <code class="rounded bg-muted px-1 py-0.5">apps(['showcase'])</code>. Keep your
+                vertical demo on separate host pages.
             </p>
         </header>
 
@@ -79,7 +81,9 @@ function cell(row: Record<string, unknown>, key: string): unknown {
                     class="border-border/80 rounded-lg border px-4 py-3"
                 >
                     <div class="text-sm font-medium">{{ field.label }}</div>
-                    <div class="text-muted-foreground mt-1 font-mono text-xs font-normal">{{ field.hint }}</div>
+                    <div class="text-muted-foreground mt-1 font-mono text-xs font-normal">
+                        {{ field.hint }}
+                    </div>
                 </li>
             </ul>
         </section>
@@ -159,7 +163,9 @@ function cell(row: Record<string, unknown>, key: string): unknown {
                         <PkBadge variant="secondary">{{ widget.type }}</PkBadge>
                         <span class="text-sm font-medium">{{ widget.label }}</span>
                     </div>
-                    <div class="text-muted-foreground mt-2 font-mono text-xs font-normal">{{ widget.hint }}</div>
+                    <div class="text-muted-foreground mt-2 font-mono text-xs font-normal">
+                        {{ widget.hint }}
+                    </div>
                 </li>
             </ul>
         </section>

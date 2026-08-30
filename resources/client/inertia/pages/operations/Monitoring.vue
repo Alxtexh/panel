@@ -458,7 +458,9 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
                     </p>
                 </template>
 
-                <p v-else class="text-sm text-muted-foreground font-normal">Not available on this platform.</p>
+                <p v-else class="text-sm text-muted-foreground font-normal">
+                    Not available on this platform.
+                </p>
             </div>
 
             <!-- Memory -->
@@ -692,8 +694,8 @@ const when = (iso: string | null) => (iso === null ? 'never' : new Date(iso).toL
 
             <p v-if="!history.length" class="px-4 py-6 text-sm text-muted-foreground">
                 No samples yet. History appears once the scheduler has run
-                <code class="font-mono text-xs">panel:monitor-sample</code>, every five minutes
-                when cron is ticking.
+                <code class="font-mono text-xs">panel:monitor-sample</code>, every five minutes when
+                cron is ticking.
             </p>
 
             <!--

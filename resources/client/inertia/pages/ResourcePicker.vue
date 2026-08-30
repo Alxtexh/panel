@@ -97,7 +97,7 @@ function cell(row: Record<string, any>, column: SchemaColumn): string {
                         >
                             {{ column.label }}
                         </th>
-                        <th class="px-3 py-2 font-medium"> </th>
+                        <th class="px-3 py-2 font-medium"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -109,11 +109,7 @@ function cell(row: Record<string, any>, column: SchemaColumn): string {
                             No matching records.
                         </td>
                     </tr>
-                    <tr
-                        v-for="row in records"
-                        :key="row.id"
-                        class="hover:bg-muted/30 border-t"
-                    >
+                    <tr v-for="row in records" :key="row.id" class="hover:bg-muted/30 border-t">
                         <td
                             v-for="column in schema.table.columns"
                             :key="column.key"
@@ -122,10 +118,7 @@ function cell(row: Record<string, any>, column: SchemaColumn): string {
                             {{ cell(row, column) }}
                         </td>
                         <td class="px-3 py-2 text-right">
-                            <Link
-                                :href="chooseHref(row.id)"
-                                :class="buttonClasses({ size: 'sm' })"
-                            >
+                            <Link :href="chooseHref(row.id)" :class="buttonClasses({ size: 'sm' })">
                                 Select
                             </Link>
                         </td>

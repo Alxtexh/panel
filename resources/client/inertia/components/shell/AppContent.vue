@@ -6,7 +6,12 @@
  * only interesting thing about it.
  */
 import { computed } from 'vue'
-import { AppPageFooter, SidebarInset, useAppearance, useShellPageFooter } from '@alxtexh-enterprise/panel'
+import {
+    AppPageFooter,
+    SidebarInset,
+    useAppearance,
+    useShellPageFooter,
+} from '@alxtexh-enterprise/panel'
 
 type Props = {
     variant?: 'sidebar' | 'header'

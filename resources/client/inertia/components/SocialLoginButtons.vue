@@ -7,8 +7,9 @@
  * `providers` only when a preview or test needs to override the shared payload.
  */
 import { computed } from 'vue'
+import { useSocialProviders } from '../composables/useSocialProviders'
+import type { SocialProvider } from '../composables/useSocialProviders'
 import AuthProviderButton from './AuthProviderButton.vue'
-import { useSocialProviders, type SocialProvider } from '../composables/useSocialProviders'
 
 const props = withDefaults(
     defineProps<{
@@ -38,9 +39,7 @@ const visible = computed(() => providers.value.length > 0)
 
         <div
             class="grid gap-2"
-            :class="
-                !compact && providers.length > 1 ? 'grid-cols-2 sm:grid-cols-3' : ''
-            "
+            :class="!compact && providers.length > 1 ? 'grid-cols-2 sm:grid-cols-3' : ''"
         >
             <AuthProviderButton
                 v-for="provider in providers"

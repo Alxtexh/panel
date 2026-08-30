@@ -89,8 +89,7 @@ function submit() {
 
     sending.value = true
 
-    const token =
-        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
 
     fetch(props.url, {
         method: 'POST',
@@ -164,11 +163,7 @@ function submit() {
                 </li>
             </ul>
 
-            <form
-                v-if="canCreate"
-                class="flex flex-col gap-2"
-                @submit.prevent="submit"
-            >
+            <form v-if="canCreate" class="flex flex-col gap-2" @submit.prevent="submit">
                 <label class="sr-only" for="comment-body">Add a comment</label>
                 <textarea
                     id="comment-body"

@@ -79,28 +79,32 @@ function resolveFamily(value: unknown): AuthFamily | null {
  */
 const appName = computed(() => {
     const pageProps = usePage().props
-    const brand = pageProps.panel && typeof pageProps.panel === 'object'
-        ? (pageProps.panel as Record<string, unknown>).brand
-        : null
+    const brand =
+        pageProps.panel && typeof pageProps.panel === 'object'
+            ? (pageProps.panel as Record<string, unknown>).brand
+            : null
 
     return String(brand || pageProps.name || 'Panel')
 })
 
 const authLayout = computed((): AuthFamily => {
     const fromProp = resolveFamily(props.layout)
+
     if (fromProp) {
         return fromProp
     }
 
     const pageProps = usePage().props
     const forced = resolveFamily(pageProps.forceAuthLayout)
+
     if (forced) {
         return forced
     }
 
-    const shared = pageProps.panel && typeof pageProps.panel === 'object'
-        ? (pageProps.panel as Record<string, unknown>).authLayout
-        : null
+    const shared =
+        pageProps.panel && typeof pageProps.panel === 'object'
+            ? (pageProps.panel as Record<string, unknown>).authLayout
+            : null
 
     return resolveFamily(shared) ?? 'centered'
 })
@@ -108,11 +112,14 @@ const authLayout = computed((): AuthFamily => {
 /** `Panel::authTestimonial()`, or null when the panel declared none. */
 const testimonial = computed((): { quote: string; author: string; role: string | null } | null => {
     const pageProps = usePage().props
-    const value = pageProps.panel && typeof pageProps.panel === 'object'
-        ? (pageProps.panel as Record<string, unknown>).authTestimonial
-        : null
+    const value =
+        pageProps.panel && typeof pageProps.panel === 'object'
+            ? (pageProps.panel as Record<string, unknown>).authTestimonial
+            : null
 
-    return value && typeof value === 'object' ? (value as { quote: string; author: string; role: string | null }) : null
+    return value && typeof value === 'object'
+        ? (value as { quote: string; author: string; role: string | null })
+        : null
 })
 
 /**
@@ -124,11 +131,14 @@ const testimonial = computed((): { quote: string; author: string; role: string |
  */
 const authImage = computed((): { src: string; alt: string | null } | null => {
     const pageProps = usePage().props
-    const value = pageProps.panel && typeof pageProps.panel === 'object'
-        ? (pageProps.panel as Record<string, unknown>).authImage
-        : null
+    const value =
+        pageProps.panel && typeof pageProps.panel === 'object'
+            ? (pageProps.panel as Record<string, unknown>).authImage
+            : null
 
-    return value && typeof value === 'object' ? (value as { src: string; alt: string | null }) : null
+    return value && typeof value === 'object'
+        ? (value as { src: string; alt: string | null })
+        : null
 })
 </script>
 
@@ -168,7 +178,10 @@ const authImage = computed((): { src: string; alt: string | null } | null => {
 
                     <div class="space-y-2 text-center">
                         <h1 class="text-xl font-medium">{{ title }}</h1>
-                        <p v-if="description" class="text-center text-sm text-muted-foreground font-normal">
+                        <p
+                            v-if="description"
+                            class="text-center text-sm text-muted-foreground font-normal"
+                        >
                             {{ description }}
                         </p>
                     </div>
@@ -228,11 +241,17 @@ const authImage = computed((): { src: string; alt: string | null } | null => {
                     <div class="flex flex-col justify-center p-6 md:p-8">
                         <div class="flex flex-col gap-6">
                             <div class="flex flex-col items-center gap-2 text-center">
-                                <Link href="/" class="text-sm font-medium text-muted-foreground hover:text-foreground">
+                                <Link
+                                    href="/"
+                                    class="text-sm font-medium text-muted-foreground hover:text-foreground"
+                                >
                                     {{ appName }}
                                 </Link>
                                 <h1 class="text-2xl font-bold tracking-tight">{{ title }}</h1>
-                                <p v-if="description" class="text-balance text-sm text-muted-foreground font-normal">
+                                <p
+                                    v-if="description"
+                                    class="text-balance text-sm text-muted-foreground font-normal"
+                                >
                                     {{ description }}
                                 </p>
                             </div>
@@ -249,7 +268,10 @@ const authImage = computed((): { src: string; alt: string | null } | null => {
                                 :alt="authImage.alt ?? ''"
                                 class="absolute inset-0 size-full object-cover"
                             />
-                            <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground/40">
+                            <div
+                                v-else
+                                class="absolute inset-0 flex items-center justify-center text-muted-foreground/40"
+                            >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 24 24"
@@ -330,7 +352,10 @@ const authImage = computed((): { src: string; alt: string | null } | null => {
         <div class="relative hidden flex-col bg-muted lg:flex">
             <!-- Brand name - top left, same placement split uses -->
             <div class="p-10">
-                <Link href="/" class="flex items-center gap-2 font-semibold text-foreground transition-opacity hover:opacity-80">
+                <Link
+                    href="/"
+                    class="flex items-center gap-2 font-semibold text-foreground transition-opacity hover:opacity-80"
+                >
                     <span class="text-lg font-semibold tracking-tight">{{ appName }}</span>
                 </Link>
             </div>
@@ -343,7 +368,10 @@ const authImage = computed((): { src: string; alt: string | null } | null => {
                         :alt="authImage.alt ?? ''"
                         class="h-64 w-64 rounded-2xl object-cover"
                     />
-                    <div v-else class="flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 text-muted-foreground/40">
+                    <div
+                        v-else
+                        class="flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 text-muted-foreground/40"
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"
@@ -390,15 +418,15 @@ const authImage = computed((): { src: string; alt: string | null } | null => {
         to signal that an image belongs here without committing to one that
         would date the product or tie it to an industry.
     -->
-    <div
-        v-else
-        class="relative flex min-h-svh flex-col justify-center lg:grid lg:grid-cols-2"
-    >
+    <div v-else class="relative flex min-h-svh flex-col justify-center lg:grid lg:grid-cols-2">
         <!-- Image panel - hidden below lg -->
         <div class="relative hidden flex-col bg-muted lg:flex">
             <!-- Brand name - top left -->
             <div class="p-10">
-                <Link href="/" class="flex items-center gap-2 font-semibold text-foreground transition-opacity hover:opacity-80">
+                <Link
+                    href="/"
+                    class="flex items-center gap-2 font-semibold text-foreground transition-opacity hover:opacity-80"
+                >
                     <span class="text-lg font-semibold tracking-tight">{{ appName }}</span>
                 </Link>
             </div>
@@ -417,7 +445,10 @@ const authImage = computed((): { src: string; alt: string | null } | null => {
                         :alt="authImage.alt ?? ''"
                         class="h-64 w-64 rounded-2xl object-cover"
                     />
-                    <div v-else class="flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 text-muted-foreground/40">
+                    <div
+                        v-else
+                        class="flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/25 text-muted-foreground/40"
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"

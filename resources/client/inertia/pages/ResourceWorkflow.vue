@@ -189,6 +189,7 @@ function seedPositions(): Record<string, NodePosition> {
 
     for (const node of props.graph.nodes) {
         const point = saved[node.id]
+
         if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) {
             merged[node.id] = { x: point.x, y: point.y }
         }
@@ -213,9 +214,13 @@ watch(
     () => [props.graph.nodes, props.positions] as const,
     () => {
         const seeded = seedPositions()
+
         for (const key of Object.keys(nodePositions)) {
-            if (!(key in seeded)) delete nodePositions[key]
+            if (!(key in seeded)) {
+                delete nodePositions[key]
+            }
         }
+
         Object.assign(nodePositions, seeded)
         layoutDirty.value = false
         hiddenStateIds.value = []
@@ -265,11 +270,16 @@ function addState() {
 function removeState(index: number) {
     const removed = editStates.value[index]
     editStates.value.splice(index, 1)
+
     if (removed) {
         for (const t of editTransitions.value) {
             t.from = t.from.filter((f) => f !== removed.key)
-            if (t.to === removed.key) t.to = ''
+
+            if (t.to === removed.key) {
+                t.to = ''
+            }
         }
+
         delete nodePositions[removed.key]
     }
 }
@@ -294,6 +304,7 @@ function removeTransition(index: number) {
 function toggleFrom(tIdx: number, stateKey: string) {
     const t = editTransitions.value[tIdx]
     const idx = t.from.indexOf(stateKey)
+
     if (idx >= 0) {
         t.from.splice(idx, 1)
     } else {
@@ -304,10 +315,15 @@ function toggleFrom(tIdx: number, stateKey: string) {
 function currentStatesPayload(): Record<string, { label: string; color: string }> {
     if (editing.value) {
         const statesPayload: Record<string, { label: string; color: string }> = {}
+
         for (const s of editStates.value) {
-            if (!s.key || !s.label) continue
+            if (!s.key || !s.label) {
+                continue
+            }
+
             statesPayload[s.key] = { label: s.label, color: s.color }
         }
+
         return statesPayload
     }
 
@@ -353,14 +369,20 @@ function pushUndo(): void {
 
 function undoCanvas(): void {
     const snap = undoStack.value.pop()
-    if (!snap) return
+
+    if (!snap) {
+        return
+    }
 
     boardTransitions.value = cloneTransitions(snap.transitions)
     hiddenStateIds.value = [...snap.hiddenStateIds]
 
     for (const key of Object.keys(nodePositions)) {
-        if (!(key in snap.positions)) delete nodePositions[key]
+        if (!(key in snap.positions)) {
+            delete nodePositions[key]
+        }
     }
+
     Object.assign(nodePositions, snap.positions)
 
     layoutDirty.value = snap.layoutDirty
@@ -371,13 +393,20 @@ function undoCanvas(): void {
 
 function selectEdge(edgeId: string, event?: Event): void {
     event?.stopPropagation()
-    if (!props.canEdit || editing.value) return
+
+    if (!props.canEdit || editing.value) {
+        return
+    }
+
     selectedEdgeId.value = edgeId
     selectedNodeId.value = null
 }
 
 function selectNode(nodeId: string): void {
-    if (!props.canEdit || editing.value || edgeDrag.value) return
+    if (!props.canEdit || editing.value || edgeDrag.value) {
+        return
+    }
+
     selectedNodeId.value = nodeId
     selectedEdgeId.value = null
 }
@@ -389,13 +418,22 @@ function clearCanvasSelection(): void {
 
 function deleteSelectedEdge(): boolean {
     const edgeId = selectedEdgeId.value
-    if (!edgeId) return false
+
+    if (!edgeId) {
+        return false
+    }
 
     const edge = displayEdges.value.find((e) => e.id === edgeId)
-    if (!edge) return false
+
+    if (!edge) {
+        return false
+    }
 
     const transition = boardTransitions.value.find((t) => t.key === edge.key)
-    if (!transition) return false
+
+    if (!transition) {
+        return false
+    }
 
     pushUndo()
 
@@ -404,6 +442,7 @@ function deleteSelectedEdge(): boolean {
         const remaining = visibleNodes.value
             .map((node) => node.id)
             .filter((id) => id !== edge.from && id !== transition.to)
+
         if (remaining.length === 0) {
             boardTransitions.value = boardTransitions.value.filter((t) => t.key !== edge.key)
         } else {
@@ -413,6 +452,7 @@ function deleteSelectedEdge(): boolean {
         boardTransitions.value = boardTransitions.value.filter((t) => t.key !== edge.key)
     } else {
         transition.from = transition.from.filter((from) => from !== edge.from)
+
         if (transition.from.length === 0) {
             boardTransitions.value = boardTransitions.value.filter((t) => t.key !== edge.key)
         }
@@ -420,23 +460,35 @@ function deleteSelectedEdge(): boolean {
 
     edgesDirty.value = true
     selectedEdgeId.value = null
+
     return true
 }
 
 function deleteSelectedNode(): boolean {
     const nodeId = selectedNodeId.value
-    if (!nodeId) return false
-    if (visibleNodes.value.length <= 1) return false
+
+    if (!nodeId) {
+        return false
+    }
+
+    if (visibleNodes.value.length <= 1) {
+        return false
+    }
 
     pushUndo()
 
     hiddenStateIds.value = [...hiddenStateIds.value, nodeId]
     boardTransitions.value = boardTransitions.value.flatMap((t) => {
-        if (t.to === nodeId) return []
+        if (t.to === nodeId) {
+            return []
+        }
 
         const wasAny = t.from.length === 0
         const from = t.from.filter((fromId) => fromId !== nodeId)
-        if (!wasAny && from.length === 0) return []
+
+        if (!wasAny && from.length === 0) {
+            return []
+        }
 
         return [{ ...t, from: wasAny ? [] : from }]
     })
@@ -444,26 +496,45 @@ function deleteSelectedNode(): boolean {
     delete nodePositions[nodeId]
     edgesDirty.value = true
     selectedNodeId.value = null
+
     return true
 }
 
 function onCanvasKeydown(event: KeyboardEvent): void {
-    if (!props.canEdit || editing.value) return
-
-    const target = event.target as HTMLElement | null
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
+    if (!props.canEdit || editing.value) {
         return
     }
 
-    if ((event.key === 'z' || event.key === 'Z') && (event.metaKey || event.ctrlKey) && !event.shiftKey) {
+    const target = event.target as HTMLElement | null
+
+    if (
+        target &&
+        (target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.tagName === 'SELECT' ||
+            target.isContentEditable)
+    ) {
+        return
+    }
+
+    if (
+        (event.key === 'z' || event.key === 'Z') &&
+        (event.metaKey || event.ctrlKey) &&
+        !event.shiftKey
+    ) {
         event.preventDefault()
         undoCanvas()
+
         return
     }
 
     if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault()
-        if (deleteSelectedEdge()) return
+
+        if (deleteSelectedEdge()) {
+            return
+        }
+
         deleteSelectedNode()
     }
 
@@ -501,6 +572,7 @@ function positionsPayload(): Record<string, NodePosition> {
 
     for (const key of Object.keys(states)) {
         const point = nodePositions[key]
+
         if (point) {
             out[key] = { x: Math.round(point.x), y: Math.round(point.y) }
         }
@@ -510,7 +582,9 @@ function positionsPayload(): Record<string, NodePosition> {
 }
 
 function putWorkflow(closeEditor: boolean) {
-    if (!props.saveUrl) return
+    if (!props.saveUrl) {
+        return
+    }
 
     saving.value = true
     saveError.value = ''
@@ -533,6 +607,7 @@ function putWorkflow(closeEditor: boolean) {
                 undoStack.value = []
                 selectedEdgeId.value = null
                 selectedNodeId.value = null
+
                 if (closeEditor) {
                     editing.value = false
                     boardTransitions.value = buildTransitions()
@@ -569,7 +644,10 @@ const hoverDropId = ref<string | null>(null)
 
 function canvasPoint(clientX: number, clientY: number): { x: number; y: number } {
     const rect = canvasEl.value?.getBoundingClientRect()
-    if (!rect) return { x: clientX, y: clientY }
+
+    if (!rect) {
+        return { x: clientX, y: clientY }
+    }
 
     return { x: clientX - rect.left, y: clientY - rect.top }
 }
@@ -581,15 +659,21 @@ function teardownEdgeListeners() {
 }
 
 function onEdgePointerMove(event: PointerEvent) {
-    if (!edgeDrag.value) return
+    if (!edgeDrag.value) {
+        return
+    }
+
     const point = canvasPoint(event.clientX, event.clientY)
     edgeDrag.value = { ...edgeDrag.value, x: point.x, y: point.y }
 }
 
 function onEdgePointerUp(event: PointerEvent) {
-    if (!edgeDrag.value) return
+    if (!edgeDrag.value) {
+        return
+    }
 
     let dropId = hoverDropId.value
+
     if (!dropId && typeof document.elementFromPoint === 'function') {
         const el = document.elementFromPoint(event.clientX, event.clientY)
         const node = el?.closest?.('[data-node-id]') as HTMLElement | null
@@ -610,8 +694,13 @@ function beginEdgeDrag(next: EdgeDrag) {
 }
 
 function onPointerDown(event: PointerEvent, id: string) {
-    if (!props.canEdit || editing.value || edgeDrag.value) return
-    if (event.button !== 0) return
+    if (!props.canEdit || editing.value || edgeDrag.value) {
+        return
+    }
+
+    if (event.button !== 0) {
+        return
+    }
 
     const point = nodePositions[id] ?? { x: 0, y: 0 }
     const target = event.currentTarget as HTMLElement
@@ -634,8 +723,13 @@ function onPointerDown(event: PointerEvent, id: string) {
 }
 
 function onPointerMove(event: PointerEvent) {
-    if (edgeDrag.value) return
-    if (!drag.value) return
+    if (edgeDrag.value) {
+        return
+    }
+
+    if (!drag.value) {
+        return
+    }
 
     if (!drag.value.moved) {
         pushUndo()
@@ -649,8 +743,14 @@ function onPointerMove(event: PointerEvent) {
 }
 
 function onPointerUp(event: PointerEvent) {
-    if (edgeDrag.value) return
-    if (!drag.value) return
+    if (edgeDrag.value) {
+        return
+    }
+
+    if (!drag.value) {
+        return
+    }
+
     releaseCapture(event)
     drag.value = null
 }
@@ -668,8 +768,13 @@ function releaseCapture(event: PointerEvent) {
 }
 
 function onSourceHandleDown(event: PointerEvent, fromId: string) {
-    if (!props.canEdit || editing.value) return
-    if (event.button !== 0) return
+    if (!props.canEdit || editing.value) {
+        return
+    }
+
+    if (event.button !== 0) {
+        return
+    }
 
     event.stopPropagation()
     event.preventDefault()
@@ -679,8 +784,13 @@ function onSourceHandleDown(event: PointerEvent, fromId: string) {
 }
 
 function onReconnectSourceDown(event: PointerEvent, edge: GraphEdge) {
-    if (!props.canEdit || editing.value) return
-    if (event.button !== 0) return
+    if (!props.canEdit || editing.value) {
+        return
+    }
+
+    if (event.button !== 0) {
+        return
+    }
 
     event.stopPropagation()
     event.preventDefault()
@@ -696,8 +806,13 @@ function onReconnectSourceDown(event: PointerEvent, edge: GraphEdge) {
 }
 
 function onReconnectTargetDown(event: PointerEvent, edge: GraphEdge) {
-    if (!props.canEdit || editing.value) return
-    if (event.button !== 0) return
+    if (!props.canEdit || editing.value) {
+        return
+    }
+
+    if (event.button !== 0) {
+        return
+    }
 
     event.stopPropagation()
     event.preventDefault()
@@ -712,11 +827,15 @@ function onReconnectTargetDown(event: PointerEvent, edge: GraphEdge) {
 }
 
 function onNodePointerEnter(nodeId: string) {
-    if (edgeDrag.value) hoverDropId.value = nodeId
+    if (edgeDrag.value) {
+        hoverDropId.value = nodeId
+    }
 }
 
 function onNodePointerLeave(nodeId: string) {
-    if (hoverDropId.value === nodeId) hoverDropId.value = null
+    if (hoverDropId.value === nodeId) {
+        hoverDropId.value = null
+    }
 }
 
 function onNodeDrop(event: PointerEvent, nodeId: string) {
@@ -724,6 +843,7 @@ function onNodeDrop(event: PointerEvent, nodeId: string) {
         event.stopPropagation()
         finishEdgeDrag(nodeId)
         teardownEdgeListeners()
+
         return
     }
 
@@ -738,17 +858,28 @@ function finishEdgeDrag(dropNodeId: string | null) {
     const current = edgeDrag.value
     edgeDrag.value = null
     hoverDropId.value = null
-    if (!current || !dropNodeId) return
+
+    if (!current || !dropNodeId) {
+        return
+    }
 
     if (current.mode === 'create') {
-        if (dropNodeId === current.fromId) return
+        if (dropNodeId === current.fromId) {
+            return
+        }
+
         createTransition(current.fromId, dropNodeId)
+
         return
     }
 
     if (current.mode === 'reconnect-source') {
-        if (dropNodeId === current.oldFrom) return
+        if (dropNodeId === current.oldFrom) {
+            return
+        }
+
         reconnectSource(current.edgeKey, current.oldFrom, dropNodeId)
+
         return
     }
 
@@ -759,7 +890,10 @@ function createTransition(fromId: string, toId: string) {
     const duplicate = boardTransitions.value.some(
         (t) => t.to === toId && t.from.includes(fromId) && t.from.length === 1,
     )
-    if (duplicate) return
+
+    if (duplicate) {
+        return
+    }
 
     pushUndo()
     boardTransitions.value.push({
@@ -777,17 +911,28 @@ function createTransition(fromId: string, toId: string) {
 
 function reconnectSource(edgeKey: string, oldFrom: string, newFrom: string) {
     const transition = boardTransitions.value.find((t) => t.key === edgeKey)
-    if (!transition) return
-    if (newFrom === transition.to) return
+
+    if (!transition) {
+        return
+    }
+
+    if (newFrom === transition.to) {
+        return
+    }
 
     pushUndo()
+
     if (transition.from.length === 0) {
         // Empty from means "any state" on the server graph. Reconnecting one
         // visual edge collapses that to an explicit list with the new source.
         transition.from = [newFrom]
     } else {
         const idx = transition.from.indexOf(oldFrom)
-        if (idx < 0) return
+
+        if (idx < 0) {
+            return
+        }
+
         if (transition.from.includes(newFrom)) {
             transition.from.splice(idx, 1)
         } else {
@@ -800,8 +945,14 @@ function reconnectSource(edgeKey: string, oldFrom: string, newFrom: string) {
 
 function reconnectTarget(edgeKey: string, newTo: string) {
     const transition = boardTransitions.value.find((t) => t.key === edgeKey)
-    if (!transition) return
-    if (transition.from.includes(newTo) && transition.from.length === 1) return
+
+    if (!transition) {
+        return
+    }
+
+    if (transition.from.includes(newTo) && transition.from.length === 1) {
+        return
+    }
 
     pushUndo()
     transition.to = newTo
@@ -826,7 +977,11 @@ const canvasSize = computed(() => {
 
     for (const node of visibleNodes.value) {
         const point = nodePositions[node.id]
-        if (!point) continue
+
+        if (!point) {
+            continue
+        }
+
         maxX = Math.max(maxX, point.x + NODE_WIDTH + 48)
         maxY = Math.max(maxY, point.y + NODE_HEIGHT + 48)
     }
@@ -844,10 +999,17 @@ const displayEdges = computed((): GraphEdge[] => {
     const edges: GraphEdge[] = []
 
     for (const t of boardTransitions.value) {
-        if (!t.key || !t.to || !t.label) continue
+        if (!t.key || !t.to || !t.label) {
+            continue
+        }
+
         const froms = t.from.length > 0 ? t.from : stateKeys
+
         for (const from of froms) {
-            if (!stateKeys.includes(from) || !stateKeys.includes(t.to)) continue
+            if (!stateKeys.includes(from) || !stateKeys.includes(t.to)) {
+                continue
+            }
+
             edges.push({
                 id: `${t.key}__${from}`,
                 key: t.key,
@@ -865,7 +1027,10 @@ const displayEdges = computed((): GraphEdge[] => {
 
 function nodeRect(id: string): { x: number; y: number; w: number; h: number } | null {
     const point = nodePositions[id]
-    if (!point) return null
+
+    if (!point) {
+        return null
+    }
 
     return { x: point.x, y: point.y, w: NODE_WIDTH, h: NODE_HEIGHT }
 }
@@ -882,9 +1047,15 @@ function segmentHitsNode(
     let hits = 0
 
     for (const node of visibleNodes.value) {
-        if (node.id === fromId || node.id === toId) continue
+        if (node.id === fromId || node.id === toId) {
+            continue
+        }
+
         const rect = nodeRect(node.id)
-        if (!rect) continue
+
+        if (!rect) {
+            continue
+        }
 
         const pad = 8
         const left = rect.x - pad
@@ -897,6 +1068,7 @@ function segmentHitsNode(
             const t = i / 9
             const x = x1 + (x2 - x1) * t
             const y = y1 + (y2 - y1) * t
+
             if (x >= left && x <= right && y >= top && y <= bottom) {
                 hits += 1
                 break
@@ -992,7 +1164,9 @@ const edgePaths = computed(() => {
 const canUndo = computed(() => undoStack.value.length > 0)
 
 const previewPath = computed(() => {
-    if (!edgeDrag.value) return null
+    if (!edgeDrag.value) {
+        return null
+    }
 
     let x1 = edgeDrag.value.x
     let y1 = edgeDrag.value.y
@@ -1005,6 +1179,7 @@ const previewPath = computed(() => {
         const transition = boardTransitions.value.find((t) => t.key === edgeDrag.value!.edgeKey)
         const toId = transition?.to
         const to = toId ? (nodePositions[toId] ?? { x: 0, y: 0 }) : { x: 0, y: 0 }
+
         return {
             d: bezierPath(edgeDrag.value.x, edgeDrag.value.y, to.x, to.y + NODE_HEIGHT / 2),
         }
@@ -1086,8 +1261,8 @@ function colorClass(color: string): string {
         <div v-if="editing" class="bg-card border-border rounded-lg border p-4 shadow-sm">
             <h3 class="mb-3 text-sm font-semibold">Edit workflow definition</h3>
             <p class="text-muted-foreground mb-4 text-xs">
-                Edit states and transitions below, then save. Node positions on the board are
-                kept with this save. Column and model stay fixed from the PHP definition.
+                Edit states and transitions below, then save. Node positions on the board are kept
+                with this save. Column and model stay fixed from the PHP definition.
             </p>
 
             <PkAlertError v-if="saveError" class="mb-4">{{ saveError }}</PkAlertError>
@@ -1121,7 +1296,9 @@ function colorClass(color: string): string {
                         class="bg-muted/30 flex items-center gap-2 rounded-md border p-2"
                     >
                         <div class="flex-1">
-                            <label class="text-muted-foreground mb-0.5 block text-[10px]">Key</label>
+                            <label class="text-muted-foreground mb-0.5 block text-[10px]"
+                                >Key</label
+                            >
                             <input
                                 v-model="state.key"
                                 type="text"
@@ -1130,7 +1307,9 @@ function colorClass(color: string): string {
                             />
                         </div>
                         <div class="flex-1">
-                            <label class="text-muted-foreground mb-0.5 block text-[10px]">Label</label>
+                            <label class="text-muted-foreground mb-0.5 block text-[10px]"
+                                >Label</label
+                            >
                             <input
                                 v-model="state.label"
                                 type="text"
@@ -1139,7 +1318,9 @@ function colorClass(color: string): string {
                             />
                         </div>
                         <div class="w-28 shrink-0">
-                            <label class="text-muted-foreground mb-0.5 block text-[10px]">Color</label>
+                            <label class="text-muted-foreground mb-0.5 block text-[10px]"
+                                >Color</label
+                            >
                             <select
                                 v-model="state.color"
                                 class="border-input bg-background text-foreground h-7 w-full rounded border px-1 text-xs focus:ring-1 focus:outline-none"
@@ -1185,7 +1366,9 @@ function colorClass(color: string): string {
                     >
                         <div class="flex gap-2">
                             <div class="flex-1">
-                                <label class="text-muted-foreground mb-0.5 block text-[10px]">Key</label>
+                                <label class="text-muted-foreground mb-0.5 block text-[10px]"
+                                    >Key</label
+                                >
                                 <input
                                     v-model="t.key"
                                     type="text"
@@ -1194,7 +1377,9 @@ function colorClass(color: string): string {
                                 />
                             </div>
                             <div class="flex-1">
-                                <label class="text-muted-foreground mb-0.5 block text-[10px]">Label</label>
+                                <label class="text-muted-foreground mb-0.5 block text-[10px]"
+                                    >Label</label
+                                >
                                 <input
                                     v-model="t.label"
                                     type="text"
@@ -1203,17 +1388,15 @@ function colorClass(color: string): string {
                                 />
                             </div>
                             <div class="w-32 shrink-0">
-                                <label class="text-muted-foreground mb-0.5 block text-[10px]">Target state</label>
+                                <label class="text-muted-foreground mb-0.5 block text-[10px]"
+                                    >Target state</label
+                                >
                                 <select
                                     v-model="t.to"
                                     class="border-input bg-background text-foreground h-7 w-full rounded border px-1 text-xs focus:ring-1 focus:outline-none"
                                 >
                                     <option value="">-- select --</option>
-                                    <option
-                                        v-for="s in editStates"
-                                        :key="s.key"
-                                        :value="s.key"
-                                    >
+                                    <option v-for="s in editStates" :key="s.key" :value="s.key">
                                         {{ s.label || s.key }}
                                     </option>
                                 </select>
@@ -1253,12 +1436,7 @@ function colorClass(color: string): string {
             </div>
 
             <div class="flex items-center gap-2 border-t pt-3">
-                <button
-                    :class="buttonClasses()"
-                    type="button"
-                    :disabled="saving"
-                    @click="save"
-                >
+                <button :class="buttonClasses()" type="button" :disabled="saving" @click="save">
                     {{ saving ? 'Saving...' : 'Save workflow' }}
                 </button>
                 <button
@@ -1274,15 +1452,15 @@ function colorClass(color: string): string {
 
         <p v-if="!editing" class="text-muted-foreground text-sm font-normal">
             <template v-if="canEdit">
-                Drag states to rearrange. Drag from a node's right handle to another
-                state to create a transition, or drag an edge endpoint to reconnect.
-                Click an edge or state, then Delete to remove it. Undo restores the
-                last canvas change. Save layout persists positions and canvas edits.
-                Use Edit workflow for labels, abilities, and multi-source transitions.
+                Drag states to rearrange. Drag from a node's right handle to another state to create
+                a transition, or drag an edge endpoint to reconnect. Click an edge or state, then
+                Delete to remove it. Undo restores the last canvas change. Save layout persists
+                positions and canvas edits. Use Edit workflow for labels, abilities, and
+                multi-source transitions.
             </template>
             <template v-else>
-                Read-only diagram of the workflow definition. You need update permission to
-                move nodes, drag edges, or edit states and transitions.
+                Read-only diagram of the workflow definition. You need update permission to move
+                nodes, drag edges, or edit states and transitions.
             </template>
         </p>
 
@@ -1428,7 +1606,9 @@ function colorClass(color: string): string {
                     :class="[
                         colorClass(node.color),
                         canEdit ? 'cursor-grab active:cursor-grabbing' : '',
-                        drag?.id === node.id || selectedNodeId === node.id ? 'ring-primary z-10 ring-2' : '',
+                        drag?.id === node.id || selectedNodeId === node.id
+                            ? 'ring-primary z-10 ring-2'
+                            : '',
                         edgeDrag ? 'z-10' : '',
                     ]"
                     :style="{

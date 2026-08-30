@@ -3,8 +3,7 @@
  * Inertia cards + table register (leases, lockers, desks).
  */
 import { Head, router } from '@inertiajs/vue3'
-import {
-    PAGE_SHELL, CatalogRegister } from '@alxtexh-enterprise/panel'
+import { PAGE_SHELL, CatalogRegister } from '@alxtexh-enterprise/panel'
 import type { CatalogFacet, CatalogItem, TableColumn } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })

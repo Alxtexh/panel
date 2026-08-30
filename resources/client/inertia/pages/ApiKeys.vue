@@ -53,11 +53,13 @@ const revealed = computed(() => props.plaintext)
 
 function toggleAbility(ability: string) {
     const set = new Set(form.abilities)
+
     if (set.has(ability)) {
         set.delete(ability)
     } else {
         set.add(ability)
     }
+
     form.abilities = [...set]
 }
 
@@ -72,11 +74,7 @@ function submitCreate() {
 }
 
 function revoke(id: number | string) {
-    router.post(
-        props.destroyHref ?? '/apps/api-keys/destroy',
-        { id },
-        { preserveScroll: true },
-    )
+    router.post(props.destroyHref ?? '/apps/api-keys/destroy', { id }, { preserveScroll: true })
 }
 
 function formatWhen(value?: string | null): string {
@@ -134,7 +132,9 @@ function formatWhen(value?: string | null): string {
                     class="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
                     placeholder="Production integration"
                 />
-                <p v-if="form.errors.name" class="mt-1 text-xs text-destructive">{{ form.errors.name }}</p>
+                <p v-if="form.errors.name" class="mt-1 text-xs text-destructive">
+                    {{ form.errors.name }}
+                </p>
             </div>
 
             <fieldset>
@@ -182,7 +182,9 @@ function formatWhen(value?: string | null): string {
 
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
-                    <thead class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
+                    <thead
+                        class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground"
+                    >
                         <tr>
                             <th class="px-3 py-2">Name</th>
                             <th class="px-3 py-2">Prefix</th>
@@ -193,12 +195,22 @@ function formatWhen(value?: string | null): string {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="row in keys" :key="String(row.id)" class="border-b last:border-0">
+                        <tr
+                            v-for="row in keys"
+                            :key="String(row.id)"
+                            class="border-b last:border-0"
+                        >
                             <td class="px-3 py-2">{{ row.name }}</td>
                             <td class="px-3 py-2 font-mono text-xs">{{ row.prefix }}…</td>
-                            <td class="px-3 py-2 font-mono text-xs">{{ row.abilities.join(', ') }}</td>
-                            <td class="px-3 py-2 text-muted-foreground">{{ formatWhen(row.last_used_at) }}</td>
-                            <td class="px-3 py-2 text-muted-foreground">{{ formatWhen(row.expires_at) }}</td>
+                            <td class="px-3 py-2 font-mono text-xs">
+                                {{ row.abilities.join(', ') }}
+                            </td>
+                            <td class="px-3 py-2 text-muted-foreground">
+                                {{ formatWhen(row.last_used_at) }}
+                            </td>
+                            <td class="px-3 py-2 text-muted-foreground">
+                                {{ formatWhen(row.expires_at) }}
+                            </td>
                             <td class="px-3 py-2 text-right">
                                 <Button type="button" variant="ghost" @click="revoke(row.id)">
                                     Revoke

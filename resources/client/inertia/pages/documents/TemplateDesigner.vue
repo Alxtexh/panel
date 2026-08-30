@@ -292,9 +292,13 @@ function insert(token: string): void {
                             {{ r.label }}
                         </option>
                     </select>
-                    <span v-else class="text-muted-foreground text-xs font-normal">Sample data</span>
+                    <span v-else class="text-muted-foreground text-xs font-normal"
+                        >Sample data</span
+                    >
 
-                    <span v-if="previewing" class="text-muted-foreground text-xs font-normal">Updating…</span>
+                    <span v-if="previewing" class="text-muted-foreground text-xs font-normal"
+                        >Updating…</span
+                    >
                 </div>
 
                 <div class="overflow-hidden rounded-lg border shadow-sm">

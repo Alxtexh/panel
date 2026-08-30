@@ -2,8 +2,8 @@
 /**
  * Organisation payment gateways. Fake connected state unless the page persists.
  */
-import { onMounted, ref, watch } from 'vue'
 import { Head } from '@inertiajs/vue3'
+import { onMounted, ref, watch } from 'vue'
 import { PaymentGatewaySettings } from '@alxtexh-enterprise/panel'
 import type { PaymentGateway } from '@alxtexh-enterprise/panel'
 

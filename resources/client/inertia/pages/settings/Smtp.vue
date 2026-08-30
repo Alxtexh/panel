@@ -24,8 +24,8 @@
  * live (saved, or the form's own unsaved values), which is exactly the
  * thing an operator wants to check on a page that has nothing typed yet.
  */
-import { ref } from 'vue'
 import { Head, useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 import {
     Label,
@@ -68,9 +68,10 @@ const form = useForm({
 })
 
 function submit() {
-    form
-        .transform((data) => ({ ...data, encryption: data.encryption || null }))
-        .submit(props.saveMethod as 'put', props.saveHref, {
+    form.transform((data) => ({ ...data, encryption: data.encryption || null })).submit(
+        props.saveMethod as 'put',
+        props.saveHref,
+        {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset('password')
@@ -84,7 +85,8 @@ function submit() {
                 form.defaults()
                 toast.success('SMTP settings saved')
             },
-        })
+        },
+    )
 }
 
 function discard() {
@@ -124,9 +126,10 @@ async function sendTest() {
             }),
         })
 
-        const result = (await response.json().catch(() => null)) as
-            | { ok: boolean; message: string }
-            | null
+        const result = (await response.json().catch(() => null)) as {
+            ok: boolean
+            message: string
+        } | null
 
         if (!response.ok || result === null) {
             toast.error('The server could not run the test.')
@@ -167,12 +170,15 @@ async function sendTest() {
         <p
             class="rounded-md border px-3 py-2 text-sm"
             :class="
-                configured ? 'border-primary/30 bg-primary/5' : 'border-dashed text-muted-foreground'
+                configured
+                    ? 'border-primary/30 bg-primary/5'
+                    : 'border-dashed text-muted-foreground'
             "
         >
             <template v-if="configured">
-                Sending through {{ config.host }}, as {{ config.fromName }}
-                &lt;{{ config.fromAddress }}&gt;.
+                Sending through {{ config.host }}, as {{ config.fromName }} &lt;{{
+                    config.fromAddress
+                }}&gt;.
             </template>
             <template v-else>
                 No mail server saved yet - outgoing mail falls back to whatever this deploy's
@@ -185,8 +191,8 @@ async function sendTest() {
                 {{ testing ? 'Sending…' : 'Send test email' }}
             </Button>
             <p class="mt-1 text-xs text-muted-foreground font-normal">
-                Sends to your own account's address, using whichever password is in the field
-                below - or the saved one, if you left it blank.
+                Sends to your own account's address, using whichever password is in the field below
+                - or the saved one, if you left it blank.
             </p>
         </div>
 
@@ -200,7 +206,13 @@ async function sendTest() {
 
                 <div class="grid gap-2">
                     <Label for="smtp-port">Port</Label>
-                    <Input id="smtp-port" v-model.number="form.port" type="number" min="1" max="65535" />
+                    <Input
+                        id="smtp-port"
+                        v-model.number="form.port"
+                        type="number"
+                        min="1"
+                        max="65535"
+                    />
                     <AuthInputError :message="form.errors.port" />
                 </div>
 

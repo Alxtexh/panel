@@ -23,8 +23,8 @@
  * grouped query, not the six counters and two breakdowns that did not change.
  */
 import { Deferred, Head, Link, router, usePage } from '@inertiajs/vue3'
-import { computed, markRaw, provide, ref, watch } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
+import { computed, markRaw, provide, ref, watch } from 'vue'
 import {
     DASHBOARD_HIDE_KEY,
     DASHBOARD_HIDDEN_STORAGE_KEY,
@@ -48,15 +48,16 @@ import type {
     SetupChecklistItem,
     StatSegment,
 } from '@alxtexh-enterprise/panel'
-import DashboardChartPane from '../components/widgets/DashboardChartPane.vue'
-import DashboardTablePane from '../components/widgets/DashboardTablePane.vue'
-import type { TableWidgetDecl } from '../components/widgets/DashboardTablePane.vue'
-import { emptySeries, type Chart, type Series } from '../components/widgets/types'
-import { useWidgetPoll, useWidgetChannels, canUseEcho } from '../composables/useWidgetPoll'
 import AnnouncementBanners from '../components/AnnouncementBanners.vue'
 import DashboardFilterPanel from '../components/DashboardFilters.vue'
 import EmptyGrantsNotice from '../components/EmptyGrantsNotice.vue'
 import RenderHook from '../components/RenderHook.vue'
+import DashboardChartPane from '../components/widgets/DashboardChartPane.vue'
+import DashboardTablePane from '../components/widgets/DashboardTablePane.vue'
+import type { TableWidgetDecl } from '../components/widgets/DashboardTablePane.vue'
+import { emptySeries } from '../components/widgets/types'
+import type { Chart, Series } from '../components/widgets/types'
+import { useWidgetPoll, useWidgetChannels, canUseEcho } from '../composables/useWidgetPoll'
 import type { Announcement } from '../types'
 
 interface Widget {
@@ -221,11 +222,14 @@ const checklist = computed(
 )
 
 const onboarding = computed(
-    () => ((page.props as Record<string, any>).onboarding as SetupChecklistItem[] | undefined) ?? [],
+    () =>
+        ((page.props as Record<string, any>).onboarding as SetupChecklistItem[] | undefined) ?? [],
 )
 
 const onboardingDismiss = computed(
-    () => ((page.props as Record<string, any>).onboardingDismiss as string | null | undefined) ?? null,
+    () =>
+        ((page.props as Record<string, any>).onboardingDismiss as string | null | undefined) ??
+        null,
 )
 
 function skipOnboarding() {
@@ -257,9 +261,7 @@ function skipOnboarding() {
 const statKeys = computed(() => props.widgets.map((w) => `stat_${w.key}`))
 
 const pollingStatKeys = computed(() =>
-    props.widgets
-        .filter((w) => w.poll && !canUseEcho(w.live))
-        .map((w) => `stat_${w.key}`),
+    props.widgets.filter((w) => w.poll && !canUseEcho(w.live)).map((w) => `stat_${w.key}`),
 )
 
 const statsPollMs = computed(() => {
@@ -496,10 +498,10 @@ const comparison: Record<string, string> = {
  */
 const hasAnything = computed(
     () =>
-        props.widgets.length > 0
-        || props.charts.length > 0
-        || props.tables.length > 0
-        || onboarding.value.length > 0,
+        props.widgets.length > 0 ||
+        props.charts.length > 0 ||
+        props.tables.length > 0 ||
+        onboarding.value.length > 0,
 )
 const emptyGrants = computed(() => Boolean((page.props as Record<string, any>).panelEmptyGrants))
 
@@ -562,11 +564,7 @@ function writeHiddenCookie(ids: Iterable<string>) {
     document.cookie = `${HIDDEN_COOKIE}=${encodeURIComponent(JSON.stringify([...ids]))};path=/;max-age=31536000;SameSite=Lax`
 }
 
-watch(
-    hiddenWidgets.hidden,
-    (ids) => writeHiddenCookie(ids),
-    { deep: true, immediate: true },
-)
+watch(hiddenWidgets.hidden, (ids) => writeHiddenCookie(ids), { deep: true, immediate: true })
 
 function hideWidget(id: string, label?: string) {
     if (label) {
@@ -654,8 +652,7 @@ const layoutItems = computed((): AnyLayoutItem[] => {
     return mergeLayoutItems(props.widgets, props.charts, props.tables, props.dashboardLayout).map(
         (item) => {
             const cookieHidden =
-                hiddenWidgets.hidden.value.has(item.key)
-                || hiddenWidgets.hidden.value.has(item.id)
+                hiddenWidgets.hidden.value.has(item.key) || hiddenWidgets.hidden.value.has(item.id)
 
             return {
                 ...item,
@@ -680,6 +677,7 @@ const rearrangingLayout = ref(false)
 function onWidgetDragStart(id: string, event: DragEvent) {
     if (!props.userDashboards || !rearrangingLayout.value) {
         event.preventDefault()
+
         return
     }
 
@@ -757,9 +755,7 @@ async function toggleWidgetSpan(id: string) {
 }
 
 const wideLayout = useMediaQuery('(min-width: 1024px)')
-const chartBands = computed(() =>
-    packWidgetColumns(visibleCharts.value, wideLayout.value ? 2 : 1),
-)
+const chartBands = computed(() => packWidgetColumns(visibleCharts.value, wideLayout.value ? 2 : 1))
 const layoutBands = computed(() =>
     packWidgetColumns(visibleLayoutItems.value, wideLayout.value ? 2 : 1),
 )
@@ -893,9 +889,7 @@ function layoutLabel(item: AnyLayoutItem): string {
                         <path :d="iconPath('eye-off')" />
                     </svg>
                     Hidden widgets
-                    <span
-                        class="ml-0.5 rounded-full bg-muted px-1.5 text-[10px] font-semibold"
-                    >
+                    <span class="ml-0.5 rounded-full bg-muted px-1.5 text-[10px] font-semibold">
                         {{ hiddenEntries.length }}
                     </span>
                 </button>
@@ -1064,7 +1058,14 @@ function layoutLabel(item: AnyLayoutItem): string {
             <Deferred :data="statKeys">
                 <template #fallback>
                     <StatStrip
-                        :segments="widgets.map((w) => ({ key: w.key, label: w.label, value: '', sensitive: false }))"
+                        :segments="
+                            widgets.map((w) => ({
+                                key: w.key,
+                                label: w.label,
+                                value: '',
+                                sensitive: false,
+                            }))
+                        "
                         :columns="statColumns"
                         :maskable="false"
                         loading
@@ -1077,7 +1078,12 @@ function layoutLabel(item: AnyLayoutItem): string {
         </PkBoundary>
 
         <div
-            v-if="userDashboards && (visibleLayoutItems.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0)"
+            v-if="
+                userDashboards &&
+                (visibleLayoutItems.length ||
+                    $slots['before-charts'] ||
+                    (shortcuts?.catalog?.length ?? 0) > 0)
+            "
             class="flex flex-col gap-3"
             data-slot="dashboard-layout"
         >
@@ -1100,7 +1106,15 @@ function layoutLabel(item: AnyLayoutItem): string {
                     :title="rearrangingLayout ? 'Done rearranging' : 'Rearrange widgets'"
                     @click="rearrangingLayout = !rearrangingLayout"
                 >
-                    <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        viewBox="0 0 24 24"
+                        class="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="m3 16 4 4 4-4M7 20V4m14 4-4-4-4 4m4-4v16" />
                     </svg>
                 </button>
@@ -1115,12 +1129,27 @@ function layoutLabel(item: AnyLayoutItem): string {
                     @dragover.prevent
                     @drop="onWidgetDrop(band.item.id, $event)"
                 >
-                    <div v-if="rearrangingLayout" class="mb-1 flex items-center justify-between gap-2">
-                        <svg viewBox="0 0 24 24" class="text-muted-foreground size-3.5 cursor-grab" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <div
+                        v-if="rearrangingLayout"
+                        class="mb-1 flex items-center justify-between gap-2"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            class="text-muted-foreground size-3.5 cursor-grab"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
                             <title>Drag to reorder</title>
-                            <circle cx="9" cy="6" r="1" /><circle cx="15" cy="6" r="1" />
-                            <circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" />
-                            <circle cx="9" cy="18" r="1" /><circle cx="15" cy="18" r="1" />
+                            <circle cx="9" cy="6" r="1" />
+                            <circle cx="15" cy="6" r="1" />
+                            <circle cx="9" cy="12" r="1" />
+                            <circle cx="15" cy="12" r="1" />
+                            <circle cx="9" cy="18" r="1" />
+                            <circle cx="15" cy="18" r="1" />
                         </svg>
                         <button
                             type="button"
@@ -1129,7 +1158,15 @@ function layoutLabel(item: AnyLayoutItem): string {
                             title="Column span"
                             @click.stop="toggleWidgetSpan(band.item.id)"
                         >
-                            <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg
+                                viewBox="0 0 24 24"
+                                class="size-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <path d="M3 12h18" />
                                 <template v-if="band.item.span >= 2">
                                     <path d="M6 8l4 4-4 4" />
@@ -1145,7 +1182,9 @@ function layoutLabel(item: AnyLayoutItem): string {
                     <template v-if="band.item.kind === 'stat'">
                         <PkBoundary :label="layoutLabel(band.item)" fill>
                             <Deferred :data="`stat_${band.item.key}`">
-                                <template #fallback><StatCard :label="layoutLabel(band.item)" loading /></template>
+                                <template #fallback
+                                    ><StatCard :label="layoutLabel(band.item)" loading
+                                /></template>
                                 <template #default>
                                     <StatCard
                                         :label="layoutLabel(band.item)"
@@ -1170,10 +1209,22 @@ function layoutLabel(item: AnyLayoutItem): string {
                         @update:period="(value: string) => setPeriod(band.item.key, value)"
                         @hide="hideWidget(band.item.id, layoutLabel(band.item))"
                     />
-                    <DashboardTablePane v-else :table="band.item.source as TableWidgetDecl" :data-key="`table_${band.item.key}`" />
+                    <DashboardTablePane
+                        v-else
+                        :table="band.item.source as TableWidgetDecl"
+                        :data-key="`table_${band.item.key}`"
+                    />
                 </div>
-                <div v-else class="flex flex-col items-start gap-3 lg:flex-row" data-slot="dashboard-widget-columns">
-                    <div v-for="(column, columnIndex) in band.columns" :key="columnIndex" class="flex w-full min-w-0 flex-1 flex-col gap-3">
+                <div
+                    v-else
+                    class="flex flex-col items-start gap-3 lg:flex-row"
+                    data-slot="dashboard-widget-columns"
+                >
+                    <div
+                        v-for="(column, columnIndex) in band.columns"
+                        :key="columnIndex"
+                        class="flex w-full min-w-0 flex-1 flex-col gap-3"
+                    >
                         <div
                             v-for="item in column"
                             :key="item.id"
@@ -1184,12 +1235,27 @@ function layoutLabel(item: AnyLayoutItem): string {
                             @dragover.prevent
                             @drop="onWidgetDrop(item.id, $event)"
                         >
-                            <div v-if="rearrangingLayout" class="mb-1 flex items-center justify-between gap-2">
-                                <svg viewBox="0 0 24 24" class="text-muted-foreground size-3.5 cursor-grab" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <div
+                                v-if="rearrangingLayout"
+                                class="mb-1 flex items-center justify-between gap-2"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    class="text-muted-foreground size-3.5 cursor-grab"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
                                     <title>Drag to reorder</title>
-                                    <circle cx="9" cy="6" r="1" /><circle cx="15" cy="6" r="1" />
-                                    <circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" />
-                                    <circle cx="9" cy="18" r="1" /><circle cx="15" cy="18" r="1" />
+                                    <circle cx="9" cy="6" r="1" />
+                                    <circle cx="15" cy="6" r="1" />
+                                    <circle cx="9" cy="12" r="1" />
+                                    <circle cx="15" cy="12" r="1" />
+                                    <circle cx="9" cy="18" r="1" />
+                                    <circle cx="15" cy="18" r="1" />
                                 </svg>
                                 <button
                                     type="button"
@@ -1198,7 +1264,15 @@ function layoutLabel(item: AnyLayoutItem): string {
                                     title="Column span"
                                     @click.stop="toggleWidgetSpan(item.id)"
                                 >
-                                    <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        class="size-3.5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
                                         <path d="M3 12h18" />
                                         <path d="M7 8 3 12l4 4" />
                                         <path d="M17 8l4 4-4 4" />
@@ -1208,7 +1282,9 @@ function layoutLabel(item: AnyLayoutItem): string {
                             <template v-if="item.kind === 'stat'">
                                 <PkBoundary :label="layoutLabel(item)" fill>
                                     <Deferred :data="`stat_${item.key}`">
-                                        <template #fallback><StatCard :label="layoutLabel(item)" loading /></template>
+                                        <template #fallback
+                                            ><StatCard :label="layoutLabel(item)" loading
+                                        /></template>
                                         <template #default>
                                             <StatCard
                                                 :label="layoutLabel(item)"
@@ -1233,7 +1309,11 @@ function layoutLabel(item: AnyLayoutItem): string {
                                 @update:period="(value: string) => setPeriod(item.key, value)"
                                 @hide="hideWidget(item.id, layoutLabel(item))"
                             />
-                            <DashboardTablePane v-else :table="item.source as TableWidgetDecl" :data-key="`table_${item.key}`" />
+                            <DashboardTablePane
+                                v-else
+                                :table="item.source as TableWidgetDecl"
+                                :data-key="`table_${item.key}`"
+                            />
                         </div>
                     </div>
                 </div>
@@ -1241,7 +1321,12 @@ function layoutLabel(item: AnyLayoutItem): string {
         </div>
 
         <div
-            v-if="!userDashboards && (visibleCharts.length || $slots['before-charts'] || (shortcuts?.catalog?.length ?? 0) > 0)"
+            v-if="
+                !userDashboards &&
+                (visibleCharts.length ||
+                    $slots['before-charts'] ||
+                    (shortcuts?.catalog?.length ?? 0) > 0)
+            "
             class="flex flex-col gap-3"
             data-slot="dashboard-charts"
         >
@@ -1266,8 +1351,16 @@ function layoutLabel(item: AnyLayoutItem): string {
                         @hide="hideWidget(band.item.key, band.item.label)"
                     />
                 </div>
-                <div v-else class="flex flex-col items-start gap-3 lg:flex-row" data-slot="dashboard-widget-columns">
-                    <div v-for="(column, columnIndex) in band.columns" :key="columnIndex" class="flex w-full min-w-0 flex-1 flex-col gap-3">
+                <div
+                    v-else
+                    class="flex flex-col items-start gap-3 lg:flex-row"
+                    data-slot="dashboard-widget-columns"
+                >
+                    <div
+                        v-for="(column, columnIndex) in band.columns"
+                        :key="columnIndex"
+                        class="flex w-full min-w-0 flex-1 flex-col gap-3"
+                    >
                         <div v-for="chart in column" :key="chart.key">
                             <DashboardChartPane
                                 :chart="chart"
@@ -1285,8 +1378,17 @@ function layoutLabel(item: AnyLayoutItem): string {
             </template>
         </div>
 
-        <div v-if="!userDashboards && tables.length" class="flex flex-col gap-3" data-slot="dashboard-tables">
-            <DashboardTablePane v-for="table in tables" :key="table.key" :table="table" :data-key="`table_${table.key}`" />
+        <div
+            v-if="!userDashboards && tables.length"
+            class="flex flex-col gap-3"
+            data-slot="dashboard-tables"
+        >
+            <DashboardTablePane
+                v-for="table in tables"
+                :key="table.key"
+                :table="table"
+                :data-key="`table_${table.key}`"
+            />
         </div>
 
         <RenderHook position="dashboard.after" :hooks="renderHooks" />

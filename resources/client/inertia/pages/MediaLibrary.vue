@@ -132,11 +132,7 @@ function confirmMove() {
 }
 
 function remove(id: number) {
-    router.post(
-        props.deleteHref ?? '/files/media-library/delete',
-        { id },
-        { preserveScroll: true },
-    )
+    router.post(props.deleteHref ?? '/files/media-library/delete', { id }, { preserveScroll: true })
 }
 </script>
 
@@ -185,8 +181,8 @@ function remove(id: number) {
             @submit.prevent="submitUpload"
         >
             <p class="text-sm text-muted-foreground font-normal">
-                Uploading into <span class="font-medium text-foreground">{{ folderLabel }}</span>.
-                Files stay on the panel uploads disk (private by default).
+                Uploading into <span class="font-medium text-foreground">{{ folderLabel }}</span
+                >. Files stay on the panel uploads disk (private by default).
             </p>
             <div>
                 <label class="text-sm font-medium" for="media-file">File</label>
@@ -226,7 +222,9 @@ function remove(id: number) {
 
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
-                    <thead class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
+                    <thead
+                        class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground"
+                    >
                         <tr>
                             <th class="px-3 py-2">Name</th>
                             <th class="px-3 py-2">Type</th>

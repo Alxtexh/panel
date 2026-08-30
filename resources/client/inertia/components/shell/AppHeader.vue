@@ -242,9 +242,7 @@ const rightNavItems: NavItem[] = [
             v-if="props.breadcrumbs.length > 1"
             class="flex w-full border-b border-sidebar-border/70"
         >
-            <div
-                class="flex h-12 w-full items-center justify-start px-4 text-neutral-500"
-            >
+            <div class="flex h-12 w-full items-center justify-start px-4 text-neutral-500">
                 <Breadcrumbs :breadcrumbs="breadcrumbs" />
             </div>
         </div>

@@ -20,6 +20,8 @@
  * `chart_<key>` and a header row's are `header_chart_<key>`, so a component
  * that looked them up itself would work on exactly one of its three hosts.
  */
+import { router } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import {
     BarChart,
     ComboChart,
@@ -37,9 +39,8 @@ import {
     PkCalendar,
     PkMap,
 } from '@alxtexh-enterprise/panel'
-import { computed } from 'vue'
-import { router } from '@inertiajs/vue3'
-import { multiSeries, type Chart, type Series } from './types'
+import { multiSeries } from './types'
+import type { Chart, Series } from './types'
 
 const props = defineProps<{
     chart: Chart
@@ -95,12 +96,10 @@ const logLines = computed(() => props.data.logLines ?? [])
         <p v-if="barcodes.length === 0" class="text-muted-foreground text-sm font-normal">
             No barcode value.
         </p>
-        <div
-            v-for="row in barcodes"
-            :key="row.key"
-            class="flex flex-col gap-1"
-        >
-            <p v-if="row.label" class="text-muted-foreground text-xs font-normal">{{ row.label }}</p>
+        <div v-for="row in barcodes" :key="row.key" class="flex flex-col gap-1">
+            <p v-if="row.label" class="text-muted-foreground text-xs font-normal">
+                {{ row.label }}
+            </p>
             <PkBarcode
                 :field="{
                     key: row.key,

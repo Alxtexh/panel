@@ -8,9 +8,9 @@
  *
  * Mount on What's new (`Changelog`). Not in the shell or account menu.
  */
-import { PkButton, PkModal } from '@alxtexh-enterprise/panel'
 import { useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
+import { PkButton, PkModal } from '@alxtexh-enterprise/panel'
 
 const open = defineModel<boolean>('open', { required: true })
 

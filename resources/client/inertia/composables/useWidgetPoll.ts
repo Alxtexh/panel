@@ -1,5 +1,6 @@
-import { onMounted, onUnmounted, watch, type MaybeRefOrGetter, toValue } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { onMounted, onUnmounted, watch, toValue } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
 
 /**
  * Keep one widget's deferred prop fresh.

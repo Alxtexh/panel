@@ -24,9 +24,9 @@
  * terminal, so this reads as a considered boundary instead of an unfinished
  * feature.
  */
+import { usePage } from '@inertiajs/vue3'
 import { Lock, Terminal } from '@lucide/vue'
 import { computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
 import { useTranslations } from '../composables/useTranslations'
 
 const page = usePage()
@@ -35,9 +35,7 @@ const { t } = useTranslations()
 const hint = computed(() => {
     const props = page.props as Record<string, any>
     const shared = props.panelEmptyGrantsHint as
-        | { title: string; body: string; commands: string[] }
-        | null
-        | undefined
+        { title: string; body: string; commands: string[] } | null | undefined
 
     if (shared) {
         return shared
@@ -74,7 +72,9 @@ const hint = computed(() => {
             <div class="min-w-0">
                 <p class="text-sm font-medium">{{ hint.title }}</p>
                 <p class="text-muted-foreground mt-0.5 text-xs">{{ hint.body }}</p>
-                <p class="text-muted-foreground/80 mt-1 text-xs italic">{{ t('grants.empty.reason') }}</p>
+                <p class="text-muted-foreground/80 mt-1 text-xs italic">
+                    {{ t('grants.empty.reason') }}
+                </p>
             </div>
         </div>
         <div class="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:flex-col sm:items-stretch">

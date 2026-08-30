@@ -1,11 +1,5 @@
 import { usePage } from '@inertiajs/vue3'
-import {
-    HelpCircle,
-    House,
-    Info,
-    MessageCircleQuestion,
-    Sparkles,
-} from '@lucide/vue'
+import { HelpCircle, House, Info, MessageCircleQuestion, Sparkles } from '@lucide/vue'
 import { computed } from 'vue'
 import type { NavItem } from '../types'
 import { resolvePanelIcon } from './panelIcons'

@@ -2,10 +2,9 @@
 /**
  * Inertia signatures studio. Documents are props; marks stay in this browser.
  */
-import { computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
-import {
-    PAGE_SHELL, SignatureStudio } from '@alxtexh-enterprise/panel'
+import { computed } from 'vue'
+import { PAGE_SHELL, SignatureStudio } from '@alxtexh-enterprise/panel'
 import type { StudioDocument } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })

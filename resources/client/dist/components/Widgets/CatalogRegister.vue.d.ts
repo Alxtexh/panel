@@ -1,6 +1,6 @@
 import type { TableColumn } from '../DataTable/types';
-import type { CatalogFacet } from './catalogFilter';
 import type { CatalogItem } from './CatalogCard.vue';
+import type { CatalogFacet } from './catalogFilter';
 type __VLS_Props = {
     title?: string;
     description?: string | null;

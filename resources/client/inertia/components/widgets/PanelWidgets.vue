@@ -29,14 +29,15 @@
  * thrown away. That bug has been paid for twice in this codebase already.
  */
 import { Deferred, usePage } from '@inertiajs/vue3'
-import { ChartCard, PkBoundary, TrendBadge, packWidgetColumns } from '@alxtexh-enterprise/panel'
-import { computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
+import { computed } from 'vue'
+import { ChartCard, PkBoundary, TrendBadge, packWidgetColumns } from '@alxtexh-enterprise/panel'
 import ChartBody from './ChartBody.vue'
 import DashboardStatPane from './DashboardStatPane.vue'
 import DashboardTablePane from './DashboardTablePane.vue'
 import type { TableWidgetDecl } from './DashboardTablePane.vue'
-import { emptySeries, type Chart, type Series, type StatDefinition, type StatValue } from './types'
+import { emptySeries } from './types'
+import type { Chart, Series, StatDefinition, StatValue } from './types'
 import WidgetRefresh from './WidgetRefresh.vue'
 
 const props = withDefaults(
@@ -120,10 +121,7 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
         `PkBoundary` PER CARD, so one widget throwing loses one tile rather than
         the screen it sits on.
     -->
-    <div
-        v-if="stats?.length"
-        class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-    >
+    <div v-if="stats?.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <DashboardStatPane
             v-for="widget in stats"
             :key="widget.key"
@@ -147,10 +145,7 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
     -->
     <div v-if="charts?.length" class="flex flex-col gap-4">
         <template v-for="(band, bandIndex) in chartBands" :key="bandIndex">
-            <PkBoundary
-                v-if="band.type === 'wide'"
-                :label="band.item.label"
-            >
+            <PkBoundary v-if="band.type === 'wide'" :label="band.item.label">
                 <Deferred :data="`${prefix}_chart_${band.item.key}`">
                     <template #fallback>
                         <ChartCard
@@ -183,20 +178,13 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
                     </template>
                 </Deferred>
             </PkBoundary>
-            <div
-                v-else
-                class="flex flex-col items-start gap-4 lg:flex-row"
-            >
+            <div v-else class="flex flex-col items-start gap-4 lg:flex-row">
                 <div
                     v-for="(column, columnIndex) in band.columns"
                     :key="columnIndex"
                     class="flex w-full min-w-0 flex-1 flex-col gap-4"
                 >
-                    <PkBoundary
-                        v-for="chart in column"
-                        :key="chart.key"
-                        :label="chart.label"
-                    >
+                    <PkBoundary v-for="chart in column" :key="chart.key" :label="chart.label">
                         <Deferred :data="`${prefix}_chart_${chart.key}`">
                             <template #fallback>
                                 <ChartCard
@@ -223,7 +211,9 @@ const chartBands = computed(() => packWidgetColumns(charts.value, wideLayout.val
                                     <ChartBody
                                         :chart="chart"
                                         :data="series(chart.key)"
-                                        :item-path="typeof bag.itemPath === 'string' ? bag.itemPath : null"
+                                        :item-path="
+                                            typeof bag.itemPath === 'string' ? bag.itemPath : null
+                                        "
                                     />
                                 </ChartCard>
                             </template>

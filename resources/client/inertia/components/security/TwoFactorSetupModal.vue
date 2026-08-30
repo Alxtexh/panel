@@ -31,9 +31,10 @@ import {
     isDark,
     useAppearance,
 } from '@alxtexh-enterprise/panel'
+import { useOtpAutoSubmit } from '../../composables/useOtpAutoSubmit'
+import type { OtpFormHandle } from '../../composables/useOtpAutoSubmit'
 import type { TwoFactorRoutes } from '../../composables/useTwoFactorAuth'
 import { useTwoFactorAuth } from '../../composables/useTwoFactorAuth'
-import { useOtpAutoSubmit, type OtpFormHandle } from '../../composables/useOtpAutoSubmit'
 import type { TwoFactorConfigContent } from '../../types'
 import AuthInputError from '../AuthInputError.vue'
 
@@ -242,7 +243,12 @@ watch(
                         error-bag="confirmTwoFactorAuthentication"
                         reset-on-error
                         v-slot="{ errors: formErrors, processing }"
-                        @finish="() => { code = ''; resetAutoSubmitGuard() }"
+                        @finish="
+                            () => {
+                                code = ''
+                                resetAutoSubmitGuard()
+                            }
+                        "
                         @error="resetAutoSubmitGuard"
                         @success="isOpen = false"
                     >

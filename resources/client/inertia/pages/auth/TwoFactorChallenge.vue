@@ -30,7 +30,8 @@ import AuthField from '../../components/AuthField.vue'
 import AuthInputError from '../../components/AuthInputError.vue'
 import AuthTurnstile from '../../components/AuthTurnstile.vue'
 import SocialLoginButtons from '../../components/SocialLoginButtons.vue'
-import { useOtpAutoSubmit, type OtpFormHandle } from '../../composables/useOtpAutoSubmit'
+import { useOtpAutoSubmit } from '../../composables/useOtpAutoSubmit'
+import type { OtpFormHandle } from '../../composables/useOtpAutoSubmit'
 import AuthLayout from './AuthLayout.vue'
 
 const props = defineProps<{
@@ -98,10 +99,7 @@ function onChallengeError(): void {
         <Head title="Two-factor authentication" />
 
         <div class="space-y-6">
-            <p
-                v-if="props.status"
-                class="text-center text-sm font-medium text-green-600"
-            >
+            <p v-if="props.status" class="text-center text-sm font-medium text-green-600">
                 {{ props.status }}
             </p>
 

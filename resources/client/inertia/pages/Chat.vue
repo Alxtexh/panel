@@ -4,11 +4,10 @@
  *
  * Reuses kit `useLiveUpdates` when `live.driver` is not `none`.
  */
-import {
-    PAGE_SHELL, useLiveUpdates } from '@alxtexh-enterprise/panel'
-import type { LiveConfig } from '@alxtexh-enterprise/panel'
 import { Head } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
+import { PAGE_SHELL, useLiveUpdates } from '@alxtexh-enterprise/panel'
+import type { LiveConfig } from '@alxtexh-enterprise/panel'
 
 defineOptions({ inheritAttrs: false })
 
@@ -92,7 +91,11 @@ const list = computed(() => rows.value as unknown as Conversation[])
                     :key="String(item.id)"
                     type="button"
                     class="block w-full rounded-md px-2 py-1.5 text-left"
-                    :class="String(item.id) === String(selectedId) ? 'bg-muted font-medium' : 'hover:bg-muted/60'"
+                    :class="
+                        String(item.id) === String(selectedId)
+                            ? 'bg-muted font-medium'
+                            : 'hover:bg-muted/60'
+                    "
                 >
                     {{ item.name }}
                     <span v-if="item.preview" class="text-muted-foreground block truncate text-xs">
@@ -107,7 +110,10 @@ const list = computed(() => rows.value as unknown as Conversation[])
                 </p>
                 <div v-else class="space-y-3">
                     <p class="font-medium">{{ thread.name }}</p>
-                    <p v-if="thread.messages.length === 0" class="text-muted-foreground text-sm font-normal">
+                    <p
+                        v-if="thread.messages.length === 0"
+                        class="text-muted-foreground text-sm font-normal"
+                    >
                         No messages.
                     </p>
                     <p

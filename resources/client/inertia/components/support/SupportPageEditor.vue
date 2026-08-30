@@ -74,7 +74,7 @@ const form = useForm<{ kind: SupportKind; entries: SupportEntry[] }>({
 watch(
     () => props.support,
     (next) => {
-        if (! next) {
+        if (!next) {
             return
         }
 
@@ -85,7 +85,7 @@ watch(
 )
 
 function startAdd() {
-    if (! props.support) {
+    if (!props.support) {
         return
     }
 
@@ -123,7 +123,10 @@ function metaLines(entry: SupportEntry, key: string): string {
 }
 
 function setMetaLines(entry: SupportEntry, key: string, raw: string) {
-    entry.meta[key] = raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+    entry.meta[key] = raw
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
 }
 
 function links(entry: SupportEntry): { label: string; href: string }[] {
@@ -141,7 +144,7 @@ function removeLink(entry: SupportEntry, index: number) {
 }
 
 function save() {
-    if (! props.support?.saveUrl) {
+    if (!props.support?.saveUrl) {
         return
     }
 
@@ -154,7 +157,7 @@ function save() {
 }
 
 function syncGithub() {
-    if (! props.support?.githubUrl) {
+    if (!props.support?.githubUrl) {
         return
     }
 
@@ -176,46 +179,47 @@ const fieldClass =
                     {{ addLabel[support.kind] }}
                 </p>
                 <p class="text-muted-foreground text-sm font-normal">
-                    Built-in copy stays as shipped. You can add items of your own, and remove those additions later.
+                    Built-in copy stays as shipped. You can add items of your own, and remove those
+                    additions later.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-            <template v-if="!editing">
-                <button
-                    v-if="support.githubUrl"
-                    type="button"
-                    class="rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
-                    @click="syncGithub"
-                >
-                    Sync from GitHub{{ support.githubRepo ? ` (${support.githubRepo})` : '' }}
-                </button>
-                <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-                    @click="startAdd"
-                >
-                    <Plus class="size-4" />
-                    Add
-                </button>
-            </template>
-            <template v-else>
-                <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
-                    @click="cancel"
-                >
-                    <X class="size-3.5" />
-                    Cancel
-                </button>
-                <button
-                    type="button"
-                    class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                    :disabled="form.processing"
-                    @click="save"
-                >
-                    Save
-                </button>
-            </template>
+                <template v-if="!editing">
+                    <button
+                        v-if="support.githubUrl"
+                        type="button"
+                        class="rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                        @click="syncGithub"
+                    >
+                        Sync from GitHub{{ support.githubRepo ? ` (${support.githubRepo})` : '' }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                        @click="startAdd"
+                    >
+                        <Plus class="size-4" />
+                        Add
+                    </button>
+                </template>
+                <template v-else>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                        @click="cancel"
+                    >
+                        <X class="size-3.5" />
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                        :disabled="form.processing"
+                        @click="save"
+                    >
+                        Save
+                    </button>
+                </template>
             </div>
         </div>
 
@@ -253,7 +257,11 @@ const fieldClass =
 
                 <label v-if="form.kind === 'faq'" class="flex flex-col gap-1 text-sm">
                     Group
-                    <input v-model="entry.category" :class="fieldClass" placeholder="Using the panel" />
+                    <input
+                        v-model="entry.category"
+                        :class="fieldClass"
+                        placeholder="Using the panel"
+                    />
                 </label>
                 <label v-if="form.kind === 'article'" class="flex flex-col gap-1 text-sm">
                     Category key
@@ -261,7 +269,11 @@ const fieldClass =
                 </label>
                 <label v-if="form.kind === 'release'" class="flex flex-col gap-1 text-sm">
                     Date
-                    <input v-model="entry.category" :class="fieldClass" placeholder="15 August 2026" />
+                    <input
+                        v-model="entry.category"
+                        :class="fieldClass"
+                        placeholder="15 August 2026"
+                    />
                 </label>
 
                 <label class="flex flex-col gap-1 text-sm">
@@ -296,13 +308,23 @@ const fieldClass =
                 </label>
 
                 <template v-if="form.kind === 'release'">
-                    <label v-for="key in ['added', 'changed', 'fixed']" :key="key" class="flex flex-col gap-1 text-sm">
+                    <label
+                        v-for="key in ['added', 'changed', 'fixed']"
+                        :key="key"
+                        class="flex flex-col gap-1 text-sm"
+                    >
                         {{ key.charAt(0).toUpperCase() + key.slice(1) }} (one per line)
                         <textarea
                             rows="3"
                             :class="fieldClass"
                             :value="metaLines(entry, key)"
-                            @input="setMetaLines(entry, key, ($event.target as HTMLTextAreaElement).value)"
+                            @input="
+                                setMetaLines(
+                                    entry,
+                                    key,
+                                    ($event.target as HTMLTextAreaElement).value,
+                                )
+                            "
                         />
                     </label>
                 </template>
@@ -311,25 +333,45 @@ const fieldClass =
                     <div class="flex flex-col gap-2">
                         <div class="flex items-center justify-between">
                             <p class="text-sm">Links</p>
-                            <button type="button" class="inline-flex items-center gap-1 text-sm" @click="addLink(entry)">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1 text-sm"
+                                @click="addLink(entry)"
+                            >
                                 <Plus class="size-3.5" />
                                 Add link
                             </button>
                         </div>
-                        <div v-for="(link, li) in links(entry)" :key="li" class="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                        <div
+                            v-for="(link, li) in links(entry)"
+                            :key="li"
+                            class="grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
+                        >
                             <input
                                 :class="fieldClass"
                                 placeholder="Label"
                                 :value="link.label"
-                                @input="links(entry)[li].label = ($event.target as HTMLInputElement).value"
+                                @input="
+                                    links(entry)[li].label = (
+                                        $event.target as HTMLInputElement
+                                    ).value
+                                "
                             />
                             <input
                                 :class="fieldClass"
                                 placeholder="https://"
                                 :value="link.href"
-                                @input="links(entry)[li].href = ($event.target as HTMLInputElement).value"
+                                @input="
+                                    links(entry)[li].href = (
+                                        $event.target as HTMLInputElement
+                                    ).value
+                                "
                             />
-                            <button type="button" class="text-sm text-muted-foreground font-normal" @click="removeLink(entry, li)">
+                            <button
+                                type="button"
+                                class="text-sm text-muted-foreground font-normal"
+                                @click="removeLink(entry, li)"
+                            >
                                 Remove
                             </button>
                         </div>

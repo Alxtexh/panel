@@ -28,12 +28,8 @@ defineOptions({ inheritAttrs: false })
  */
 import { Head, Link } from '@inertiajs/vue3'
 import { Globe, Terminal } from '@lucide/vue'
-import {
-    CATALOGUE_CONTAINER,
-    CATALOGUE_GRID_TIGHT,
-    PkSkeleton,
-} from '@alxtexh-enterprise/panel'
 import { computed } from 'vue'
+import { CATALOGUE_CONTAINER, CATALOGUE_GRID_TIGHT, PkSkeleton } from '@alxtexh-enterprise/panel'
 
 /*
  * NO LAYOUT IS NAMED HERE, and that is the difference between a page in an

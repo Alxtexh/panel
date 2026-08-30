@@ -69,7 +69,9 @@ function shortcut(index: number): string | null {
                             <span class="truncate font-medium">{{
                                 workspaces.current?.name ?? 'Choose a workspace'
                             }}</span>
-                            <span class="text-muted-foreground truncate text-xs">Switch workspace</span>
+                            <span class="text-muted-foreground truncate text-xs"
+                                >Switch workspace</span
+                            >
                         </div>
                         <ChevronsUpDown class="ml-auto size-4" />
                     </SidebarMenuButton>
@@ -81,7 +83,9 @@ function shortcut(index: number): string | null {
                     align="start"
                     :side-offset="4"
                 >
-                    <DropdownMenuLabel class="text-muted-foreground text-xs font-normal">Workspaces</DropdownMenuLabel>
+                    <DropdownMenuLabel class="text-muted-foreground text-xs font-normal"
+                        >Workspaces</DropdownMenuLabel
+                    >
 
                     <DropdownMenuItem
                         v-for="(workspace, index) in workspaces.available"
@@ -115,7 +119,10 @@ function shortcut(index: number): string | null {
                                 class="ml-auto size-4"
                                 aria-hidden="true"
                             />
-                            <span v-else-if="shortcut(index)" class="text-muted-foreground ml-auto text-xs">
+                            <span
+                                v-else-if="shortcut(index)"
+                                class="text-muted-foreground ml-auto text-xs"
+                            >
                                 {{ shortcut(index) }}
                             </span>
                         </Link>
@@ -125,7 +132,9 @@ function shortcut(index: number): string | null {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem as-child class="gap-2 p-2">
                             <Link :href="workspaces.manageUrl">
-                                <div class="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                                <div
+                                    class="flex size-6 items-center justify-center rounded-md border bg-transparent"
+                                >
                                     <Plus class="size-4" />
                                 </div>
                                 <span class="text-muted-foreground font-medium">Add workspace</span>

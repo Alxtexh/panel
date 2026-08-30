@@ -18,8 +18,8 @@
  */
 import { Head, Link } from '@inertiajs/vue3'
 import { Search, X } from '@lucide/vue'
-import { PAGE_SHELL } from '@alxtexh-enterprise/panel'
 import { computed, ref } from 'vue'
+import { PAGE_SHELL } from '@alxtexh-enterprise/panel'
 
 interface Entry {
     key: string
@@ -91,7 +91,9 @@ const results = computed(() => {
                     class="flex flex-col gap-0.5 rounded-lg border bg-card p-4 transition-colors hover:bg-accent"
                 >
                     <span class="text-sm font-medium">{{ entry.title }}</span>
-                    <span class="text-xs text-muted-foreground font-normal">{{ entry.description }}</span>
+                    <span class="text-xs text-muted-foreground font-normal">{{
+                        entry.description
+                    }}</span>
                 </Link>
             </li>
         </ul>

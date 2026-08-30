@@ -1,5 +1,5 @@
-import type { CatalogFacet } from './catalogFilter';
 import type { CatalogItem } from './CatalogCard.vue';
+import type { CatalogFacet } from './catalogFilter';
 export interface CatalogBrowserTab {
     key: string;
     label: string;

@@ -33,10 +33,10 @@ import {
     PkLandingSections,
 } from '@alxtexh-enterprise/panel'
 import type { LandingSection } from '@alxtexh-enterprise/panel'
-import LandingFooter from './LandingFooter.vue'
-import LandingNav from './LandingNav.vue'
 import SocialLoginButtons from '../../components/SocialLoginButtons.vue'
 import { useSocialProviders } from '../../composables/useSocialProviders'
+import LandingFooter from './LandingFooter.vue'
+import LandingNav from './LandingNav.vue'
 
 /*
  * NO `layout` HERE. `app.ts` already resolves every `landing/*` page to no
@@ -120,10 +120,7 @@ const socialProviders = useSocialProviders()
                 :previews="previews"
             />
 
-            <div
-                v-if="socialProviders.length > 0"
-                class="border-b bg-muted/40"
-            >
+            <div v-if="socialProviders.length > 0" class="border-b bg-muted/40">
                 <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-4 sm:px-6">
                     <p class="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                         Sign in with

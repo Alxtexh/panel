@@ -180,10 +180,16 @@ async function confirmImport(): Promise<void> {
             <!-- Step 0: upload -->
             <div v-if="activeStep === 0" class="flex flex-col gap-2">
                 <label class="flex flex-col gap-1">
-                    <span class="text-xs font-medium">{{ excel ? 'CSV or Excel file' : 'CSV file' }}</span>
+                    <span class="text-xs font-medium">{{
+                        excel ? 'CSV or Excel file' : 'CSV file'
+                    }}</span>
                     <input
                         type="file"
-                        :accept="excel ? '.csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel' : '.csv,text/csv'"
+                        :accept="
+                            excel
+                                ? '.csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
+                                : '.csv,text/csv'
+                        "
                         class="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
                         :disabled="busy"
                         @change="chooseFile"

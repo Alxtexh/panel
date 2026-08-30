@@ -43,9 +43,9 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from '@alxtexh-enterprise/panel'
-import type { User } from '../../types'
 import { resolvePanelIcon } from '../../composables/panelIcons'
 import { useTranslations } from '../../composables/useTranslations'
+import type { User } from '../../types'
 import UserInfo from './UserInfo.vue'
 
 const page = usePage()
@@ -91,9 +91,7 @@ type Abilities = {
 
 const can = computed(() => (page.props.auth as Abilities | undefined)?.can ?? {})
 
-const user = computed(
-    () => (page.props.auth as { user?: User | null } | undefined)?.user ?? null,
-)
+const user = computed(() => (page.props.auth as { user?: User | null } | undefined)?.user ?? null)
 
 const operations = computed(() => panel.value?.operations ?? {})
 
@@ -132,14 +130,22 @@ const handleLogout = () => {
             feedback is not an item here; it lives on What's new.
         -->
         <DropdownMenuItem v-if="panel?.account" as-child>
-            <Link class="flex w-full cursor-pointer items-center gap-2" :href="panel.account" prefetch>
+            <Link
+                class="flex w-full cursor-pointer items-center gap-2"
+                :href="panel.account"
+                prefetch
+            >
                 <UserRound class="size-4 shrink-0" />
                 {{ t('chrome.account.profile') }}
             </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem v-if="panel?.settings && !panel?.settingsInSidebar" as-child>
-            <Link class="flex w-full cursor-pointer items-center gap-2" :href="panel.settings" prefetch>
+            <Link
+                class="flex w-full cursor-pointer items-center gap-2"
+                :href="panel.settings"
+                prefetch
+            >
                 <Settings class="size-4 shrink-0" />
                 {{ t('chrome.account.settings') }}
             </Link>
@@ -204,7 +210,11 @@ const handleLogout = () => {
             logs above it, and a different kind from anything in the sidebar.
         -->
         <DropdownMenuItem v-if="panel?.activity && can.viewOperations" as-child>
-            <Link class="flex w-full cursor-pointer items-center gap-2" :href="panel.activity" prefetch>
+            <Link
+                class="flex w-full cursor-pointer items-center gap-2"
+                :href="panel.activity"
+                prefetch
+            >
                 <Activity class="size-4 shrink-0" />
                 {{ t('chrome.account.activity') }}
             </Link>
@@ -253,30 +263,24 @@ const handleLogout = () => {
             -->
             <template v-for="item in panel?.menuItems ?? []" :key="item.key">
                 <DropdownMenuItem v-if="panel?.menuItems" as-child>
-                <a
-                    v-if="/^https?:\/\//.test(item.href)"
-                    class="flex w-full cursor-pointer items-center gap-2"
-                    :href="item.href"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <component
-                        :is="resolvePanelIcon(item.icon)"
-                        class="size-4 shrink-0"
-                    />
-                    <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
-                </a>
-                <Link
-                    v-else
-                    class="flex w-full cursor-pointer items-center gap-2"
-                    :href="item.href"
-                >
-                    <component
-                        :is="resolvePanelIcon(item.icon)"
-                        class="size-4 shrink-0"
-                    />
-                    <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
-                </Link>
+                    <a
+                        v-if="/^https?:\/\//.test(item.href)"
+                        class="flex w-full cursor-pointer items-center gap-2"
+                        :href="item.href"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <component :is="resolvePanelIcon(item.icon)" class="size-4 shrink-0" />
+                        <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+                    </a>
+                    <Link
+                        v-else
+                        class="flex w-full cursor-pointer items-center gap-2"
+                        :href="item.href"
+                    >
+                        <component :is="resolvePanelIcon(item.icon)" class="size-4 shrink-0" />
+                        <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+                    </Link>
                 </DropdownMenuItem>
             </template>
         </DropdownMenuGroup>

@@ -5,10 +5,9 @@
  * Renders `pageLayout.nodes` with the same SchemaNode tree as resource forms.
  * Custom content from `data()` still lands in the default slot below the layout.
  */
-import { computed, watch } from 'vue'
 import { Head, useForm } from '@inertiajs/vue3'
-import {
-    PAGE_SHELL, SchemaNode } from '@alxtexh-enterprise/panel'
+import { computed, watch } from 'vue'
+import { PAGE_SHELL, SchemaNode } from '@alxtexh-enterprise/panel'
 import type { SchemaNode as SchemaNodeType } from '@alxtexh-enterprise/panel'
 import { PanelWidgets } from '@alxtexh-enterprise/panel/inertia'
 
@@ -63,11 +62,13 @@ function submitLayout() {
 
     if (method === 'put') {
         form.put(props.saveHref)
+
         return
     }
 
     if (method === 'patch') {
         form.patch(props.saveHref)
+
         return
     }
 
@@ -88,7 +89,11 @@ function submitLayout() {
 
         <PanelWidgets />
 
-        <form v-if="nodes.length && canSave" class="flex flex-col gap-4" @submit.prevent="submitLayout">
+        <form
+            v-if="nodes.length && canSave"
+            class="flex flex-col gap-4"
+            @submit.prevent="submitLayout"
+        >
             <SchemaNode
                 v-for="(node, index) in nodes"
                 :key="index"

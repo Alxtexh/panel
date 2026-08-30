@@ -88,11 +88,7 @@ watch(
 )
 
 function openTemplate(key: string) {
-    router.get(
-        indexHref.value,
-        { key },
-        { preserveState: true, preserveScroll: true },
-    )
+    router.get(indexHref.value, { key }, { preserveState: true, preserveScroll: true })
 }
 
 function startCreate() {
@@ -111,6 +107,7 @@ function submitSave() {
             if (form.key) {
                 openTemplate(form.key)
             }
+
             showCreate.value = false
         },
     })
@@ -136,9 +133,7 @@ function submitTest() {
             "
         >
             <template #actions>
-                <Button type="button" variant="outline" @click="startCreate">
-                    New template
-                </Button>
+                <Button type="button" variant="outline" @click="startCreate"> New template </Button>
             </template>
         </PkPageHeader>
 
@@ -153,27 +148,23 @@ function submitTest() {
             </template>
         </PkEmptyState>
 
-        <div
-            v-else
-            class="grid gap-4 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]"
-        >
+        <div v-else class="grid gap-4 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
             <TableShell>
                 <template #title>
                     <p class="text-sm font-medium">Templates</p>
                 </template>
                 <ul class="divide-y text-sm">
-                    <li v-if="templates.length === 0" class="text-muted-foreground px-3 py-4 text-xs">
+                    <li
+                        v-if="templates.length === 0"
+                        class="text-muted-foreground px-3 py-4 text-xs"
+                    >
                         None saved yet.
                     </li>
                     <li v-for="row in templates" :key="row.key">
                         <button
                             type="button"
                             class="hover:bg-muted/50 flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left"
-                            :class="
-                                (selected?.key ?? form.key) === row.key
-                                    ? 'bg-muted/60'
-                                    : ''
-                            "
+                            :class="(selected?.key ?? form.key) === row.key ? 'bg-muted/60' : ''"
                             @click="openTemplate(row.key)"
                         >
                             <span class="font-mono text-xs font-medium">{{ row.key }}</span>
@@ -244,11 +235,7 @@ function submitTest() {
 
                     <div class="flex flex-wrap gap-2">
                         <Button type="submit" :disabled="form.processing">Save</Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            @click="showPreview = !showPreview"
-                        >
+                        <Button type="button" variant="outline" @click="showPreview = !showPreview">
                             {{ showPreview ? 'Hide preview' : 'Preview' }}
                         </Button>
                     </div>
@@ -264,7 +251,7 @@ function submitTest() {
                     <p class="text-sm font-semibold">{{ form.subject || '(no subject)' }}</p>
                     <pre
                         class="bg-background max-h-64 overflow-auto rounded-md border p-3 text-xs whitespace-pre-wrap"
-                    >{{ form.body || '(empty body)' }}</pre>
+                        >{{ form.body || '(empty body)' }}</pre>
                 </section>
 
                 <form
@@ -274,8 +261,8 @@ function submitTest() {
                 >
                     <p class="text-sm font-medium">Send test</p>
                     <p class="text-muted-foreground text-xs font-normal">
-                        Posts to send-test. Packaged deliverTest() is a no-op until the host
-                        wires Mail.
+                        Posts to send-test. Packaged deliverTest() is a no-op until the host wires
+                        Mail.
                     </p>
                     <div>
                         <label class="text-sm font-medium" for="tpl-to">To</label>
