@@ -16,7 +16,7 @@ import {
     assertTransparentImage,
 } from '@alxtexh-enterprise/panel';
 import AuthInputError from '@alxtexh-enterprise/panel/components/AuthInputError.vue';
-import { useGroupedSettingsCards } from '@alxtexh-enterprise/panel/composables/useGroupedSettingsCards';
+import { useGroupedSettingsCards } from '@alxtexh-enterprise/panel/composables/useGroupedSettingsCards.ts';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';

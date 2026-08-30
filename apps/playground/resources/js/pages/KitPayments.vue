@@ -12,7 +12,7 @@ const props = defineProps<{
 }>();
 
 onMounted(() => {
-    router.replace(props.redirectTo ?? '/settings/payments');
+    router.visit(props.redirectTo ?? '/settings/payments', { replace: true });
 });
 </script>
 

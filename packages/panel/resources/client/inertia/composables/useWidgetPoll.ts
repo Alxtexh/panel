@@ -114,7 +114,7 @@ export function useWidgetPoll(
             return
         }
 
-        router.reload({ only, preserveState: true, preserveScroll: true })
+        router.reload({ only })
     }
 
     function startEcho(channel: string): boolean {
@@ -212,7 +212,7 @@ export function useWidgetChannels(
             return
         }
 
-        router.reload({ only: keys, preserveState: true, preserveScroll: true })
+        router.reload({ only: keys })
     }
 
     function start(): void {

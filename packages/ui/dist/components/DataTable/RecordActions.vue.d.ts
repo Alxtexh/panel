@@ -1,3 +1,4 @@
+import type { ModalSize } from '../../lib/pageShell';
 export interface RecordActionItem {
     key: string;
     label: string;
@@ -36,6 +37,12 @@ export interface RecordActionItem {
         color: string | null;
         icon: string | null;
     }[];
+    /** `RecordAction::modalWidth()` - ignored once `slideOver` is on. */
+    modalWidth?: ModalSize | null;
+    /** `RecordAction::submitLabel()` - defaults to `label` when unset. */
+    submitLabel?: string | null;
+    /** `RecordAction::cancelLabel()` - defaults to "Cancel" when unset. */
+    cancelLabel?: string | null;
 }
 export interface RecordActionGroup {
     label?: string;

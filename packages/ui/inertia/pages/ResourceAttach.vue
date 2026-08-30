@@ -35,7 +35,7 @@ const props = defineProps<{
     breadcrumbs: { title: string; href: string }[]
 }>()
 
-const form = useForm<{ ids: Array<string | number>; pivot: Record<string, unknown> }>({
+const form = useForm<{ ids: Array<string | number>; pivot: Record<string, any> }>({
     ids: [],
     pivot: {},
 })

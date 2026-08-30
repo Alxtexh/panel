@@ -17,6 +17,7 @@ import {
     fieldErrorsFromPayload,
     useSchemaColumns,
 } from '@alxtexh-enterprise/panel'
+import type { FormField } from '@alxtexh-enterprise/panel'
 import { formatMoney } from '../lib/money'
 
 type CrudMode = 'create' | 'edit' | 'view'
@@ -30,7 +31,7 @@ const props = defineProps<{
         label: string
         labelPlural: string
         routes: { index: string; store?: string; update?: string }
-        form: { columns: number; nodes?: any[]; fields?: Record<string, any>[] }
+        form: { columns: number; nodes?: any[]; fields?: FormField[] }
         table: { columns: any[] }
         infolist?: any[]
     }
@@ -152,7 +153,7 @@ function formatCell(column: any, row: Record<string, any>): string {
     }
 
     if (column.type === 'money') {
-        return formatMoney(Number(value), column.currency ?? 'USD')
+        return formatMoney(column, value, row)
     }
 
     return String(value)

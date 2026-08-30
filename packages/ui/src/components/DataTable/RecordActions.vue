@@ -33,6 +33,7 @@
  */
 import { computed, ref } from 'vue'
 import { actionColorTone } from '../../lib/actionColorTone'
+import type { ModalSize } from '../../lib/pageShell'
 import { iconPath, resolveActionIcon } from '../primitives/icons'
 import PkDropdown from '../primitives/PkDropdown.vue'
 
@@ -72,6 +73,12 @@ export interface RecordActionItem {
         color: string | null
         icon: string | null
     }[]
+    /** `RecordAction::modalWidth()` - ignored once `slideOver` is on. */
+    modalWidth?: ModalSize | null
+    /** `RecordAction::submitLabel()` - defaults to `label` when unset. */
+    submitLabel?: string | null
+    /** `RecordAction::cancelLabel()` - defaults to "Cancel" when unset. */
+    cancelLabel?: string | null
 }
 
 export interface RecordActionGroup {

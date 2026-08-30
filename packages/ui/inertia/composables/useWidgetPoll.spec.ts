@@ -47,8 +47,6 @@ describe('useWidgetPoll', () => {
         vi.advanceTimersByTime(10_000)
         expect(router.reload).toHaveBeenCalledWith({
             only: ['stat_online'],
-            preserveState: true,
-            preserveScroll: true,
         })
 
         wrapper.unmount()
@@ -112,8 +110,6 @@ describe('useWidgetPoll', () => {
         expect(router.reload).toHaveBeenCalledTimes(1)
         expect(router.reload).toHaveBeenCalledWith({
             only: ['stat_online'],
-            preserveState: true,
-            preserveScroll: true,
         })
 
         wrapper.unmount()
