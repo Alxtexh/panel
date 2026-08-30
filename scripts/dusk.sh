@@ -105,7 +105,7 @@ DB_CONNECTION=sqlite DB_DATABASE="$DB_FILE" \
 # 11.24's pre-run dependency check fails whenever pnpm's cwd is a workspace
 # member - `--filter` doesn't route around it, only cwd does. See .npmrc.
 echo "==> Building assets"
-PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=false pnpm run build --silent >/tmp/alxtexhpanel-dusk-build.log 2>&1 || {
+PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=false pnpm --silent run build >/tmp/alxtexhpanel-dusk-build.log 2>&1 || {
     echo "The asset build failed. Its log:" >&2
     tail -20 /tmp/alxtexhpanel-dusk-build.log >&2
     exit 1

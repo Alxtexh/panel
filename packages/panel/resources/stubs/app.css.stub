@@ -138,13 +138,18 @@
     --muted-foreground: hsl(0 0% 40%);
     --accent: hsl(0 0% 96.1%);
     --accent-foreground: hsl(0 0% 9%);
-    --destructive: hsl(0 84.2% 60.2%);
+    /*
+     * DARKENED FOR CONTRAST - see apps/playground/resources/css/app.css for
+     * the measured axe ratios. --warning is untouched: its foreground is
+     * dark, not white, and already passes.
+     */
+    --destructive: hsl(0 84.2% 46%);
     --destructive-foreground: hsl(0 0% 98%);
-    --success: hsl(142 71% 40%);
+    --success: hsl(142 71% 28%);
     --success-foreground: hsl(0 0% 98%);
     --warning: hsl(38 92% 46%);
     --warning-foreground: hsl(0 0% 9%);
-    --info: hsl(199 89% 45%);
+    --info: hsl(199 89% 33%);
     --info-foreground: hsl(0 0% 98%);
     --border: hsl(0 0% 92.8%);
     --input: hsl(0 0% 89.8%);
@@ -190,7 +195,7 @@
     --muted-foreground: hsl(0 0% 63.9%);
     --accent: hsl(0 0% 14.9%);
     --accent-foreground: hsl(0 0% 98%);
-    --destructive: hsl(0 84% 60%);
+    --destructive: hsl(0 84% 46%);
     --destructive-foreground: hsl(0 0% 98%);
     --success: hsl(142 65% 50%);
     --success-foreground: hsl(0 0% 9%);

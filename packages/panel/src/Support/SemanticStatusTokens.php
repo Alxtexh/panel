@@ -102,11 +102,11 @@ final class SemanticStatusTokens
 }
 
 :root {
-    --success: hsl(142 71% 40%);
+    --success: hsl(142 71% 28%);
     --success-foreground: hsl(0 0% 98%);
     --warning: hsl(38 92% 46%);
     --warning-foreground: hsl(0 0% 9%);
-    --info: hsl(199 89% 45%);
+    --info: hsl(199 89% 33%);
     --info-foreground: hsl(0 0% 98%);
 }
 

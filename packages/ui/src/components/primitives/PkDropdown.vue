@@ -371,7 +371,15 @@ defineExpose({ close, openAt })
         @pointerenter="hoverable && openNow()"
         @pointerleave="hoverable && scheduleClose()"
     >
-        <div @click="toggle">
+        <!--
+            HOVERABLE SKIPS `toggle()`. A real click always crosses the
+            trigger first - `pointerenter` opens it via `openNow`, and a
+            plain `toggle()` on the click that follows would immediately flip
+            it back closed. `openNow` is idempotent (returns early if already
+            open), so a click either opens it or is a harmless no-op; closing
+            stays with `pointerleave` the way hover-opened content should.
+        -->
+        <div @click="hoverable ? openNow() : toggle()">
             <slot name="trigger" :open="open" />
         </div>
 

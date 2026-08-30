@@ -77,11 +77,26 @@ final class PanelShellRenderTest extends DuskTestCase
                 /*
                  * THE ACCOUNT MENU, which the scaffold did not have at all -
                  * it printed the name as plain text with no way to sign out.
+                 *
+                 * `[aria-label="Account menu"]`, NOT `[aria-haspopup="menu"]`.
+                 * The workspace switcher above it is correctly ARIA-marked the
+                 * same way - both are dropdown-menu triggers - so the generic
+                 * selector clicked whichever came first in the DOM (the
+                 * switcher) and this test then waited 5 seconds for text a
+                 * different menu was never going to show. `NavUser` already
+                 * carries this label; nothing to add.
                  */
-                ->assertPresent('[aria-haspopup="menu"]')
-                ->click('[aria-haspopup="menu"]')
-                ->waitForText('Sign out', 5)
-                ->assertSee('Sign out');
+                /*
+                 * "Log out", NOT "Sign out" - `chrome.account.logout` (see
+                 * packages/panel/resources/lang/en/chrome.php) is the string
+                 * this menu actually renders. "Sign out" exists in this
+                 * repository too, but only under the billing namespace, for
+                 * a different screen entirely.
+                 */
+                ->assertPresent('[aria-label="Account menu"]')
+                ->click('[aria-label="Account menu"]')
+                ->waitForText('Log out', 5)
+                ->assertSee('Log out');
 
             $browser->screenshot('panel-shell');
         });

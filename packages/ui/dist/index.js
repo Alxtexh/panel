@@ -1051,10 +1051,12 @@ const hl = {
       ref_key: "root",
       ref: s,
       class: "relative",
-      onPointerenter: g[2] || (g[2] = (_) => e.hoverable && p()),
-      onPointerleave: g[3] || (g[3] = (_) => e.hoverable && h())
+      onPointerenter: g[3] || (g[3] = (_) => e.hoverable && p()),
+      onPointerleave: g[4] || (g[4] = (_) => e.hoverable && h())
     }, [
-      o("div", { onClick: $ }, [
+      o("div", {
+        onClick: g[0] || (g[0] = (_) => e.hoverable ? p() : $())
+      }, [
         q(m.$slots, "trigger", { open: r.value })
       ]),
       (t(), D(ct, { to: "body" }, [
@@ -1089,8 +1091,8 @@ const hl = {
               }),
               "data-pk-overlay": "",
               role: "menu",
-              onPointerenter: g[0] || (g[0] = (_) => e.hoverable && p()),
-              onPointerleave: g[1] || (g[1] = (_) => e.hoverable && h()),
+              onPointerenter: g[1] || (g[1] = (_) => e.hoverable && p()),
+              onPointerleave: g[2] || (g[2] = (_) => e.hoverable && h()),
               onClick: v
             }, [
               q(m.$slots, "panel", { close: w })
