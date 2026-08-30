@@ -15,20 +15,23 @@ Host applications do **not** need npm for the kit UI. npm is optional, only when
 you customise Vue and run `npm run build` for your app. The monorepo uses npm
 internally to build the playground demo; that is not part of the installer path.
 
-## GitHub names (three repos, one consumer artifact)
-
-Historically there are three GitHub names. Only one is on the installer path:
+## GitHub names (two repos)
 
 | Repository | Role |
 |---|---|
 | `Alxtexh/panelkit` | Monorepo for development (PHP package + Vue kit + playground) |
 | `Alxtexh/panel` | **Consumer artifact.** Composer VCS target for `alxtexh-enterprise/panel` |
-| `Alxtexh/panel-ui` | Optional mirror / archive candidate of `packages/ui`. **Not** required for installers |
 
 Vue for consumers is built in the monorepo (`packages/ui`), mirrored with
 `make sync-client` into `packages/panel/resources/client`, and ships inside
-`Alxtexh/panel`. Host apps never need `panel-ui` as a separate dependency.
-There is no Packagist release and no npm registry package for kit consumers.
+`Alxtexh/panel`. Host apps never need a separate UI dependency. There is no
+Packagist release and no npm registry package for kit consumers.
+
+A third name, `Alxtexh/panel-ui`, used to be documented here as an "optional
+mirror" of `packages/ui`. It was never created - `git ls-remote` against it
+returns "Repository not found" - and nothing in the installer path, this
+monorepo's remotes, or `scripts/split.sh`'s actual usage needs it to exist.
+Removed rather than left as a repo somebody might go looking for.
 
 ## GitHub only install (VCS composer repository)
 

@@ -8,7 +8,7 @@ These pages are the catalogue: what ships, and how to switch each part on.
 
 | Page | What it covers |
 |---|---|
-| [1. Install](01-install.md) | GitHub-only install: panelkit (dev) → Alxtexh/panel (Composer). panel-ui not required |
+| [1. Install](01-install.md) | GitHub-only install: panelkit (dev) → Alxtexh/panel (Composer). Two repos, not three |
 | [2. Resources](02-resources.md) | Tables, forms, and the one class that declares both |
 | [3. Fields](03-fields.md) | Form field types (incl. ToggleButtons, morphTo, tableSelect) |
 | [4. Columns and filters](04-columns-and-filters.md) | All 12 column types, 6 filters |

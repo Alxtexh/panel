@@ -8,8 +8,8 @@ widget and command, and how to switch each part on.
 
 From GitHub only (no Packagist or npm registry). Develop in **panelkit**;
 installers consume **Alxtexh/panel**. Vue is vendored into that Composer package
-via `make sync-client` (`packages/ui` → `resources/client`). **panel-ui** is not
-on the consumer path (optional mirror / archive candidate).
+via `make sync-client` (`packages/ui` → `resources/client`) - there is no
+separate UI repo.
 
 Add this to your application's `composer.json`:
 
