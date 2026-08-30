@@ -1,7 +1,10 @@
 # Alxtexhpanel — run everything from the monorepo root.
 #
-# artisan lives in apps/playground, npm lives in three places. Rather than
-# remember which directory each command belongs to, use these.
+# artisan lives in apps/playground. JS is a pnpm workspace rooted here
+# (pnpm-workspace.yaml lists apps/playground and packages/ui;
+# packages/panel/resources/client is a build copy, not a third install
+# target — see `sync-client` below) with one lockfile at the repo root.
+# Rather than remember which directory each command belongs to, use these.
 
 PLAYGROUND := apps/playground
 ARTISAN    := cd $(PLAYGROUND) && php artisan
@@ -48,17 +51,22 @@ counts: ## Print seeded row counts
 		foreach (['tenants','plans','routers','clients','client_sessions'] as \$$t) \
 			printf('%-18s %s'.PHP_EOL, \$$t, number_format(DB::table(\$$t)->count()));"
 
+# `pnpm --filter <name> run <script>` FROM THE ROOT, NEVER `cd dir && pnpm
+# run`. pnpm 11.24's pre-run dependency check breaks when invoked from a
+# workspace member's own directory - it reports zero packages in the
+# workspace and fails outright. See the comment in .npmrc for the full story.
 .PHONY: build
 build: ## Production asset build
-	@cd $(PLAYGROUND) && npm run build
+	@pnpm --filter playground run build
 
 .PHONY: install
 install: ## Install PHP and JS dependencies
-	@cd $(PLAYGROUND) && composer install && npm install
+	@cd $(PLAYGROUND) && composer install
+	@pnpm install
 
 .PHONY: sync-client
 sync-client: ## Build packages/ui (lib + kit SPA) and mirror it into packages/panel/resources/client
-	@cd packages/ui && npm run build
+	@pnpm --filter @alxtexh-enterprise/panel run build
 	@rm -rf packages/panel/resources/client
 	@mkdir -p packages/panel/resources/client
 	@cp packages/ui/package.json packages/panel/resources/client/
@@ -129,7 +137,7 @@ verify-broadcast: ## Prove a broadcast reaches a subscriber over a real socket
 # client-only against a server that is running perfectly.
 .PHONY: ssr
 ssr: ## Build the SSR bundle and start the SSR server (flag first - see the note)
-	@cd $(PLAYGROUND) && npm run build:ssr
+	@pnpm --filter playground run build:ssr
 	@echo
 	@echo "SSR bundle built. Starting the server; serve the app with INERTIA_SSR_ENABLED=true:"
 	@echo "    cd $(PLAYGROUND) && INERTIA_SSR_ENABLED=true php artisan serve"

@@ -69,7 +69,7 @@ fi
 
 # THE VITE HOT FILE HAS TO GO, and this is not tidiness.
 #
-# `public/hot` exists while `npm run dev` is running, and Laravel's Vite helper
+# `public/hot` exists while `pnpm run dev` is running, and Laravel's Vite helper
 # treats it as "serve assets from the dev server" - for EVERY server reading that
 # directory, including the one this script starts. So the browser asked for
 # `127.0.0.1:5173/resources/js/app.ts`, got a connection refused, rendered
@@ -100,8 +100,12 @@ DB_CONNECTION=sqlite DB_DATABASE="$DB_FILE" \
 # component minutes earlier was not in the served asset, and the failure read as
 # "the element never appeared" rather than "you did not rebuild". Five seconds is
 # cheaper than that confusion.
+# THE ENV VAR, NOT `--filter` FROM THE ROOT: this script runs from inside
+# apps/playground (the `cd` above) for everything else it does, and pnpm
+# 11.24's pre-run dependency check fails whenever pnpm's cwd is a workspace
+# member - `--filter` doesn't route around it, only cwd does. See .npmrc.
 echo "==> Building assets"
-npm run build --silent >/tmp/alxtexhpanel-dusk-build.log 2>&1 || {
+PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=false pnpm run build --silent >/tmp/alxtexhpanel-dusk-build.log 2>&1 || {
     echo "The asset build failed. Its log:" >&2
     tail -20 /tmp/alxtexhpanel-dusk-build.log >&2
     exit 1

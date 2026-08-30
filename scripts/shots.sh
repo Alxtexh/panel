@@ -40,7 +40,7 @@ esac
 
 if [[ -f public/hot ]]; then
     echo "public/hot exists, so pages will ask a Vite dev server for their scripts." >&2
-    echo "Stop 'npm run dev' and run 'npm run build', or every screenshot lies." >&2
+    echo "Stop 'pnpm run dev' and run 'pnpm run build', or every screenshot lies." >&2
     exit 1
 fi
 

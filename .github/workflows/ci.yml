@@ -134,12 +134,24 @@ jobs:
     name: Client half
     runs-on: ubuntu-latest
 
+    # pnpm 11.24's pre-run dependency check (`verify-deps-before-run`,
+    # default `install`) fails whenever pnpm's own cwd is a workspace member
+    # rather than the repo root - every `working-directory: apps/playground`
+    # or `packages/ui` step below that runs `pnpm run <script>` would hit it
+    # otherwise. See the comment in .npmrc for the full story and why a
+    # committed .npmrc alone doesn't reach this case.
+    env:
+      PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: false
+
     steps:
       - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'pnpm'
 
       # PHP IS HERE FOR ONE COMMAND, AND IT IS NOT OPTIONAL.
       #
@@ -168,18 +180,13 @@ jobs:
           # smaller and more confusing version of the same failure.
           php artisan wayfinder:generate --with-form
 
-      # THE PACKAGES FIRST, AND NOT ONLY FOR SPEED. Both are linked into the
-      # application with `file:`, and both carry their own dependencies - the
-      # type checker resolves `vue` from the package's real path, so a package
-      # with no `node_modules` fails to type-check every file in it while the
-      # application itself looks fine.
-      - name: Install @alxtexh-enterprise/panel
-        working-directory: packages/ui
-        run: npm install --no-audit --no-fund
-
-      - name: Install the application
-        working-directory: apps/playground
-        run: npm install --no-audit --no-fund
+      # ONE INSTALL FOR BOTH. They're linked through the pnpm workspace
+      # (`workspace:*`, not `file:`) and both carry their own dependencies -
+      # the type checker resolves `vue` from the package's real path, so a
+      # package with no `node_modules` fails to type-check every file in it
+      # while the application itself looks fine.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       # THE PACKAGE IS BUILT BEFORE ANYTHING TYPE-CHECKS AGAINST IT.
       #
@@ -191,7 +198,7 @@ jobs:
       # and reports errors that name the application's own screens.
       - name: Build @alxtexh-enterprise/panel
         working-directory: packages/ui
-        run: npm run build
+        run: pnpm run build
 
       # THE COMPOSER PACKAGE SHIPS A MIRROR OF packages/ui. Editing Vue under
       # packages/ui without `make sync-client` leaves resources/client stale
@@ -203,11 +210,11 @@ jobs:
 
       - name: Unit tests
         working-directory: packages/ui
-        run: npm test
+        run: pnpm test
 
       - name: Types
         working-directory: apps/playground
-        run: npx vue-tsc --noEmit
+        run: pnpm exec vue-tsc --noEmit
 
       # THE REFORMAT LANDED IN THE SAME CHANGE THAT ADDS THIS STEP, not before
       # it and not after. Enforcing lint on a repository that has never been
@@ -219,11 +226,11 @@ jobs:
       # basePath blocks above.
       - name: Lint
         working-directory: apps/playground
-        run: npm run lint:check
+        run: pnpm run lint:check
 
       - name: Format
         working-directory: apps/playground
-        run: npm run format:check
+        run: pnpm run format:check
 
       # THE PACKAGE IS FORMAT-CHECKED SEPARATELY, because it carries its own
       # `.prettierrc` (no semicolons, 100 columns - see the comment on that
@@ -233,7 +240,7 @@ jobs:
       # such mechanism.
       - name: Format (packages/ui)
         working-directory: packages/ui
-        run: npm run format:check
+        run: pnpm run format:check
 
       # AND LINTED, which it silently was not for three releases.
       #
@@ -245,12 +252,14 @@ jobs:
       # zero. A lint pass over a directory that is not there looks exactly like
       # a clean one.
       #
-      # THE BINARY COMES FROM THE PLAYGROUND on purpose: the config already
-      # imports the playground's rules, so one rule set governs both and there
-      # is no second dependency tree to keep in step.
+      # THE CONFIG STILL RE-EXPORTS THE PLAYGROUND'S RULES (see
+      # packages/ui/eslint.config.js), so one rule set governs both. Only the
+      # `eslint` binary itself is now a direct devDependency of packages/ui -
+      # under pnpm's non-hoisted node_modules, reaching into the playground's
+      # binary the way this used to stopped resolving.
       - name: Lint (packages/ui)
         working-directory: packages/ui
-        run: npm run lint:check
+        run: pnpm run lint:check
 
       # THE BUILD IS NOT REDUNDANT WITH THE TYPE CHECK. A production build
       # resolves every import for real and runs the SFC compiler over every
@@ -264,7 +273,7 @@ jobs:
       # fine in the browser while server rendering died on an internal.
       - name: Build
         working-directory: apps/playground
-        run: npm run build:ssr
+        run: pnpm run build:ssr
 
   # ---------------------------------------------------------------- browser
   #
@@ -284,6 +293,12 @@ jobs:
     name: Browser tests
     runs-on: ubuntu-latest
 
+    # See the `client` job above: pnpm's pre-run dependency check breaks when
+    # invoked from a workspace member's own directory, which the
+    # `working-directory: packages/ui` build step below does.
+    env:
+      PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: false
+
     steps:
       - uses: actions/checkout@v4
 
@@ -293,9 +308,12 @@ jobs:
           extensions: sqlite3, pdo_sqlite, zip, intl, bcmath, gd
           coverage: none
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'pnpm'
 
       - name: Install PHP dependencies
         working-directory: apps/playground
@@ -313,13 +331,15 @@ jobs:
         working-directory: apps/playground
         run: php artisan wayfinder:generate --with-form
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       # THE PACKAGE IS BUILT HERE TOO. Its `dist` is generated, so a fresh
       # checkout has none - and the asset build below resolves the package
       # through `node_modules`, where `main` points at exactly that.
-      - name: Install the client half
-        run: |
-          cd packages/ui && npm install --no-audit --no-fund && npm run build
-          cd ../../apps/playground && npm install --no-audit --no-fund
+      - name: Build @alxtexh-enterprise/panel
+        working-directory: packages/ui
+        run: pnpm run build
 
       # CHROME FOR TESTING, at the major version Dusk's ChromeDriver matches.
       # The runner's own Chrome would work today and drift the moment either

@@ -1,5 +1,6 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
+    "name": "playground",
     "private": true,
     "type": "module",
     "scripts": {
@@ -38,7 +39,7 @@
         "vue-tsc": "^2.2.4"
     },
     "dependencies": {
-        "@alxtexh-enterprise/panel": "file:../../packages/ui",
+        "@alxtexh-enterprise/panel": "workspace:*",
         "@inertiajs/vite": "^3.0.0",
         "@inertiajs/vue3": "^3.0.0",
         "@laravel/passkeys": "^0.2.0",

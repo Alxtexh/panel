@@ -1,0 +1,10 @@
+# The only two real npm install roots in the repository - see the Makefile
+# comment above `install` for how packages/panel/resources/client (a build
+# copy, not an install target) fits in.
+packages:
+  - apps/playground
+  - packages/ui
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+  vue-demi: true
