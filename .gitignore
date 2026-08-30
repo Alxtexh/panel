@@ -133,3 +133,10 @@ vendor/research/
 # Local vendor / research trees (never ship)
 erpgosaas/
 tmp/
+
+# Same as erpgosaas/ above - scratch installs that were committed by accident
+# before this rule existed. scripts/split.sh already documents temp-filament
+# as untracked scratch content; testfolder carries no first-party code at
+# all, only vendor/node_modules/bootstrap/storage bloat.
+temp-filament/
+testfolder/
