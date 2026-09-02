@@ -34,18 +34,25 @@ final class AppearanceTest extends TestCase
     }
 
     /**
-     * Set the preference the way the CONTROLLER does - direct assignment.
+     * Set the preference the way the CONTROLLER does - merged, not replaced.
      *
      * `appearance` is deliberately absent from the model's Fillable attribute:
      * mass assignment stays closed by construction, and the endpoint assigns
      * the validated value itself. A test using update() would be exercising a
      * path the application does not take.
      *
+     * MERGED WITH WHATEVER IS ALREADY THERE, matching `AppearanceController::
+     * update()`'s own partial-update behaviour (see
+     * `test_a_partial_update_merges_rather_than_replaces` below) - a blind
+     * overwrite here would silently erase unrelated keys the factory or an
+     * earlier step already wrote (`setupWizardDone`, notably), which the real
+     * endpoint never does.
+     *
      * @param  array<string, mixed>  $appearance
      */
     private function storeAppearance(array $appearance): void
     {
-        $this->user->appearance = $appearance;
+        $this->user->appearance = [...($this->user->appearance ?? []), ...$appearance];
         $this->user->save();
     }
 
@@ -136,12 +143,14 @@ final class AppearanceTest extends TestCase
      */
     public function test_a_value_outside_the_allowed_list_is_rejected(): void
     {
+        $before = $this->user->appearance;
+
         $this->actingAs($this->user)
             ->putJson('/settings/appearance', ['primary' => 'red; background: url(evil)'])
             ->assertStatus(422)
             ->assertJsonValidationErrors('primary');
 
-        $this->assertNull($this->user->fresh()->appearance);
+        $this->assertSame($before, $this->user->fresh()->appearance);
     }
 
     public function test_an_unknown_theme_is_rejected(): void

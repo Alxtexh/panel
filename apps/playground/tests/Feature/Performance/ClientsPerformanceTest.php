@@ -63,6 +63,16 @@ final class ClientsPerformanceTest extends TestCase
         }
 
         $this->user = $user;
+
+        /*
+         * THE COOKIE, NOT A WRITE TO THE REAL USER ROW. This test connects to
+         * the real development database precisely so it never touches it -
+         * see the class docblock. A real seeded user predates the setup
+         * wizard and has no `appearance.setupWizardDone`, so
+         * `RedirectToSetupWizard` would otherwise send every request here to
+         * `/setup-wizard` instead of the screen being measured.
+         */
+        $this->withUnencryptedCookie(\Alxtexh\Panel\Support\SetupWizardState::COOKIE, '1');
     }
 
     public function test_the_unfiltered_list_responds_within_budget(): void

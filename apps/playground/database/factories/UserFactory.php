@@ -37,6 +37,17 @@ class UserFactory extends Factory
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
+            /*
+             * A FACTORY USER IS A USER WHO HAS ALREADY BEEN THROUGH SETUP,
+             * unless a test says otherwise. `RedirectToSetupWizard` sends
+             * anyone without this to `/setup-wizard` before anywhere else -
+             * correct for a real first login, and exactly wrong as the
+             * default for the thousands of tests that create a user to
+             * exercise something else entirely. `SetupWizardTest` itself
+             * overrides this back to unset where the wizard is the thing
+             * under test.
+             */
+            'appearance' => ['setupWizardDone' => true],
         ];
     }
 

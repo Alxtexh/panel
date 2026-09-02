@@ -104,6 +104,8 @@ class Tenant extends Model implements TenantWithDatabase
             'features' => 'array',
             // Roadmap 4.3: the billing preferences singular's one record.
             'billing' => 'array',
+            // The setup wizard's own record - see its migration's docblock.
+            'settings' => 'array',
         ];
     }
 

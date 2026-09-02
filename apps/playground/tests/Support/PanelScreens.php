@@ -79,6 +79,25 @@ final class PanelScreens
         '/about/building/search',
         '/settings/organisation/logo',
         '/operations/backups/download',
+
+        /*
+         * SETUP-WIZARD ROUTES, ON EVERY PANEL THAT DOES NOT OFFER ONE. They
+         * register unconditionally - `RedirectToSetupWizard`'s own docblock
+         * explains why: the same shape as onboarding's dismiss/reset routes,
+         * evaluated live inside the controller rather than baked into route
+         * registration. Only `AdminPanelProvider` calls `Panel::
+         * setupWizard()` in this demo, so these four panels' own copies 404
+         * on purpose - not a broken link, a feature this portal never opted
+         * into.
+         */
+        '/client/setup-wizard',
+        '/client/setup-wizard/complete',
+        '/platform/setup-wizard',
+        '/platform/setup-wizard/complete',
+        '/reseller/setup-wizard',
+        '/reseller/setup-wizard/complete',
+        '/superadmin/setup-wizard',
+        '/superadmin/setup-wizard/complete',
     ];
 
     /**

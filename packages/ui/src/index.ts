@@ -141,6 +141,7 @@ export { default as AppPageFooter } from './components/Layout/AppPageFooter.vue'
 export { useShellPageFooter } from './composables/useShellPageFooter'
 export { default as PkDeviceFrame } from './components/Layout/PkDeviceFrame.vue'
 export { default as PkStepIndicator } from './components/Layout/PkStepIndicator.vue'
+export { default as PkSetupWizardCompletion } from './components/Layout/PkSetupWizardCompletion.vue'
 export { default as PkRepeater } from './components/Form/PkRepeater.vue'
 /*
  | ROADMAP 4.5. Markdown stores the source rather than a rendering; code

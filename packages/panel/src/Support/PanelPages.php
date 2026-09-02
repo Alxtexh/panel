@@ -47,6 +47,18 @@ final class PanelPages
         'Sitemap',
 
         /*
+         * THE FULL-SCREEN SETUP WIZARD. `SetupWizardController` is a plain
+         * controller, not a `Page` subclass, so it renders with a literal
+         * `Inertia::render('SetupWizard', ...)` the same way `PanelDashboard`
+         * above does - which is exactly what keeps this list and the render
+         * calls honest against each other. `Panel::setupWizard()` gates
+         * whether the ROUTE does anything useful; the stub still has to
+         * exist so a host that never calls it gets a 404 from the
+         * controller, not a Vite resolution error from a missing file.
+         */
+        'SetupWizard',
+
+        /*
          * THE PUBLIC FRONT PAGE. `LandingController` renders this; the editor
          * that composes it is `Landing\LandingPageResource`. All of it lived in
          * the reference application until now, so every other installation had

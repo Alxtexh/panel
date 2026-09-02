@@ -5,9 +5,21 @@ declare(strict_types=1);
 namespace App\Providers\Panels;
 
 use App\Models\Feedback;
+use App\Models\Plan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Alxtexh\Panel\Forms\Fields\RadioField;
+use Alxtexh\Panel\Forms\Fields\SelectField;
+use Alxtexh\Panel\Forms\Fields\TextareaField;
+use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
+use Alxtexh\Panel\Schema\Callout;
+use Alxtexh\Panel\Schema\Step;
+use Alxtexh\Panel\Schema\Wizard;
+use Alxtexh\Panel\Support\SetupWizard;
+use Alxtexh\Panel\Support\SetupWizardCompletion;
 use Alxtexh\Panel\Support\TenantContext;
 use Alxtexh\Panel\Support\ModuleRegistry;
 use App\Panel\KitDemo;
@@ -118,6 +130,141 @@ final class AdminPanelProvider extends ServiceProvider
                  */
                 ->editableSupport()
                 ->onboarding()
+                /*
+                 * THE FULL-SCREEN COUNTERPART, SEPARATE FROM `onboarding()`
+                 * ABOVE. That one is a dismissable dashboard checklist that
+                 * links out to existing screens; this one is a forced,
+                 * one-shot flow that collects real data before an operator
+                 * ever sees the dashboard. Both can run at once - see
+                 * `RedirectToSetupWizard`'s own docblock for why finishing
+                 * one does not mark the other done.
+                 *
+                 * FOUR STEPS, EACH REAL FOR THIS DEMO. Localization and
+                 * Location both write to `tenants.settings`/`tenants.name` -
+                 * no dedicated Location model exists or is warranted here,
+                 * since nothing else in this fixture would ever reference
+                 * one. Data plan writes a real `Plan` row, the model this
+                 * fixture already has for exactly that concept.
+                 */
+                ->setupWizard(fn (): SetupWizard => SetupWizard::make()
+                    ->wizard(Wizard::make()->steps([
+                        Step::make('Localization')
+                            ->description('Timezone, date format and currency for this workspace')
+                            ->icon('globe')
+                            ->schema([
+                                /*
+                                 * A CURATED HANDFUL, NOT `DateTimeZone::listIdentifiers()`.
+                                 * All 419 IANA zones trips `SelectField`'s own
+                                 * inline-option guard - a select this large has to be
+                                 * ->searchable() instead, which this wizard has no
+                                 * search endpoint wired for. This demo is Kenya-based,
+                                 * so Africa/Nairobi leads; the rest cover the other
+                                 * regions an operator evaluating the kit is likely in.
+                                 */
+                                SelectField::make('timezone')->required()->options([
+                                    'Africa/Nairobi' => 'Africa/Nairobi',
+                                    'Africa/Lagos' => 'Africa/Lagos',
+                                    'Africa/Johannesburg' => 'Africa/Johannesburg',
+                                    'Africa/Cairo' => 'Africa/Cairo',
+                                    'Europe/London' => 'Europe/London',
+                                    'Europe/Paris' => 'Europe/Paris',
+                                    'America/New_York' => 'America/New_York',
+                                    'America/Chicago' => 'America/Chicago',
+                                    'America/Los_Angeles' => 'America/Los_Angeles',
+                                    'Asia/Dubai' => 'Asia/Dubai',
+                                    'Asia/Kolkata' => 'Asia/Kolkata',
+                                    'Asia/Singapore' => 'Asia/Singapore',
+                                    'Australia/Sydney' => 'Australia/Sydney',
+                                    'UTC' => 'UTC',
+                                ]),
+                                SelectField::make('date_format')->required()->options([
+                                    'Y-m-d' => 'YYYY-MM-DD',
+                                    'd/m/Y' => 'DD/MM/YYYY',
+                                    'm/d/Y' => 'MM/DD/YYYY',
+                                ]),
+                                SelectField::make('currency')->required()->options([
+                                    'KES' => 'KES',
+                                    'USD' => 'USD',
+                                    'EUR' => 'EUR',
+                                ]),
+                            ]),
+
+                        Step::make('Location')
+                            ->description('What operators and clients see as your ISP name')
+                            ->icon('building')
+                            ->schema([
+                                TextField::make('name')->required()->placeholder('Nairobi Fibre'),
+                            ]),
+
+                        Step::make('Splash page')
+                            ->description('The page a hotspot client sees before they get online')
+                            ->icon('layout-template')
+                            ->schema([
+                                RadioField::make('splash_mode')->required()->inline()->options([
+                                    'auto' => 'Create it for me',
+                                    'custom' => 'Let me create it',
+                                ]),
+                                TextField::make('splash_headline')
+                                    ->visibleWhen('splash_mode', 'custom')
+                                    ->required(),
+                                TextareaField::make('splash_welcome_message')
+                                    ->visibleWhen('splash_mode', 'custom'),
+                            ]),
+
+                        Step::make('Data plan')
+                            ->description('Your first plan - add more any time from Plans')
+                            ->icon('wifi')
+                            ->schema([
+                                TextField::make('plan_name')->required()->placeholder('Home 20'),
+                                Callout::make('20 Mbps · KES 2,500/mo (edit anytime in Plans)'),
+                            ]),
+                    ]))
+                    ->submit(function (array $v, Request $r): void {
+                        $tenant = app(TenantContext::class)->tenant();
+
+                        if ($tenant === null) {
+                            return;
+                        }
+
+                        $tenant->forceFill([
+                            'name' => $v['name'],
+                            'settings' => [
+                                ...$tenant->settings ?? [],
+                                'timezone' => $v['timezone'],
+                                'date_format' => $v['date_format'],
+                                'currency' => $v['currency'],
+                                'splash_mode' => $v['splash_mode'],
+                                'splash_headline' => $v['splash_headline'] ?? null,
+                                'splash_welcome_message' => $v['splash_welcome_message'] ?? null,
+                            ],
+                        ])->save();
+
+                        Plan::create([
+                            'tenant_id' => $tenant->id,
+                            'name' => $v['plan_name'],
+                            'speed_mbps' => 20,
+                            'price_cents' => 250_000,
+                            'is_active' => true,
+                        ]);
+                    })
+                    ->completion(
+                        SetupWizardCompletion::make()
+                            ->summary(fn (): array => [
+                                [
+                                    'label' => 'First location created',
+                                    'detail' => app(TenantContext::class)->tenant()?->name,
+                                ],
+                                ['label' => 'Splash page configured'],
+                                ['label' => 'Test data plan created'],
+                            ])
+                            ->nextSteps(fn (): array => Route::has('panel.create') ? [
+                                ['label' => 'Add a router', 'href' => route('panel.create', ['resource' => 'routers'])],
+                            ] : [])
+                            ->actions(fn (): array => [
+                                ['label' => 'Create a client', 'href' => route('panel.create', ['resource' => 'clients'])],
+                                ['label' => 'Go to dashboard', 'href' => route('panel.pages.dashboard'), 'primary' => true],
+                            ])
+                    ))
                 /*
                  * OPT-IN CAPABILITY, INACTIVE BY DEFAULT - `panel.auth.
                  * magic_link` (env `PANEL_MAGIC_LINK`) still gates whether it

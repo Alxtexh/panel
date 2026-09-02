@@ -160,6 +160,16 @@ createInertiaApp({
             case name === 'auth/VerifyOtp':
                 return null;
             /*
+             * THE SETUP WIZARD IS ALSO THE ONLY THING ON SCREEN, same
+             * reasoning as LockScreen/VerifyOtp above - it draws its own
+             * centred card and its own "Skip"/"Finish" controls, and it is
+             * reached by a FORCED redirect before an operator has ever seen
+             * the sidebar. Wrapping it in AppLayout would show the shell it
+             * exists to run ahead of.
+             */
+            case name === 'SetupWizard':
+                return null;
+            /*
              * ERROR PAGES STAND ALONE, and this is not a style choice.
              *
              * A URL matching no route never enters the `web` middleware group,

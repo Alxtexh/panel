@@ -382,6 +382,13 @@ final class Pages
             '/client/account/subscription' => 'Choose-a-plan showcase; linked from a billing CTA a real host provides, not the sidebar.',
             '/client/subscription-confirmed' => 'Reached by redirect after choosing a plan. Not a destination; links back to the catalog from its own template.',
             /*
+             * Reached only by a successful POST /setup-wizard, then offers
+             * its own "Go to dashboard" / "Create hotspot" actions - never a
+             * menu destination, the same way subscription-confirmed above
+             * is reached by redirect rather than a link.
+             */
+            '/setup-wizard/complete' => 'Reached by redirect after finishing the setup wizard. Not a destination; offers its own dashboard/create actions.',
+            /*
              * SETTINGS AND CHANGELOG COPIES PER PORTAL. Same destinations as
              * the operator portal's, mounted under each portal prefix.
              */
