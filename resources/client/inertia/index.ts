@@ -235,6 +235,7 @@ export const PANEL_PAGES = {
     PanelDashboard: () => import('./pages/PanelDashboard.vue'),
     PanelPage: () => import('./pages/PanelPage.vue'),
     Onboarding: () => import('./pages/Onboarding.vue'),
+    SetupWizard: () => import('./pages/SetupWizard.vue'),
     Changelog: () => import('./pages/Changelog.vue'),
     ApiKeys: () => import('./pages/ApiKeys.vue'),
     ApiDocs: () => import('./pages/ApiDocs.vue'),
@@ -336,6 +337,7 @@ export { default as TicketThread } from './components/TicketThread.vue'
 export { default as AnnouncementBanners } from './components/AnnouncementBanners.vue'
 export { default as FeedbackDialog } from './components/FeedbackDialog.vue'
 export { default as Onboarding } from './pages/Onboarding.vue'
+export { default as SetupWizard } from './pages/SetupWizard.vue'
 /*
  * `User` IS EXPORTED because the shell hands one out.
  *

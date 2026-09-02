@@ -800,6 +800,28 @@ final class PanelRoutes
                         ->name('onboarding.reset');
                 }
 
+                /*
+                 * THE FULL-SCREEN SETUP WIZARD, separate from the checklist
+                 * above. REGISTERED UNCONDITIONALLY, same as onboarding's own
+                 * two routes just above - `offersSetupWizard()` is evaluated
+                 * live, inside `SetupWizardController`, not baked into
+                 * whether the route exists. Routes register once, at boot,
+                 * from `$this->app->booted()`; a call to `Panel::
+                 * setupWizard()` after that point (a test's own setUp(), or
+                 * any config resolved per-request) would never be reflected
+                 * if registration itself depended on it.
+                 */
+                if (self::unclaimed('GET', $panel->getPath().'/setup-wizard')) {
+                    Route::get('setup-wizard', [Controllers\SetupWizardController::class, 'show'])
+                        ->name('setup-wizard');
+                    Route::post('setup-wizard', [Controllers\SetupWizardController::class, 'store'])
+                        ->name('setup-wizard.store');
+                    Route::post('setup-wizard/skip', [Controllers\SetupWizardController::class, 'skip'])
+                        ->name('setup-wizard.skip');
+                    Route::get('setup-wizard/complete', [Controllers\SetupWizardController::class, 'complete'])
+                        ->name('setup-wizard.complete');
+                }
+
                 if (self::unclaimed('GET', $panel->getPath().'/settings/security')) {
                     /*
                      * PASSWORD CONFIRMATION TO LOOK, NOT ONLY TO CHANGE. The

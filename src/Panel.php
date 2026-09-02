@@ -172,6 +172,11 @@ final class Panel
 
     private mixed $feedbackPersister = null;
 
+    /** Full-screen first-run setup wizard. Off by default. */
+    private bool $setupWizardEnabled = false;
+
+    private mixed $setupWizardResolver = null;
+
     /**
      * Host override for first-run setup steps. Null uses kit chrome defaults.
      *
@@ -2220,6 +2225,53 @@ final class Panel
     }
 
     /**
+     * Opt this portal into a full-screen first-run setup wizard, separate
+     * from the dashboard checklist `onboarding()` enables.
+     *
+     * $resolver RETURNS THE WIZARD rather than being handed one to fill in,
+     * matching `feedback()`'s single-call shape rather than the split
+     * `onboarding()`/`onboardingSteps()` pair: there is no framework-wide
+     * default step list a setup wizard could fall back to the way
+     * `OnboardingSteps::chrome()` supplies kit chrome for the checklist -
+     * every step here collects real, host-specific data, so a host that
+     * calls this always supplies its own steps.
+     *
+     * ENABLING THIS ON AN EXISTING INSTALL REDIRECTS EVERY CURRENT USER TO
+     * IT ON THEIR NEXT LOGIN. `SetupWizardState::isDone()` defaults to false
+     * for everyone, the same as any other first-run flag flipped after
+     * people already exist - backfill `appearance.setupWizardDone = true`
+     * for existing users in the migration/seeder that turns this on.
+     *
+     * TWO THINGS A HOST STILL HAS TO DO ITSELF, because they live in the
+     * application, not the package: exempt `panel_setup_wizard_done` from
+     * `EncryptCookies` in `bootstrap/app.php` (`SetupWizardState`'s own
+     * docblock explains why an encrypted copy of that cookie is unreadable
+     * to itself), and make the `SetupWizard` page name resolve to no layout
+     * in `createInertiaApp({ layout: ... })` - it draws its own full-screen
+     * card and is reached by a forced redirect before anyone has seen the
+     * sidebar, the same reasoning `LockScreen`/`VerifyOtp` already get.
+     *
+     * @param  Closure(): \Alxtexh\Panel\Support\SetupWizard  $resolver
+     */
+    public function setupWizard(Closure $resolver): self
+    {
+        $this->setupWizardEnabled = true;
+        $this->setupWizardResolver = $resolver;
+
+        return $this;
+    }
+
+    public function setupWizardResolver(): ?Closure
+    {
+        return $this->setupWizardResolver instanceof Closure ? $this->setupWizardResolver : null;
+    }
+
+    public function offersSetupWizard(): bool
+    {
+        return $this->setupWizardEnabled && $this->offers('setup-wizard');
+    }
+
+    /**
      * Replace or wrap the default first-run setup steps shown on the dashboard.
      *
      * The closure receives the kit chrome steps (organisation, settings,
@@ -2418,6 +2470,7 @@ final class Panel
         $stack = $this->withIdleLockMiddleware($stack);
         $stack[] = Http\Middleware\EnsurePanelEmailIsVerified::class;
         $stack[] = Http\Middleware\RequireTwoFactorEnrolment::class;
+        $stack[] = Http\Middleware\RedirectToSetupWizard::class;
         $stack[] = Http\Middleware\EnforceSubscriptionGate::class;
 
         return $stack;
