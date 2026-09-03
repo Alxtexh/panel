@@ -149,27 +149,30 @@ function uploadFor(key: string) {
 
         <!-- Flat fallback. -->
         <div v-else class="grid grid-cols-1 gap-4" :class="gridClass">
-            <FormFieldControl
+            <div
                 v-for="field in fields"
                 :key="field.key"
-                :field="field"
-                :value="modelValue[field.key]"
-                :error="errors[field.key]"
-                :errors="errors"
-                :options="options[field.key]"
-                :child-options="options"
-                :processing="processing"
-                :search-options="
-                    field.searchable && searchOptions
-                        ? (term: string) => searchOptions!(field.key, term)
-                        : undefined
-                "
-                :upload="uploadFor(field.key)"
-                :discard="discard"
                 :class="field.span && field.span >= 2 ? 'sm:col-span-2' : ''"
-                @change="(value) => emit('change', field.key, value)"
-                @affix-action="(action) => emit('affix-action', field.key, action)"
-            />
+            >
+                <FormFieldControl
+                    :field="field"
+                    :value="modelValue[field.key]"
+                    :error="errors[field.key]"
+                    :errors="errors"
+                    :options="options[field.key]"
+                    :child-options="options"
+                    :processing="processing"
+                    :search-options="
+                        field.searchable && searchOptions
+                            ? (term: string) => searchOptions!(field.key, term)
+                            : undefined
+                    "
+                    :upload="uploadFor(field.key)"
+                    :discard="discard"
+                    @change="(value) => emit('change', field.key, value)"
+                    @affix-action="(action) => emit('affix-action', field.key, action)"
+                />
+            </div>
         </div>
     </div>
 </template>

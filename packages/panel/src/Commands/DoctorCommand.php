@@ -135,6 +135,8 @@ final class DoctorCommand extends Command
         $this->checkPluginCompatibility($panels);
         $this->checkPluginPageRegistration($panels);
         $this->checkPluginPerformance($panels);
+        $this->checkPluginHealth($panels);
+        $this->checkRenderHookCompatibility($panels);
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->findings, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -702,6 +704,10 @@ final class DoctorCommand extends Command
      */
     private function checkDocumentTemplates(): void
     {
+        if (! class_exists(Documents\DocumentTemplate::class) || ! class_exists(Documents\DocumentKinds::class)) {
+            return;
+        }
+
         if (! Schema::hasTable('panel_document_templates')) {
             // The migration has not run. That is a fresh install, not a fault.
             return;
@@ -914,6 +920,10 @@ final class DoctorCommand extends Command
      */
     private function checkTemplateContrast(): void
     {
+        if (! class_exists(Documents\DocumentTemplate::class)) {
+            return;
+        }
+
         if (! Schema::hasTable('panel_document_templates')) {
             return;
         }
@@ -1978,6 +1988,91 @@ final class DoctorCommand extends Command
     }
 
     /**
+     * Validate optional plugin dependencies and health reports without making
+     * them part of the required interface, preserving compatibility for direct
+     * PanelPlugin implementations.
+     */
+    private function checkPluginHealth(PanelManager $panels): void
+    {
+        foreach ($this->discoveredPlugins($panels) as $plugin) {
+            $id = $plugin->id();
+
+            if (method_exists($plugin, 'dependencies')) {
+                foreach ((array) $plugin->dependencies() as $dependency) {
+                    if (! is_string($dependency) || $dependency === '') {
+                        $this->problem(
+                            "Plugin [{$id}] declares an invalid dependency",
+                            'Plugin dependencies must be non-empty class or interface names.',
+                            'Return class-string values from dependencies().',
+                        );
+                        continue;
+                    }
+
+                    if (! class_exists($dependency) && ! interface_exists($dependency)) {
+                        $this->problem(
+                            "Plugin [{$id}] is missing dependency [{$dependency}]",
+                            'The plugin is registered, but one of its declared runtime dependencies cannot be autoloaded.',
+                            'Install the dependency or remove the plugin registration.',
+                        );
+                    }
+                }
+            }
+
+            if (method_exists($plugin, 'configKey') && method_exists($plugin, 'configRules')) {
+                $configKey = $plugin->configKey();
+                $rules = $plugin->configRules();
+
+                if ($configKey !== null && $configKey !== '' && $rules !== []) {
+                    $validator = validator((array) config($configKey, []), $rules);
+
+                    if ($validator->fails()) {
+                        $this->problem(
+                            "Plugin [{$id}] has invalid configuration",
+                            "Configuration [{$configKey}] does not satisfy the plugin schema: "
+                                .implode('; ', $validator->errors()->all()),
+                            "Fix config('{$configKey}') before deploying the plugin.",
+                        );
+                    }
+                }
+            }
+
+            if (! method_exists($plugin, 'health')) {
+                continue;
+            }
+
+            try {
+                $findings = $plugin->health();
+            } catch (Throwable $exception) {
+                $this->problem(
+                    "Plugin [{$id}] health check failed",
+                    $exception->getMessage(),
+                    'Fix the plugin health check before deploying it.',
+                );
+                continue;
+            }
+
+            foreach ((array) $findings as $finding) {
+                if (! is_array($finding) || ! isset($finding['title'], $finding['detail'])) {
+                    $this->problem(
+                        "Plugin [{$id}] returned an invalid health finding",
+                        'Each health finding must contain title and detail strings.',
+                        'Return arrays shaped like ["level" => "problem", "title" => ..., "detail" => ...].',
+                    );
+                    continue;
+                }
+
+                $level = ($finding['level'] ?? 'problem') === 'note' ? 'note' : 'problem';
+                $method = $level === 'note' ? 'note' : 'problem';
+                $this->{$method}(
+                    "Plugin [{$id}]: {$finding['title']}",
+                    (string) $finding['detail'],
+                    isset($finding['suggested']) ? (string) $finding['suggested'] : null,
+                );
+            }
+        }
+    }
+
+    /**
      * Compare installed plugins against the PanelKit plugin contract version.
      *
      * Explicit registration only: config, global registry, and per-panel lists.
@@ -2027,6 +2122,24 @@ final class DoctorCommand extends Command
                 get_class($plugin)." reports plugin contract {$version}, but this PanelKit release expects {$expected}.",
                 'Update the plugin class to match the current contract version, or pin PanelKit to a compatible release.',
             );
+        }
+    }
+
+    /** Detect hooks authored for a different position contract before runtime. */
+    private function checkRenderHookCompatibility(PanelManager $panels): void
+    {
+        foreach ($panels->panels() as $panel) {
+            foreach ($panels->renderHookCompatibility(panelId: $panel->id) as $hook) {
+                if ($hook['compatible']) {
+                    continue;
+                }
+
+                $this->problem(
+                    "Render hook [{$hook['component']}] has an incompatible version",
+                    "Position [{$hook['position']}] expects version {$hook['expectedVersion']}, but the hook declares version {$hook['version']}.",
+                    'Update the plugin to the current render-hook contract before enabling it.',
+                );
+            }
         }
     }
 

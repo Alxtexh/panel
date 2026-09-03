@@ -28,7 +28,6 @@
         "illuminate/routing": "^12.0|^13.0",
         "illuminate/support": "^12.0|^13.0",
         "inertiajs/inertia-laravel": "^2.0|^3.0",
-        "laravel-notification-channels/telegram": "^7.0",
         "spatie/laravel-permission": "^8.3"
     },
     "require-dev": {
@@ -37,7 +36,11 @@
         "stancl/tenancy": "^3.10"
     },
     "suggest": {
-        "laravel/ai": "Needed only for ProviderEmbedder - model-backed retrieval. The default embedder is local and needs nothing.",
+        "alxtexh-enterprise/panel-ai": "Needed only for provider-backed AI retrieval and tenant-scoped conversations. The default embedder is local and needs nothing.",
+        "alxtexh-enterprise/panel-telegram": "Needed only for Telegram alerts and Telegram notification delivery.",
+        "alxtexh-enterprise/panel-documents": "Needed only for document templates and renderers.",
+        "alxtexh-enterprise/panel-billing": "Needed only for provider-agnostic billing webhook adapters.",
+        "alxtexh-enterprise/panel-operations": "Needed only for queued imports, exports, bulk actions, and scheduled reports.",
         "laravel/socialite": "Needed only for social sign-in buttons. Credentials in config/services.php are the switch; without this package the buttons stay hidden.",
         "phpoffice/phpspreadsheet": "Needed only for Excel import (Resource::excelImport()). CSV import needs nothing.",
         "stancl/tenancy": "Needed only for `database` tenancy mode - dedicated database per tenant. The default `column` mode needs nothing."

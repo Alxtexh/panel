@@ -120,9 +120,17 @@ final class RunBulkAction implements ShouldQueue
                 $list->matching($request, $this->ids === [] ? null : $this->ids),
                 $class::model(),
                 $list->keyColumnName(),
-                fn (int $done) => JobStatus::progress($this->token, $done),
+                function (int $done): bool {
+                    JobStatus::progress($this->token, $done);
+
+                    return ! JobStatus::isCanceled($this->token);
+                },
                 $this->data,
             );
+
+            if (JobStatus::isCanceled($this->token)) {
+                return;
+            }
 
             JobStatus::finish($this->token, ['done' => $affected]);
 

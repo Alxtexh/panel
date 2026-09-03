@@ -61,6 +61,33 @@ final class BillingWebhookInboundTest extends TestCase
         $this->assertSame(0, BillingState::query()->count());
     }
 
+    public function test_repeated_delivery_is_applied_only_once(): void
+    {
+        $tenant = Tenant::create(['name' => 'Mine', 'slug' => 'mine']);
+
+        app(PanelManager::class)->panel('admin')
+            ->billingWebhookVerifier(static fn (): bool => true);
+
+        $payload = [
+            'billable_type' => 'tenant',
+            'billable_key' => (string) $tenant->id,
+            'status' => 'active',
+        ];
+
+        $this->withHeaders(['X-Webhook-Id' => 'evt-100'])
+            ->postJson('/billing/webhooks/generic', $payload)
+            ->assertAccepted()
+            ->assertJsonPath('duplicate', null);
+
+        $this->withHeaders(['X-Webhook-Id' => 'evt-100'])
+            ->postJson('/billing/webhooks/generic', $payload)
+            ->assertAccepted()
+            ->assertJsonPath('duplicate', true)
+            ->assertJsonPath('applied', false);
+
+        $this->assertSame(1, BillingState::query()->count());
+    }
+
     public function test_signed_header_adapter_accepts_a_matching_hmac(): void
     {
         $secret = 'test-secret';
@@ -93,4 +120,3 @@ final class BillingWebhookInboundTest extends TestCase
             ->assertStatus(401);
     }
 }
-

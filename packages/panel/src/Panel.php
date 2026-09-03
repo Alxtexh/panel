@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alxtexh\Panel;
 
 use Alxtexh\Panel\Auth\Turnstile;
+use Alxtexh\Panel\Support\Deprecation;
 use Alxtexh\Panel\Resources\ResourceConfigurator;
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -1208,6 +1209,7 @@ final class Panel
      */
     public function environmentBanner(bool $enabled = true): self
     {
+        Deprecation::warn(__METHOD__, 'remove the call; the environment badge is permanently disabled');
         $this->environmentBanner = $enabled;
 
         return $this;
@@ -1216,12 +1218,14 @@ final class Panel
     /** @deprecated Permanently off; value is ignored. */
     public function environmentBannerOverride(): ?bool
     {
+        Deprecation::warn(__METHOD__, 'remove the call; the environment badge is permanently disabled');
         return $this->environmentBanner;
     }
 
     /** @deprecated Permanently off; always false for shared props. */
     public function showsEnvironmentBanner(): bool
     {
+        Deprecation::warn(__METHOD__, 'remove the call; the environment badge is permanently disabled');
         return false;
     }
 

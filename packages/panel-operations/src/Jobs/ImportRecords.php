@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Jobs;
 use Alxtexh\Panel\Actions\ExportedFile;
 use Alxtexh\Panel\Actions\JobStatus;
 use Alxtexh\Panel\Imports\ImportFailure;
+use Alxtexh\Panel\Imports\ImportRetry;
 use Alxtexh\Panel\Imports\Importer;
 use Alxtexh\Panel\Imports\RowsReader;
 use Alxtexh\Panel\Support\TenantContext;
@@ -32,7 +33,9 @@ final class ImportRecords implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public int $tries = 1;
+    public int $tries = 3;
+
+    public array|int $backoff = [30, 120];
 
     public int $timeout = 900;
 
@@ -46,10 +49,16 @@ final class ImportRecords implements ShouldQueue
         private readonly int|string $userId,
         private readonly string $token,
         private readonly bool $dryRun = false,
+        private readonly bool $retainSource = false,
+        /** @var list<int> */
+        private readonly array $onlyLines = [],
+        private readonly ?string $retryToken = null,
     ) {}
 
     public function handle(): void
     {
+        $preserveSource = $this->retainSource;
+
         try {
             $class = $this->actAs($this->userId, $this->resource);
 
@@ -66,8 +75,27 @@ final class ImportRecords implements ShouldQueue
             $reader = RowsReader::open($this->path);
             $result = $importer->process($reader->rows());
 
-            $written = 0;
+            if ($this->onlyLines !== []) {
+                $wanted = array_fill_keys($this->onlyLines, true);
+                $result = new \Alxtexh\Panel\Imports\ImportResult(
+                    array_values(array_filter(
+                        $result->prepared,
+                        static fn ($row): bool => isset($wanted[$row->line]),
+                    )),
+                    array_values(array_filter(
+                        $result->failures,
+                        static fn ($failure): bool => isset($wanted[$failure->line]),
+                    )),
+                );
+            }
+
             $saveFailures = [];
+            $status = JobStatus::get($this->token, $this->userId) ?? [];
+            $written = (int) ($status['done'] ?? 0);
+            $processedLines = array_fill_keys(
+                array_map('intval', (array) ($status['checkpoint'] ?? [])),
+                true,
+            );
 
             if (! $this->dryRun) {
                 $model = $class::model();
@@ -84,6 +112,14 @@ final class ImportRecords implements ShouldQueue
                  * use."
                  */
                 foreach ($result->prepared as $row) {
+                    if (JobStatus::isCanceled($this->token)) {
+                        return;
+                    }
+
+                    if (isset($processedLines[$row->line])) {
+                        continue;
+                    }
+
                     try {
                         $record = new $model;
                         $record->forceFill($row->data);
@@ -97,12 +133,38 @@ final class ImportRecords implements ShouldQueue
                         );
                     }
 
+                    $processedLines[$row->line] = true;
+                    JobStatus::checkpoint($this->token, array_keys($processedLines));
+
                     JobStatus::progress($this->token, $written, $result->importable());
                 }
             }
 
+            if (JobStatus::isCanceled($this->token)) {
+                return;
+            }
+
             $failures = [...$result->failures, ...$saveFailures];
+
             $failurePath = $this->writeFailures($failures);
+
+            if ($failures !== []) {
+                ImportRetry::store(
+                    $this->token,
+                    $this->userId,
+                    $this->resource,
+                    $this->path,
+                    $this->mapping,
+                    array_map(static fn (ImportFailure $failure): int => $failure->line, $failures),
+                );
+
+                if ($this->retryToken !== null) {
+                    ImportRetry::forget($this->retryToken);
+                }
+            } elseif ($this->retryToken !== null) {
+                ImportRetry::forget($this->retryToken);
+                $preserveSource = false;
+            }
 
             JobStatus::finish($this->token, [
                 'done' => $written,
@@ -133,14 +195,19 @@ final class ImportRecords implements ShouldQueue
 
             throw $e;
         } finally {
-            @unlink($this->path);
+            if (! $preserveSource && ! ImportRetry::find($this->token, $this->userId)) {
+                @unlink($this->path);
+            }
         }
     }
 
     public function failed(Throwable $e): void
     {
         JobStatus::fail($this->token, $e->getMessage());
-        @unlink($this->path);
+
+        if (! $this->retainSource) {
+            @unlink($this->path);
+        }
     }
 
     /**

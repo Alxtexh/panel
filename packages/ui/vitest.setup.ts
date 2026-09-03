@@ -25,3 +25,15 @@ class ResizeObserverStub implements ResizeObserver {
 }
 
 globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver
+
+/** jsdom exposes canvas elements but not their 2D context implementation. */
+if (typeof HTMLCanvasElement !== 'undefined') {
+    HTMLCanvasElement.prototype.getContext = (() => ({
+        clearRect() {},
+        fillRect() {},
+        beginPath() {},
+        moveTo() {},
+        lineTo() {},
+        stroke() {},
+    })) as unknown as typeof HTMLCanvasElement.prototype.getContext
+}

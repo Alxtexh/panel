@@ -50,9 +50,11 @@ function fakeCredential() {
 }
 
 let posted: { url: string; body: any } | null = null
+let consoleError: ReturnType<typeof vi.spyOn>
 
 beforeEach(() => {
     posted = null
+    consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     // The button hides itself without this - see `supported`.
     ;(globalThis as any).PublicKeyCredential = class {}
@@ -85,6 +87,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+    consoleError.mockRestore()
     vi.unstubAllGlobals()
 })
 

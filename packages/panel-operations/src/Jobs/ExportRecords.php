@@ -129,15 +129,29 @@ final class ExportRecords implements ShouldQueue
                 Request::create('/', 'GET', $this->query),
                 $this->ids,
                 self::CHUNK,
-                function (array $rows) use ($handle, $keys): void {
+                function (array $rows) use ($handle, $keys): bool {
+                    if (JobStatus::isCanceled($this->token)) {
+                        return false;
+                    }
+
                     foreach ($rows as $row) {
                         fputcsv($handle, array_map(
                             static fn (string $key): string => self::stringify($row[$key] ?? null),
                             $keys,
                         ));
                     }
+
+                    return ! JobStatus::isCanceled($this->token);
                 },
             );
+
+            if (JobStatus::isCanceled($this->token)) {
+                fclose($handle);
+                $handle = null;
+                Storage::disk(config('panel.exports.disk', 'local'))->delete($path);
+
+                return;
+            }
 
             fclose($handle);
             $handle = null;

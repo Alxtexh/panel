@@ -1,0 +1,15 @@
+{
+    "name": "alxtexh-enterprise/panel-documents",
+    "description": "Optional document templates and rendering module for Panel",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "alxtexh-enterprise/panel": "@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Alxtexh\\Panel\\": "src/"
+        }
+    }
+}

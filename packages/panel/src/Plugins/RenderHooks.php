@@ -33,6 +33,9 @@ namespace Alxtexh\Panel\Plugins;
  */
 final class RenderHooks
 {
+    /** Current render-hook contract version. Increment when a position changes shape. */
+    public const VERSION = 1;
+
     /** Above the page title on a resource list. */
     public const LIST_BEFORE_HEADER = 'list.before-header';
 
@@ -104,5 +107,19 @@ final class RenderHooks
     public static function isPosition(string $position): bool
     {
         return in_array($position, self::positions(), true);
+    }
+
+    public static function positionVersion(string $position): int
+    {
+        if (! self::isPosition($position)) {
+            throw new \InvalidArgumentException("Unknown render position [{$position}].");
+        }
+
+        return self::VERSION;
+    }
+
+    public static function isCompatible(string $position, int $version): bool
+    {
+        return self::isPosition($position) && $version === self::positionVersion($position);
     }
 }

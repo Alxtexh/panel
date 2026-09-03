@@ -8,6 +8,7 @@ use Alxtexh\Panel\Actions\Action;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use InvalidArgumentException;
 
@@ -314,14 +315,33 @@ final class Notification
             default => 'info',
         };
 
-        $user->notify(new BellText(
-            $this->title,
-            $this->body,
-            $this->href ?? $this->firstActionHref(),
-            $severity,
-            $this->serializedActions(),
-            $this->category,
-        ));
+        try {
+            $user->notify(new BellText(
+                $this->title,
+                $this->body,
+                $this->href ?? $this->firstActionHref(),
+                $severity,
+                $this->serializedActions(),
+                $this->category,
+            ));
+
+            Log::info('Panel notification delivered to the database inbox.', [
+                'channel' => 'database',
+                'category' => $this->category,
+                'notification' => static::class,
+                'recipient' => (string) $user->getAuthIdentifier(),
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error('Panel notification delivery failed.', [
+                'channel' => 'database',
+                'category' => $this->category,
+                'notification' => static::class,
+                'recipient' => (string) $user->getAuthIdentifier(),
+                'error' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        }
     }
 
     private function writeToMail(?object $user): void

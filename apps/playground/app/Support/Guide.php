@@ -227,7 +227,7 @@ final class Guide
      */
     public static function pages(): array
     {
-        return [
+        $pages = [
             /* ------------------------------------------------ getting started */
 
             'introduction' => [
@@ -804,6 +804,16 @@ php artisan panel:sitemap-generate          # write sitemap.xml from every regis
                 ],
             ],
         ];
+
+        // Keep the CI-facing validation alias visible alongside the doctor
+        // command without duplicating the large shell reference block.
+        $pages['commands']['blocks'][0]['code'] = str_replace(
+            "php artisan panel:doctor                    # what is silently wrong",
+            "php artisan panel:doctor                    # what is silently wrong\nphp artisan panel:modules                   # inspect optional capability modules\nphp artisan panel:validate                  # CI/operator validation alias with profiles and JSON",
+            $pages['commands']['blocks'][0]['code'],
+        );
+
+        return $pages;
     }
 
     /**

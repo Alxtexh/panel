@@ -457,6 +457,7 @@ function insertChip(token: string) {
             :deletable="field.deletable ?? true"
             :cloneable="field.cloneable ?? false"
             :table="field.table ?? false"
+            :relationship="field.relationship ?? null"
             :disabled="field.disabled || processing"
             :errors="errors"
             :child-options="childOptions"

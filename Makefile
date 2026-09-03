@@ -37,6 +37,19 @@ fresh: ## Drop everything, re-migrate, re-seed
 test: ## Run the playground test suite
 	@$(ARTISAN) test
 
+.PHONY: test-fast
+test-fast: ## Run the fast application unit and focused feature gate
+	@cd $(PLAYGROUND) && timeout 120s php artisan test --testsuite=Unit --stop-on-failure
+	@cd $(PLAYGROUND) && timeout 120s php artisan test --testsuite=Feature --filter='RecordWrite|CrossTenant|Authorization|ExportOwnership|ImportHttp|BulkAction' --stop-on-failure
+
+.PHONY: test-playground-feature
+test-playground-feature: ## Run the complete playground feature suite with a hard bound
+	@cd $(PLAYGROUND) && timeout 180s php artisan test --testsuite=Feature --stop-on-failure
+
+.PHONY: test-security
+test-security: ## Run tenant, authorization, auth, upload, API, and webhook checks
+	@cd $(PLAYGROUND) && timeout 120s php artisan test --testsuite=Feature --filter='Tenant|Authorization|Auth|Security|Upload|Api|Webhook|CrossTenant' --stop-on-failure
+
 .PHONY: browser
 browser: ## Run the browser tests (needs Chrome - see scripts/dusk.sh)
 	@scripts/dusk.sh
@@ -87,10 +100,14 @@ check-client: ## Fail if packages/panel/resources/client is out of sync with pac
 check-page-shell: ## Fail on new mx-auto + max-w-* congested admin chrome (design freeze)
 	@scripts/check-page-shell.sh
 
+.PHONY: check-public-api
+check-public-api: ## Verify the documented package extension surface remains present
+	@php scripts/check-public-api.php
+
 .PHONY: test-package
 test-package: ## Run packages/panel's own suite - Testbench, fixture models, no playground
 	@cd packages/panel && [ -d vendor ] || composer install --no-interaction --no-progress
-	@cd packages/panel && vendor/bin/pest --no-coverage
+	@cd packages/panel && timeout 180s vendor/bin/pest --no-coverage
 
 # THE RELEASE GATE FOR DEMO = KIT. Playground Vite aliases packages/ui source,
 # so a green demo can hide a stale Composer mirror. Before tagging:
@@ -102,7 +119,7 @@ check-css-parity: ## Fail when stub, kit, and playground CSS drift on critical b
 	@scripts/check-css-parity.sh
 
 .PHONY: release-check
-release-check: check-client check-css-parity check-page-shell test-package ## Pre-tag: mirror sync + CSS parity + page-shell freeze + Pest
+release-check: check-client check-css-parity check-page-shell check-public-api test-fast test-package ## Pre-tag: client/CSS/design checks plus fast app, API, and package tests
 	@echo "release-check ok: client mirror matches packages/ui; CSS parity ok; page-shell freeze ok; package tests passed."
 	@echo "Remember: demo UI must match the published kit (sync-client before tag)."
 

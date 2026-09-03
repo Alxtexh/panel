@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Actions;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Support\Deprecation;
 
 /**
  * One step in a declarative record action wizard.
@@ -109,6 +110,7 @@ final class ActionStep
      */
     public function validate(Closure $callback): self
     {
+        Deprecation::warn(__METHOD__, 'onExecute()');
         return $this->onExecute($callback);
     }
 
@@ -137,4 +139,3 @@ final class ActionStep
         return is_array($result) ? $result : null;
     }
 }
-

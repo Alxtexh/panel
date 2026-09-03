@@ -400,24 +400,27 @@ function uploadFor(key: string) {
             class="grid grid-cols-1 gap-4"
             :class="[gridClass, isRoot ? 'border-t px-4 py-4 sm:px-5 sm:py-5' : '']"
         >
-            <SchemaNode
+            <div
                 v-for="(child, i) in node.children ?? []"
                 :key="i"
-                :node="child"
-                :values="values"
-                :errors="errors"
-                :options="options"
-                :processing="processing"
-                :search-options="searchOptions"
-                :upload="upload"
-                :discard="discard"
-                :depth="depth + 1"
                 :class="child.span && child.span >= 2 ? 'sm:col-span-2' : ''"
-                @change="(key: string, value: unknown) => emit('change', key, value)"
-                @affix-action="
-                    (field: string, action: string) => emit('affix-action', field, action)
-                "
-            />
+            >
+                <SchemaNode
+                    :node="child"
+                    :values="values"
+                    :errors="errors"
+                    :options="options"
+                    :processing="processing"
+                    :search-options="searchOptions"
+                    :upload="upload"
+                    :discard="discard"
+                    :depth="depth + 1"
+                    @change="(key: string, value: unknown) => emit('change', key, value)"
+                    @affix-action="
+                        (field: string, action: string) => emit('affix-action', field, action)
+                    "
+                />
+            </div>
         </div>
     </section>
 
@@ -460,22 +463,27 @@ function uploadFor(key: string) {
         class="grid grid-cols-1 gap-4"
         :class="columnsGridClass(node)"
     >
-        <SchemaNode
+        <div
             v-for="(child, i) in node.children ?? []"
             :key="i"
-            :node="child"
-            :values="values"
-            :errors="errors"
-            :options="options"
-            :processing="processing"
-            :search-options="searchOptions"
-            :upload="upload"
-            :discard="discard"
-            :depth="depth + 1"
             :class="child.component === 'column' ? columnSpanClass(child.span) : ''"
-            @change="(key: string, value: unknown) => emit('change', key, value)"
-            @affix-action="(field: string, action: string) => emit('affix-action', field, action)"
-        />
+        >
+            <SchemaNode
+                :node="child"
+                :values="values"
+                :errors="errors"
+                :options="options"
+                :processing="processing"
+                :search-options="searchOptions"
+                :upload="upload"
+                :discard="discard"
+                :depth="depth + 1"
+                @change="(key: string, value: unknown) => emit('change', key, value)"
+                @affix-action="
+                    (field: string, action: string) => emit('affix-action', field, action)
+                "
+            />
+        </div>
     </div>
 
     <!-- Column: one slot inside Columns. -->

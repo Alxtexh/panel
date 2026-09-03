@@ -145,12 +145,20 @@ if [[ "$DO_COMPOSER" == true ]]; then
     echo
     echo "==> Archiving alxtexh-enterprise/panel as a registry would"
 
-    # `git archive` is what GitHub's zipball endpoint runs and where Composer
-    # gets a dist, so it is the only view in which `.gitattributes` applies.
+    # Package the CURRENT WORKTREE, not HEAD. This verifier is run before a
+    # commit during release work, and archiving HEAD would make every local
+    # modernization change invisible to the consumer probe. The explicit
+    # exclusions mirror the package's `.gitattributes` export-ignore rules.
     ARCHIVE="$WORK/panel.tar"
 
-    if ! git archive HEAD:packages/panel > "$ARCHIVE" 2>"$WORK/archive.log"; then
-        echo "FAILED: git archive (commit your changes first - it reads HEAD)" >&2
+    if ! (cd "$ROOT/packages/panel" && tar -cf "$ARCHIVE" \
+            --exclude='./tests' \
+            --exclude='./phpunit.xml' \
+            --exclude='./testbench.yaml' \
+            --exclude='./composer.lock' \
+            --transform='s#^\./##' \
+            .) 2>"$WORK/archive.log"; then
+        echo "FAILED: archiving the current Composer package worktree" >&2
         cat "$WORK/archive.log" >&2
         exit 1
     fi

@@ -1,0 +1,50 @@
+{
+    "Alxtexh\\Panel\\Panel": [
+        "make",
+        "path",
+        "plugins"
+    ],
+    "Alxtexh\\Panel\\Plugins\\PanelPlugin": [
+        "id",
+        "appliesTo",
+        "register",
+        "getVersion",
+        "panelIds"
+    ],
+    "Alxtexh\\Panel\\Plugins\\Plugin": [
+        "dependencies",
+        "health",
+        "configKey",
+        "configRules"
+    ],
+    "Alxtexh\\Panel\\Resources\\Resource": [
+        "model",
+        "definition",
+        "formDefinition",
+        "infolist",
+        "beforeValidate",
+        "afterValidate",
+        "beforeCreate",
+        "afterCreate",
+        "beforeUpdate",
+        "afterUpdate",
+        "beforeDelete",
+        "afterDelete"
+    ],
+    "Alxtexh\\Panel\\Tables\\ListQuery": [
+        "searchable",
+        "summaries",
+        "grouping",
+        "eachMatching"
+    ],
+    "Alxtexh\\Panel\\Actions\\JobStatus": [
+        "start",
+        "startFor",
+        "progress",
+        "finish",
+        "fail",
+        "cancel",
+        "isCanceled",
+        "get"
+    ]
+}

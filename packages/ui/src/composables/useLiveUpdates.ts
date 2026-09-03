@@ -1,4 +1,4 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { getCurrentInstance, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { Ref } from 'vue'
 
 /**
@@ -287,22 +287,29 @@ export function useLiveUpdates(options: LiveUpdateOptions) {
         }
     }
 
-    onMounted(() => {
-        if (config.driver === 'none') {
-            return
-        }
+    // Composables are occasionally exercised as plain functions by consumers
+    // and unit tests. Vue warns when lifecycle hooks are registered without an
+    // active component, so only register browser/component lifecycle work when
+    // this composable is actually running inside setup(). The returned control
+    // methods remain usable in both contexts.
+    if (getCurrentInstance()) {
+        onMounted(() => {
+            if (config.driver === 'none') {
+                return
+            }
 
-        start()
+            start()
 
-        if (config.pauseWhenHidden) {
-            document.addEventListener('visibilitychange', onVisibilityChange)
-        }
-    })
+            if (config.pauseWhenHidden) {
+                document.addEventListener('visibilitychange', onVisibilityChange)
+            }
+        })
 
-    onBeforeUnmount(() => {
-        document.removeEventListener('visibilitychange', onVisibilityChange)
-        stop()
-    })
+        onBeforeUnmount(() => {
+            document.removeEventListener('visibilitychange', onVisibilityChange)
+            stop()
+        })
+    }
 
     return { status, recentlyChanged, applyPatch: queue, flush, pollOnce }
 }

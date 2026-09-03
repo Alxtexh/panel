@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
@@ -21,6 +23,7 @@ use Alxtexh\Panel\CustomFields\CustomFieldFactory;
 use Alxtexh\Panel\Http\NestedContext;
 use Alxtexh\Panel\Http\NestedRelation;
 use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Forms\Fields\RepeaterField;
 use Alxtexh\Panel\Http\Requests\RecordFormRequest;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Resources\Resource;
@@ -93,11 +96,19 @@ final class RecordController extends Controller
             $record->setAttribute($class::parentColumn(), $parent->getKey());
         }
 
-        $this->save($record);
+        $class::beforeCreate($record, $validated);
 
-        if ($parent !== null && NestedRelation::belongsToMany($class)) {
-            NestedRelation::of($parent, $class)->syncWithoutDetaching([$record->getKey()]);
-        }
+        Transaction::run(function () use ($class, $record, $parent, $validated): void {
+            $this->save($record);
+
+            $this->syncRelationshipRepeaters($class, $record, $validated);
+
+            if ($parent !== null && NestedRelation::belongsToMany($class)) {
+                NestedRelation::of($parent, $class)->syncWithoutDetaching([$record->getKey()]);
+            }
+
+            $class::afterCreate($record, $validated);
+        });
 
         return back()->with('success', $class::label().' created.');
     }
@@ -128,7 +139,13 @@ final class RecordController extends Controller
             NestedRelation::restamp($class, $parent, $record);
         }
 
-        $this->save($record);
+        $class::beforeUpdate($record, $validated);
+
+        Transaction::run(function () use ($class, $record, $validated): void {
+            $this->save($record);
+            $this->syncRelationshipRepeaters($class, $record, $validated);
+            $class::afterUpdate($record, $validated);
+        });
 
         return back()->with('success', $class::label().' updated.');
     }
@@ -670,7 +687,12 @@ final class RecordController extends Controller
 
         abort_unless($class::can('delete', $record), 403);
 
-        Transaction::run(static fn () => $record->delete());
+        $class::beforeDelete($record);
+
+        Transaction::run(function () use ($class, $record): void {
+            $record->delete();
+            $class::afterDelete($record);
+        });
 
         return back()->with('success', $class::label().' deleted.');
     }
@@ -930,6 +952,74 @@ final class RecordController extends Controller
         $sanitized['custom'] = $custom;
 
         return $sanitized;
+    }
+
+    /**
+     * Persist relationship repeaters after the parent exists.
+     *
+     * Existing children are resolved through the bound relation, never the
+     * child model globally, so a submitted id cannot update or delete a row
+     * outside this parent. The parent policy already authorizes the form write;
+     * the repeater's child schema is the mass-assignment allowlist.
+     *
+     * @param  array<string, mixed>  $validated
+     */
+    private function syncRelationshipRepeaters(string $class, Model $record, array $validated): void
+    {
+        foreach ($class::formDefinition()->fields() as $field) {
+            if (! $field instanceof RepeaterField || ! $field->isRelationship() || ! array_key_exists($field->key, $validated)) {
+                continue;
+            }
+
+            $name = $field->relationshipName();
+
+            if ($name === null || ! method_exists($record, $name)) {
+                throw new InvalidArgumentException("Repeater relationship [{$name}] does not exist on [{$class}].");
+            }
+
+            $relation = $record->{$name}();
+
+            if (! $relation instanceof HasMany && ! $relation instanceof MorphMany) {
+                throw new InvalidArgumentException(
+                    "Relationship repeater [{$field->key}] requires a HasMany or MorphMany relation."
+                );
+            }
+
+            $retained = [];
+            $existing = $relation->get();
+
+            foreach ($field->rowsForStorage($validated[$field->key]) as $row) {
+                $id = $row['_id'] ?? null;
+                unset($row['_id']);
+
+                if ($id !== null) {
+                    $child = $relation->whereKey($id)->first();
+
+                    if ($child === null) {
+                        throw ValidationException::withMessages([
+                            $field->key => ['A relationship row is no longer available. Reload and try again.'],
+                        ]);
+                    }
+                } else {
+                    $child = $relation->getRelated()->newInstance();
+                }
+
+                // A child may carry its own tenant scope. The parent relation
+                // constrains ownership, but does not stamp the child column.
+                $this->applyTenant($child);
+                $child->forceFill($row);
+                $relation->save($child);
+                $retained[] = $child->getKey();
+            }
+
+            // Delete through the relation instance so its parent constraint,
+            // morph constraint, and child global scopes are all retained.
+            foreach ($existing as $child) {
+                if (! in_array($child->getKey(), $retained, false)) {
+                    $child->delete();
+                }
+            }
+        }
     }
 
     /** @return class-string<resource> */

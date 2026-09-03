@@ -72,6 +72,7 @@ final class BulkController extends Controller
             'all' => ['sometimes', 'boolean'],
             'ids' => ['sometimes', 'array', 'max:'.self::MAX_EXPLICIT_IDS],
             'ids.*' => ['required'],
+            'idempotencyKey' => ['sometimes', 'nullable', 'string', 'max:128'],
         ]);
 
         $definition = $class::definition();
@@ -123,26 +124,37 @@ final class BulkController extends Controller
         $queued = $all || count($ids) > $this->queueThreshold($action);
 
         if ($queued) {
-            $token = JobStatus::token();
-            JobStatus::start($token, $this->actorId(), "bulk:{$action->key}");
-
-            RunBulkAction::dispatch(
-                $resource,
-                $action->key,
-                // The FILTERS travel for select-all - see the job.
-                $this->filterParameters($request),
+            $token = JobStatus::startFor(
                 $this->actorId(),
-                $token,
-                // VALIDATED BEFORE THE JOB IS QUEUED, not inside it. A failure
-                // an operator can fix belongs in the response they are looking
-                // at, not in a worker's log twenty seconds later.
-                $data,
-                // Empty for select-all, which is what makes the filters the
-                // set; populated for a large explicit selection.
-                $all ? [] : $ids,
+                "bulk:{$resource}:{$action->key}",
+                $this->idempotencyKey($request, $validated),
+                function (string $token) use ($resource, $action, $request, $data, $all, $ids): void {
+                    RunBulkAction::dispatch(
+                        $resource,
+                        $action->key,
+                        $this->filterParameters($request),
+                        $this->actorId(),
+                        $token,
+                        $data,
+                        $all ? [] : $ids,
+                    );
+                },
+                $this->fingerprint([
+                    'resource' => $resource,
+                    'action' => $action->key,
+                    'all' => $all,
+                    'ids' => $ids,
+                    'filters' => $this->filterParameters($request),
+                    'data' => $data,
+                ]),
             );
 
-            return response()->json(['status' => JobStatus::PENDING, 'token' => $token]);
+            $state = JobStatus::get($token, $this->actorId());
+
+            return response()->json([
+                'status' => $state['status'] ?? JobStatus::PENDING,
+                'token' => $token,
+            ]);
         }
 
         $list = $definition->toListQuery($class::model());
@@ -196,30 +208,38 @@ final class BulkController extends Controller
             'all' => ['sometimes', 'boolean'],
             'ids' => ['sometimes', 'array', 'max:'.self::MAX_EXPLICIT_IDS],
             'ids.*' => ['required'],
+            'idempotencyKey' => ['sometimes', 'nullable', 'string', 'max:128'],
         ]);
 
         $ids = $this->ids($validated);
-        $token = JobStatus::token();
-
-        JobStatus::start($token, $this->actorId(), 'export');
-
-        ExportRecords::dispatch(
-            $resource,
-            $this->filterParameters($request),
-            ($validated['all'] ?? false) ? null : ($ids === [] ? null : $ids),
+        $token = JobStatus::startFor(
             $this->actorId(),
-            $token,
-            /*
-             * THE LINK IS BUILT HERE, WHERE THE PORTAL IS KNOWN. A queued job has
-             * no request, so it cannot tell whether this export was started from
-             * `/clients` or `/reseller/clients` - and the notification it writes
-             * is stored permanently. Guessing produced a stored link into a
-             * portal that does not serve it.
-             */
-            $this->downloadPath($resource, $token),
+            "export:{$resource}",
+            $this->idempotencyKey($request, $validated),
+            function (string $token) use ($resource, $request, $validated, $ids): void {
+                ExportRecords::dispatch(
+                    $resource,
+                    $this->filterParameters($request),
+                    ($validated['all'] ?? false) ? null : ($ids === [] ? null : $ids),
+                    $this->actorId(),
+                    $token,
+                    $this->downloadPath($resource, $token),
+                );
+            },
+            $this->fingerprint([
+                'resource' => $resource,
+                'all' => (bool) ($validated['all'] ?? false),
+                'ids' => $ids,
+                'filters' => $this->filterParameters($request),
+            ]),
         );
 
-        return response()->json(['status' => JobStatus::PENDING, 'token' => $token]);
+        $state = JobStatus::get($token, $this->actorId());
+
+        return response()->json([
+            'status' => $state['status'] ?? JobStatus::PENDING,
+            'token' => $token,
+        ]);
     }
 
     /** Progress for a queued job. Owner-checked, so a leaked token is inert. */
@@ -246,6 +266,17 @@ final class BulkController extends Controller
             'truncated' => $state['truncated'] ?? false,
             'written' => $state['written'] ?? $state['done'],
         ]);
+    }
+
+    public function cancel(Request $request, string $resource, string $token): JsonResponse
+    {
+        $this->guard($resource);
+
+        if (! JobStatus::cancel($token, $this->actorId())) {
+            throw new NotFoundHttpException('No cancelable job.');
+        }
+
+        return response()->json(['status' => JobStatus::CANCELED, 'token' => $token]);
     }
 
     /**
@@ -322,6 +353,36 @@ final class BulkController extends Controller
         abort_if($id === null, 401);
 
         return $id;
+    }
+
+    /** @param array<string, mixed> $validated */
+    private function idempotencyKey(Request $request, array $validated): ?string
+    {
+        return isset($validated['idempotencyKey'])
+            ? (string) $validated['idempotencyKey']
+            : ($request->header('Idempotency-Key') ?: null);
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function fingerprint(array $payload): string
+    {
+        $normalize = function (mixed $value) use (&$normalize): mixed {
+            if (! is_array($value)) {
+                return $value;
+            }
+
+            $keys = array_keys($value);
+            sort($keys);
+            $normalized = [];
+
+            foreach ($keys as $key) {
+                $normalized[$key] = $normalize($value[$key]);
+            }
+
+            return $normalized;
+        };
+
+        return hash('sha256', json_encode($normalize($payload), JSON_THROW_ON_ERROR));
     }
 
     /** @return class-string<resource> */

@@ -189,7 +189,9 @@ final class Announcement extends Model
 
         return strtr($text, [
             '@user' => $name,
-            '@organisation' => app(DocumentBranding::class)->company(),
+            '@organisation' => (class_exists(DocumentBranding::class) || interface_exists(DocumentBranding::class))
+                ? app(DocumentBranding::class)->company()
+                : (string) config('app.name', 'Panel'),
         ]);
     }
 

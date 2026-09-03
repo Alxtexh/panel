@@ -15,16 +15,17 @@
  * badge lit for as long as a condition persists - which trains people to ignore
  * the badge, and then they miss the notification that mattered.
  *
- * IT FETCHES ONLY WHEN OPENED. A bell that polls in the background costs a
- * request per interval per open tab forever. The unread count arrives with the
- * page payload, so the badge is correct on load with no request at all.
+ * IT FETCHES WHEN OPENED, THEN POLLS ONLY WHILE OPEN. This gives realtime-capable
+ * hosts a natural place to refresh after a push event, while installations that
+ * have no broadcaster still receive new notifications without background work
+ * in every open tab.
  *
  * THE ENDPOINT IS PANEL-PREFIXED, which is the one thing the reference app's
  * version could not do - it wrote `/notifications` in its own source, so a
  * portal mounted at `/reseller` asked the wrong panel and got the wrong bell.
  */
 import { usePage } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { PkSlideover } from '@alxtexh-enterprise/panel'
 import {
     followNotificationAction,
@@ -86,6 +87,7 @@ const notifications = ref<Note[]>([])
 const hasMore = ref(false)
 const loadingMore = ref(false)
 const notificationsPage = ref(1)
+let pollTimer: ReturnType<typeof setInterval> | null = null
 
 /**
  * Whether this person may write an announcement.
@@ -217,7 +219,21 @@ async function loadMore(): Promise<void> {
 function show(): void {
     open.value = true
     void load()
+    if (pollTimer === null) {
+        pollTimer = setInterval(() => {
+            if (open.value && !loading.value) {
+                void load()
+            }
+        }, 30_000)
+    }
 }
+
+onUnmounted(() => {
+    if (pollTimer !== null) {
+        clearInterval(pollTimer)
+        pollTimer = null
+    }
+})
 
 /*
  * THE COUNT MOVES BEFORE THE REQUEST DOES, in all three writes below. Marking a

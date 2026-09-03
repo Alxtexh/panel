@@ -576,10 +576,57 @@ final class PanelManager
                     continue;
                 }
 
+                // A hook built against a future position contract must not be
+                // rendered with today's props shape. Keep it available through
+                // the compatibility report so operators can diagnose the
+                // plugin instead of silently mounting a broken component.
+                if (! Plugins\RenderHooks::isCompatible($hook['position'], $hook['version'])) {
+                    continue;
+                }
+
                 $out[] = [
                     'position' => $hook['position'],
                     'component' => $hook['component'],
                     'props' => $hook['props'],
+                    'version' => $hook['version'],
+                ];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Report render hooks that cannot be safely mounted by this Panel build.
+     *
+     * @return list<array{position: string, component: string, version: int, expectedVersion: int, compatible: bool}>
+     */
+    public function renderHookCompatibility(?string $resource = null, ?string $panelId = null): array
+    {
+        $panel = $panelId === null ? $this->currentPanel() : $this->panel($panelId);
+
+        if ($panel === null) {
+            return [];
+        }
+
+        $this->applyPlugins($panel);
+        $out = [];
+
+        foreach ($this->pluginContexts[$panel->id] ?? [] as $context) {
+            foreach ($context->registeredRenders() as $hook) {
+                $scoped = $hook['resources'];
+
+                if ($scoped !== null && ($resource === null || ! in_array($resource, $scoped, true))) {
+                    continue;
+                }
+
+                $expected = Plugins\RenderHooks::positionVersion($hook['position']);
+                $out[] = [
+                    'position' => $hook['position'],
+                    'component' => $hook['component'],
+                    'version' => $hook['version'],
+                    'expectedVersion' => $expected,
+                    'compatible' => $hook['version'] === $expected,
                 ];
             }
         }

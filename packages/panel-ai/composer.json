@@ -1,0 +1,16 @@
+{
+    "name": "alxtexh-enterprise/panel-ai",
+    "description": "Optional AI integration module for Panel",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "alxtexh-enterprise/panel": "@dev",
+        "laravel/ai": "^0.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Alxtexh\\Panel\\": "src/"
+        }
+    }
+}

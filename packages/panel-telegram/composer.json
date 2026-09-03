@@ -1,0 +1,21 @@
+{
+    "name": "alxtexh-enterprise/panel-telegram",
+    "description": "Optional Telegram delivery module for Panel",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "alxtexh-enterprise/panel": "@dev",
+        "laravel-notification-channels/telegram": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Alxtexh\\Panel\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    }
+}

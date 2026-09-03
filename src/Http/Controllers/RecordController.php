@@ -92,11 +92,17 @@ final class RecordController extends Controller
             $record->setAttribute($class::parentColumn(), $parent->getKey());
         }
 
-        $this->save($record);
+        $class::beforeCreate($record, $validated);
 
-        if ($parent !== null && NestedRelation::belongsToMany($class)) {
-            NestedRelation::of($parent, $class)->syncWithoutDetaching([$record->getKey()]);
-        }
+        Transaction::run(function () use ($class, $record, $parent, $validated): void {
+            $this->save($record);
+
+            if ($parent !== null && NestedRelation::belongsToMany($class)) {
+                NestedRelation::of($parent, $class)->syncWithoutDetaching([$record->getKey()]);
+            }
+
+            $class::afterCreate($record, $validated);
+        });
 
         return back()->with('success', $class::label().' created.');
     }
@@ -127,7 +133,12 @@ final class RecordController extends Controller
             NestedRelation::restamp($class, $parent, $record);
         }
 
-        $this->save($record);
+        $class::beforeUpdate($record, $validated);
+
+        Transaction::run(function () use ($class, $record, $validated): void {
+            $this->save($record);
+            $class::afterUpdate($record, $validated);
+        });
 
         return back()->with('success', $class::label().' updated.');
     }
@@ -438,7 +449,12 @@ final class RecordController extends Controller
 
         abort_unless($class::can('delete', $record), 403);
 
-        Transaction::run(static fn () => $record->delete());
+        $class::beforeDelete($record);
+
+        Transaction::run(function () use ($class, $record): void {
+            $record->delete();
+            $class::afterDelete($record);
+        });
 
         return back()->with('success', $class::label().' deleted.');
     }

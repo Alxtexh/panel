@@ -68,7 +68,9 @@ function skip() {
 </script>
 
 <template>
-    <Head :title="completed ? (completion?.heading ?? 'Setup complete') : (pageHeading ?? 'Setup')" />
+    <Head
+        :title="completed ? (completion?.heading ?? 'Setup complete') : (pageHeading ?? 'Setup')"
+    />
     <div class="bg-muted flex min-h-screen items-center justify-center p-4 sm:p-6">
         <div class="bg-card w-full max-w-2xl rounded-xl border p-6 shadow-sm sm:p-8">
             <PkSetupWizardCompletion

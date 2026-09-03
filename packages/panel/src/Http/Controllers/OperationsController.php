@@ -21,6 +21,7 @@ use Alxtexh\Panel\Support\BackupArchive;
 use Alxtexh\Panel\Support\BackupDestinationProbe;
 use Alxtexh\Panel\Support\BackupSettings;
 use Alxtexh\Panel\Support\BackupStatus;
+use Alxtexh\Panel\Support\OperationStatus;
 use Alxtexh\Panel\Support\DatabaseInspector;
 use Alxtexh\Panel\Support\HealthReport;
 use Alxtexh\Panel\Support\InstallationState;
@@ -137,8 +138,8 @@ final class OperationsController
              * never read - the screen simply showed nothing and looked like a
              * backup that had never been started.
              */
-            'lastRun' => app(InstallationState::class)->get(RunBackupNow::STATE_KEY),
-            'lastRestore' => app(InstallationState::class)->get(RestoreBackup::STATE_KEY),
+            'lastRun' => app(OperationStatus::class)->get(RunBackupNow::STATE_KEY),
+            'lastRestore' => app(OperationStatus::class)->get(RestoreBackup::STATE_KEY),
 
             /*
              * THE MAINTENANCE BYPASS FOR THE RESTORE JUST STARTED.

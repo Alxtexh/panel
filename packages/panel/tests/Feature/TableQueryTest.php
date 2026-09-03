@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Tests\Feature;
 
 use Alxtexh\Panel\Tables\Table;
+use Alxtexh\Panel\Tables\DataProvider;
+use Alxtexh\Panel\Tables\DataProviderResult;
+use Alxtexh\Panel\Tables\Columns\TextColumn;
 use Alxtexh\Panel\Tests\Fixtures\Models\Post;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\Fixtures\Resources\PostResource;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 /**
  * The list surface, tested without borrowing anybody's domain.
@@ -177,5 +181,84 @@ final class TableQueryTest extends TestCase
             ),
             'List SELECT must include the row key. Got: '.implode(', ', array_map('strval', $columns)),
         );
+    }
+
+    public function test_exact_search_mode_matches_the_complete_declared_value(): void
+    {
+        $this->makePosts(0);
+        DB::table('posts')->insert([
+            ['title' => 'Alpha', 'status' => 'draft', 'views' => 1, 'is_featured' => false, 'created_at' => now(), 'updated_at' => now()],
+            ['title' => 'Alpha Extended', 'status' => 'draft', 'views' => 2, 'is_featured' => false, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $table = Table::make()
+            ->columns([
+                TextColumn::make('title')->from('posts.title')->sortable()->searchable(),
+                TextColumn::make('created_at')->from('posts.created_at')->sortable(),
+            ])
+            ->searchMode('exact');
+
+        $result = $table->toListQuery(Post::class)->run(Request::create('/posts', 'GET', ['search' => 'Alpha']));
+
+        $this->assertSame(['Alpha'], array_column($result->records, 'title'));
+    }
+
+    public function test_relevance_search_prioritises_an_exact_value(): void
+    {
+        DB::table('posts')->insert([
+            ['title' => 'Alpha Extended', 'status' => 'draft', 'views' => 1, 'is_featured' => false, 'created_at' => now(), 'updated_at' => now()],
+            ['title' => 'Alpha', 'status' => 'draft', 'views' => 2, 'is_featured' => false, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $table = Table::make()
+            ->columns([
+                TextColumn::make('title')->from('posts.title')->sortable()->searchable(),
+                TextColumn::make('created_at')->from('posts.created_at')->sortable(),
+            ])
+            ->searchMode('relevance');
+
+        $result = $table->toListQuery(Post::class)->run(Request::create('/posts', 'GET', ['search' => 'Alpha']));
+
+        $this->assertSame('Alpha', $result->records[0]['title']);
+    }
+
+    public function test_a_custom_provider_can_supply_a_read_only_page_without_eloquent(): void
+    {
+        $provider = new class implements DataProvider {
+            public function provide(Request $request, array $state, int $perPage): DataProviderResult
+            {
+                return new DataProviderResult(
+                    records: [['id' => 'external-1', 'title' => 'From an API']],
+                    hasMore: false,
+                    nextCursor: null,
+                    total: 1,
+                );
+            }
+        };
+
+        $result = Table::make()
+            ->dataProvider($provider)
+            ->toListQuery(Post::class)
+            ->run(Request::create('/external', 'GET', ['search' => 'anything']));
+
+        $this->assertSame('From an API', $result->records[0]['title']);
+        $this->assertSame(1, ($result->total)());
+        $this->assertSame('exact', $result->countStrategy);
+    }
+
+    public function test_custom_provider_operations_fail_explicitly_instead_of_falling_back_to_eloquent(): void
+    {
+        $provider = new class implements DataProvider {
+            public function provide(Request $request, array $state, int $perPage): DataProviderResult
+            {
+                return new DataProviderResult([], false, null, 0);
+            }
+        };
+
+        $query = Table::make()->dataProvider($provider)->toListQuery(Post::class);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('read-only');
+        $query->matching(Request::create('/external'));
     }
 }

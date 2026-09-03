@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Http\Controllers;
 use Alxtexh\Panel\Actions\ExportedFile;
 use Alxtexh\Panel\Actions\JobStatus;
 use Alxtexh\Panel\Imports\Importer;
+use Alxtexh\Panel\Imports\ImportRetry;
 use Alxtexh\Panel\Imports\RowsReader;
 use Alxtexh\Panel\Jobs\ImportRecords;
 use Alxtexh\Panel\PanelManager;
@@ -56,6 +57,7 @@ final class ImportController extends Controller
             'mapping' => ['required', 'array'],
             'mapping.*' => ['required', 'string'],
             'dryRun' => ['sometimes'],
+            'idempotencyKey' => ['sometimes', 'nullable', 'string', 'max:128'],
         ]);
 
         $dryRun = filter_var($validated['dryRun'] ?? false, FILTER_VALIDATE_BOOLEAN);
@@ -78,14 +80,35 @@ final class ImportController extends Controller
         }
 
         $stored = $this->keepUpload($path);
-        $token = JobStatus::token();
         $userId = Auth::id();
 
         abort_if($userId === null, 403);
 
-        JobStatus::start($token, $userId, 'import');
+        $dispatched = false;
+        $token = JobStatus::startFor(
+            $userId,
+            "import:{$resource}",
+            isset($validated['idempotencyKey'])
+                ? (string) $validated['idempotencyKey']
+                : ($request->header('Idempotency-Key') ?: null),
+            function (string $token) use (&$dispatched, $resource, $stored, $mapping, $userId): void {
+                $dispatched = true;
+                ImportRecords::dispatch($resource, $stored, $mapping, $userId, $token, false);
+            },
+            hash('sha256', json_encode([
+                'resource' => $resource,
+                'mapping' => $mapping,
+                'file' => hash_file('sha256', $stored) ?: basename($stored),
+            ], JSON_THROW_ON_ERROR)),
+        );
 
-        ImportRecords::dispatch($resource, $stored, $mapping, $userId, $token, false);
+        if ($dispatched === false) {
+            // A retry with the same key created a temporary copy before the
+            // shared job store could tell us it was already running. Do not
+            // accumulate orphaned uploads while correctly avoiding a second
+            // dispatch.
+            @unlink($stored);
+        }
 
         $state = JobStatus::get($token, $userId);
 
@@ -131,6 +154,50 @@ final class ImportController extends Controller
         }
 
         return $disk->download($export['path'], 'import-failures.csv');
+    }
+
+    public function retry(Request $request, string $resource, string $token): JsonResponse
+    {
+        $class = $this->guard($resource);
+        $userId = Auth::id();
+        abort_if($userId === null, 403);
+
+        $retry = ImportRetry::find($token, $userId);
+
+        if ($retry === null || $retry['resource'] !== $resource) {
+            throw new NotFoundHttpException('No retryable import.');
+        }
+
+        abort_unless(is_file($retry['source']), 404, 'The original import file is no longer available.');
+
+        $newToken = JobStatus::startFor(
+            $userId,
+            "import-retry:{$resource}:{$token}",
+            $request->header('Idempotency-Key'),
+            function (string $newToken) use ($retry, $resource, $userId, $token): void {
+                ImportRecords::dispatch(
+                    $resource,
+                    $retry['source'],
+                    $retry['mapping'],
+                    $userId,
+                    $newToken,
+                    false,
+                    true,
+                    $retry['failed_lines'],
+                    $token,
+                );
+            },
+            hash('sha256', json_encode($retry, JSON_THROW_ON_ERROR)),
+        );
+
+        $state = JobStatus::get($newToken, $userId);
+
+        return response()->json([
+            'queued' => true,
+            'token' => $newToken,
+            'status' => $state['status'] ?? JobStatus::PENDING,
+            'resource' => $class::key(),
+        ]);
     }
 
     /** @return class-string<resource> */

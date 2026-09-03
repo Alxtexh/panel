@@ -45,6 +45,10 @@ final class Telegram
      */
     public static function configured(): bool
     {
+        if (! class_exists(Client::class)) {
+            return false;
+        }
+
         self::configure();
 
         return self::token() !== '' && self::chat() !== '';
@@ -60,6 +64,10 @@ final class Telegram
      */
     public static function send(string $text, ?string $chat = null): bool
     {
+        if (! class_exists(Client::class)) {
+            return false;
+        }
+
         self::configure();
 
         $chat ??= self::chat();

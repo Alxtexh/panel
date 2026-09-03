@@ -12,6 +12,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Alxtexh\Panel\Support\BackupSettings;
 use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\OperationStatus;
 use Alxtexh\Panel\Support\TenantBackup;
 use Alxtexh\Panel\Support\Tenants;
 
@@ -147,11 +148,12 @@ final class RunBackupNow implements ShouldQueue
 
     private function record(string $state, string $message): void
     {
-        app(InstallationState::class)->put(self::STATE_KEY, [
-            'state' => $state,
-            'message' => $message,
-            'at' => now()->toIso8601String(),
-            'by' => $this->startedBy,
-        ], seconds: 86_400);
+        app(OperationStatus::class)->record(
+            self::STATE_KEY,
+            'backup.manual',
+            $state,
+            $message,
+            ['at' => now()->toIso8601String(), 'by' => $this->startedBy],
+        );
     }
 }

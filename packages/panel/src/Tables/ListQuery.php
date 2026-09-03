@@ -17,6 +17,7 @@ use Alxtexh\Panel\Tables\Filters\Filter;
 use Alxtexh\Panel\Tables\Filters\QueryBuilderFilter;
 use Alxtexh\Panel\Tables\Filters\TrashedFilter;
 use Alxtexh\Panel\Tables\Grouping\Group;
+use Alxtexh\Panel\Support\Deprecation;
 
 /**
  * The shared list query, extracted in Phase 3 from three hardcoded controllers.
@@ -62,6 +63,9 @@ final class ListQuery
     /** Whether a multi-word term is ANDed word by word - see `applySearch()`. */
     private bool $splitSearchTerms = true;
 
+    /** prefix | exact | relevance. */
+    private string $searchMode = 'prefix';
+
     /** @var list<Filter> */
     private array $filters = [];
 
@@ -85,6 +89,8 @@ final class ListQuery
 
     /** @var Closure(list<array<string, mixed>>): void|null */
     private ?Closure $prepareRows = null;
+
+    private ?DataProvider $dataProvider = null;
 
     /**
      * The declared record actions, for per-row availability.
@@ -248,6 +254,26 @@ final class ListQuery
         return $this;
     }
 
+    /** Use a host-owned read-only source instead of the Eloquent query path. */
+    public function dataProvider(DataProvider $provider): self
+    {
+        $this->dataProvider = $provider;
+
+        return $this;
+    }
+
+    /** Select the matching strategy for declared searchable columns. */
+    public function searchMode(string $mode): self
+    {
+        if (! in_array($mode, ['prefix', 'exact', 'relevance'], true)) {
+            throw new InvalidArgumentException("Unknown search mode [{$mode}].");
+        }
+
+        $this->searchMode = $mode;
+
+        return $this;
+    }
+
     /**
      * Columns searched THROUGH a relation, without declaring a join.
      *
@@ -403,6 +429,7 @@ final class ListQuery
      */
     public function groupRowsBy(string $key, string $column): self
     {
+        Deprecation::warn(__METHOD__, 'grouping()');
         $this->groupKey = $key;
         $this->groupColumn = $column;
         $this->activeGroup = Group::make($key);
@@ -596,6 +623,8 @@ final class ListQuery
      */
     public function changedSince(array $ids, string $since): array
     {
+        $this->assertEloquentSource('live updates');
+
         if ($ids === []) {
             return [];
         }
@@ -787,6 +816,8 @@ final class ListQuery
      */
     public function find(int|string $id): ?array
     {
+        $this->assertEloquentSource('record lookup');
+
         /** @var \Illuminate\Database\Eloquent\Builder $eloquent */
         $eloquent = $this->model::query();
 
@@ -831,6 +862,8 @@ final class ListQuery
      */
     public function matching(Request $request, ?array $ids = null): Builder
     {
+        $this->assertEloquentSource('bulk selection');
+
         $query = $this->base($this->readState($request));
 
         if ($ids !== null) {
@@ -862,11 +895,13 @@ final class ListQuery
      * the cost argument alone settles it.
      *
      * @param  list<int|string>|null  $ids
-     * @param  Closure(list<array<string, mixed>>): void  $callback
+     * @param  Closure(list<array<string, mixed>>): (bool|void)  $callback  Return false to stop.
      * @return int Rows emitted.
      */
     public function eachMatching(Request $request, ?array $ids, int $chunkSize, Closure $callback): int
     {
+        $this->assertEloquentSource('exports');
+
         $state = $this->readState($request);
         $key = $this->qualifiedKey();
 
@@ -896,7 +931,9 @@ final class ListQuery
                 $mapped = array_map($this->transform, $mapped);
             }
 
-            $callback($mapped);
+            if ($callback($mapped) === false) {
+                break;
+            }
 
             $emitted += count($mapped);
             /*
@@ -1013,11 +1050,11 @@ final class ListQuery
 
     public function run(Request $request): ListResult
     {
-        if ($this->sortable === []) {
+        if ($this->dataProvider === null && $this->sortable === []) {
             throw new InvalidArgumentException('A list query must declare at least one sortable column.');
         }
 
-        if (! array_key_exists($this->defaultSort, $this->sortable)) {
+        if ($this->dataProvider === null && ! array_key_exists($this->defaultSort, $this->sortable)) {
             throw new InvalidArgumentException(
                 "Default sort [{$this->defaultSort}] is not in the sortable allowlist."
             );
@@ -1030,6 +1067,26 @@ final class ListQuery
         // Request-supplied per-page, but only if it is on the allowlist.
         $requested = (int) $this->param($request, 'perPage', (string) $this->perPage);
         $perPage = in_array($requested, $this->perPageOptions, true) ? $requested : $this->perPage;
+
+        if ($this->dataProvider !== null) {
+            $provided = $this->dataProvider->provide($request, $state, $perPage);
+
+            return new ListResult(
+                records: $this->decorate($provided->records),
+                state: $state,
+                filterSchema: array_map(static fn (Filter $f): array => $f->toArray(), $this->filters),
+                nextCursor: $provided->hasMore ? $provided->nextCursor : null,
+                perPage: $perPage,
+                perPageOptions: $this->perPageOptions,
+                tabs: $this->tabs?->values ?? [],
+                tabCounts: null,
+                summary: null,
+                total: static fn (): int => $provided->total,
+                countStrategy: 'exact',
+                indicators: $this->indicatorsFor($state['filters']),
+                groupBy: $this->activeGroup?->toSchema(),
+            );
+        }
 
         /*
          * ONE ROW MORE THAN THE PAGE, and the extra row is never shown.
@@ -1247,6 +1304,18 @@ final class ListQuery
         $terms = $this->orderingTerms($state['sort'], $column);
 
         $query = $this->base($state)->select($this->selectedColumns());
+
+        if ($this->searchMode === 'relevance' && $state['search'] !== '') {
+            $driver = $query->getConnection()->getDriverName();
+            [$expression, $bindings] = $this->relevanceOrdering(
+                (string) $state['search'],
+                $driver === 'pgsql' ? 'ilike' : 'like',
+            );
+
+            if ($expression !== null) {
+                $query->orderByRaw($expression.' DESC', $bindings);
+            }
+        }
 
         /*
          * Group first, then the chosen sort. That single extra ORDER BY term is
@@ -1467,6 +1536,28 @@ final class ListQuery
             trim($term),
         ) ?? '';
 
+        if ($this->searchMode === 'exact') {
+            $eloquent->where(function (EloquentBuilder $q) use ($normalised): void {
+                foreach ($this->searchable as $i => $column) {
+                    $method = $i === 0 ? 'where' : 'orWhere';
+                    $q->{$method}($column, '=', $normalised);
+                }
+
+                foreach ($this->searchableRelations as $relation => $columns) {
+                    $q->orWhereHas($relation, static function (EloquentBuilder $related) use ($columns, $normalised): void {
+                        $related->where(function (EloquentBuilder $inner) use ($columns, $normalised): void {
+                            foreach ($columns as $i => $column) {
+                                $method = $i === 0 ? 'where' : 'orWhere';
+                                $inner->{$method}($column, '=', $normalised);
+                            }
+                        });
+                    });
+                }
+            });
+
+            return;
+        }
+
         /*
          * SPLITTING IS RIGHT FOR NAMES AND WRONG FOR REFERENCES.
          *
@@ -1529,6 +1620,30 @@ final class ListQuery
         }
     }
 
+    /** @return array{0: string|null, 1: list<string>} */
+    private function relevanceOrdering(string $term, string $like): array
+    {
+        if ($this->searchable === []) {
+            return [null, []];
+        }
+
+        $normalised = preg_replace('/(\s|\x{3164}|\x{1160})+/u', ' ', trim($term)) ?? '';
+        $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $normalised);
+        $startsWith = $escaped.'%';
+        $pattern = '%'.$escaped.'%';
+        $parts = [];
+        $bindings = [];
+
+        foreach ($this->searchable as $column) {
+            $parts[] = "CASE WHEN {$column} = ? THEN 3 WHEN {$column} {$like} ? THEN 2 WHEN {$column} {$like} ? THEN 1 ELSE 0 END";
+            $bindings[] = $normalised;
+            $bindings[] = $startsWith;
+            $bindings[] = $pattern;
+        }
+
+        return [implode(' + ', $parts), $bindings];
+    }
+
     /**
      * The ORDER BY, minus the key: group first, then the chosen sort.
      *
@@ -1572,6 +1687,15 @@ final class ListQuery
     private function wrapColumn(string $column): string
     {
         return $this->model::query()->toBase()->getGrammar()->wrap($column);
+    }
+
+    private function assertEloquentSource(string $operation): void
+    {
+        if ($this->dataProvider !== null) {
+            throw new InvalidArgumentException(
+                "Custom table data providers are read-only and do not support {$operation}."
+            );
+        }
     }
 
     /**

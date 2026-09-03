@@ -98,6 +98,26 @@ final class ExportOwnershipTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_job_status_has_a_common_operations_payload(): void
+    {
+        $token = JobStatus::token();
+        JobStatus::start($token, $this->owner->getKey(), 'export');
+        JobStatus::progress($token, 5, 10);
+
+        $state = JobStatus::get($token, $this->owner->getKey());
+
+        $this->assertSame('export', $state['operation']);
+        $this->assertSame(50, $state['progress']);
+        $this->assertNotNull($state['startedAt']);
+
+        JobStatus::finish($token);
+        $state = JobStatus::get($token, $this->owner->getKey());
+
+        $this->assertSame(JobStatus::DONE, $state['status']);
+        $this->assertSame(100, $state['progress']);
+        $this->assertNotNull($state['finishedAt']);
+    }
+
     public function test_a_colleague_cannot_download_an_export(): void
     {
         $token = JobStatus::token();
@@ -107,6 +127,18 @@ final class ExportOwnershipTest extends TestCase
         $this->actingAs($this->colleague)
             ->get("/articles/jobs/{$token}/download")
             ->assertNotFound();
+    }
+
+    public function test_status_persists_a_resumable_checkpoint(): void
+    {
+        $token = JobStatus::token();
+        JobStatus::start($token, $this->owner->getKey(), 'import');
+
+        JobStatus::checkpoint($token, [2, 4, 4]);
+
+        $state = JobStatus::get($token, $this->owner->getKey());
+
+        $this->assertSame([2, 4], $state['checkpoint']);
     }
 
     public function test_a_guest_cannot_read_a_job_status(): void
@@ -130,5 +162,79 @@ final class ExportOwnershipTest extends TestCase
         $this->actingAs($this->owner)
             ->getJson('/articles/jobs/'.JobStatus::token())
             ->assertNotFound();
+    }
+
+    public function test_an_idempotency_key_reuses_a_job_without_dispatching_twice(): void
+    {
+        $dispatches = 0;
+
+        $first = JobStatus::startFor(
+            $this->owner->getKey(),
+            'export',
+            'same-request',
+            static function () use (&$dispatches): void {
+                $dispatches++;
+            },
+        );
+        $second = JobStatus::startFor(
+            $this->owner->getKey(),
+            'export',
+            'same-request',
+            static function () use (&$dispatches): void {
+                $dispatches++;
+            },
+        );
+
+        $this->assertSame($first, $second);
+        $this->assertSame(1, $dispatches);
+        $this->assertNotSame(
+            $first,
+            JobStatus::startFor($this->colleague->getKey(), 'export', 'same-request'),
+        );
+    }
+
+    public function test_reusing_a_key_for_a_different_request_is_a_conflict(): void
+    {
+        JobStatus::startFor($this->owner->getKey(), 'export', 'same-request', null, 'first-request');
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\ConflictHttpException::class);
+
+        JobStatus::startFor($this->owner->getKey(), 'export', 'same-request', null, 'different-request');
+    }
+
+    public function test_a_failed_dispatch_can_be_retried_with_the_same_key(): void
+    {
+        $attempts = 0;
+
+        try {
+            JobStatus::startFor($this->owner->getKey(), 'export', 'retry-after-failure', function (): void {
+                throw new \RuntimeException('queue unavailable');
+            });
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('queue unavailable', $exception->getMessage());
+        }
+
+        $token = JobStatus::startFor(
+            $this->owner->getKey(),
+            'export',
+            'retry-after-failure',
+            static function () use (&$attempts): void {
+                $attempts++;
+            },
+        );
+
+        $this->assertSame(1, $attempts);
+        $this->assertSame(JobStatus::PENDING, JobStatus::get($token, $this->owner->getKey())['status']);
+    }
+
+    public function test_an_owner_can_cancel_a_live_job_but_a_colleague_cannot(): void
+    {
+        $token = JobStatus::token();
+        JobStatus::start($token, $this->owner->getKey(), 'export');
+
+        $this->assertFalse(JobStatus::cancel($token, $this->colleague->getKey()));
+        $this->assertTrue(JobStatus::cancel($token, $this->owner->getKey()));
+        $this->assertSame(JobStatus::CANCELED, JobStatus::get($token, $this->owner->getKey())['status']);
+        $this->assertFalse(JobStatus::cancel($token, $this->owner->getKey()));
     }
 }

@@ -15,6 +15,7 @@ use Alxtexh\Panel\Support\BackupArchive;
 use Alxtexh\Panel\Support\BackupSettings;
 use Alxtexh\Panel\Support\DatabaseRestorer;
 use Alxtexh\Panel\Support\InstallationState;
+use Alxtexh\Panel\Support\OperationStatus;
 
 /**
  * Put a snapshot's DATABASE back.
@@ -369,13 +370,17 @@ final class RestoreBackup implements ShouldQueue
             $this->step = $step;
         }
 
-        app(InstallationState::class)->put(self::STATE_KEY, [
-            'state' => $state,
-            'message' => $message,
-            'step' => $this->step,
-            'at' => now()->toIso8601String(),
-            'by' => $this->startedBy,
-            'snapshot' => $this->path,
-        ], seconds: 86_400);
+        app(OperationStatus::class)->record(
+            self::STATE_KEY,
+            'backup.restore',
+            $state,
+            $message,
+            [
+                'step' => $this->step,
+                'at' => now()->toIso8601String(),
+                'by' => $this->startedBy,
+                'snapshot' => $this->path,
+            ],
+        );
     }
 }

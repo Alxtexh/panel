@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Tests\Feature;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Tenant;
 use Alxtexh\Panel\Tests\Fixtures\Models\User;
+use Alxtexh\Panel\Tests\Fixtures\Resources\ArticleResource;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -47,6 +48,7 @@ final class RecordWriteTest extends TestCase
         ]);
 
         $this->actingAs($this->user);
+        ArticleResource::resetLifecycleEvents();
     }
 
     private function makeArticle(array $attributes = []): Article
@@ -64,6 +66,28 @@ final class RecordWriteTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(1, Article::query()->where('title', 'Fresh')->count());
+        $this->assertSame(
+            ['beforeValidate', 'afterValidate', 'beforeCreate', 'afterCreate'],
+            ArticleResource::$lifecycleEvents,
+        );
+    }
+
+    public function test_update_and_delete_run_their_resource_lifecycle_hooks(): void
+    {
+        $article = $this->makeArticle();
+
+        $this->put("/articles/{$article->getKey()}", ['title' => 'Renamed', 'status' => 'draft'])
+            ->assertRedirect();
+
+        $this->delete("/articles/{$article->getKey()}")->assertRedirect();
+
+        $this->assertSame(
+            [
+                'beforeValidate', 'afterValidate', 'beforeUpdate', 'afterUpdate',
+                'beforeDelete', 'afterDelete',
+            ],
+            ArticleResource::$lifecycleEvents,
+        );
     }
 
     /**

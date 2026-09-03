@@ -11,8 +11,10 @@
     "require": {
         "php": "^8.3",
         "inertiajs/inertia-laravel": "^3.0",
-        "laravel-notification-channels/telegram": "^7.0",
-        "laravel/ai": "0.10.1",
+        "alxtexh-enterprise/panel-ai": "@dev",
+        "alxtexh-enterprise/panel-documents": "@dev",
+        "alxtexh-enterprise/panel-billing": "@dev",
+        "alxtexh-enterprise/panel-operations": "@dev",
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.17",
@@ -20,6 +22,7 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "alxtexh-enterprise/panel": "@dev",
+        "alxtexh-enterprise/panel-telegram": "@dev",
         "spatie/laravel-backup": "^10.3",
         "spatie/laravel-permission": "^8.3",
         "stancl/tenancy": "^3.10"
@@ -132,6 +135,41 @@
         {
             "type": "path",
             "url": "../../packages/panel",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/panel-telegram",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/panel-ai",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/panel-documents",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/panel-billing",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/panel-operations",
             "options": {
                 "symlink": true
             }

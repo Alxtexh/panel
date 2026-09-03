@@ -93,6 +93,9 @@ final class Table
     /** Whether a multi-word term is ANDed word by word. */
     private bool $splitSearchTerms = true;
 
+    /** prefix | exact | relevance. */
+    private string $searchMode = 'prefix';
+
     /** @var list<BulkAction> */
     private array $bulkActions = [];
 
@@ -114,6 +117,8 @@ final class Table
     private ?string $model = null;
 
     private ?Closure $constrain = null;
+
+    private ?DataProvider $dataProvider = null;
 
     /** The column rows are dragged into order along. */
     private ?string $reorderColumn = null;
@@ -241,6 +246,18 @@ final class Table
     public function splitsSearchTerms(bool $split = true): self
     {
         $this->splitSearchTerms = $split;
+
+        return $this;
+    }
+
+    /** Select prefix, exact, or relevance-ranked global search. */
+    public function searchMode(string $mode): self
+    {
+        if (! in_array($mode, ['prefix', 'exact', 'relevance'], true)) {
+            throw new InvalidArgumentException("Unknown search mode [{$mode}].");
+        }
+
+        $this->searchMode = $mode;
 
         return $this;
     }
@@ -623,6 +640,14 @@ final class Table
         return $this;
     }
 
+    /** Configure a read-only non-Eloquent source for this table. */
+    public function dataProvider(DataProvider $provider): self
+    {
+        $this->dataProvider = $provider;
+
+        return $this;
+    }
+
     /**
      * A predicate that defines what this table lists.
      *
@@ -974,6 +999,7 @@ final class Table
             ->searchable($this->resolveSearchable())
             ->searchableRelations($this->searchableRelations)
             ->splitSearchTerms($this->splitSearchTerms)
+            ->searchMode($this->searchMode)
             ->summaries($this->resolveSummaries())
             ->filters($this->filters)
             ->defaultSort($this->defaultSort, $this->defaultDirection)
@@ -982,6 +1008,10 @@ final class Table
 
         if ($this->query !== null) {
             $query->join($this->query);
+        }
+
+        if ($this->dataProvider !== null) {
+            $query->dataProvider($this->dataProvider);
         }
 
         if ($this->constrain !== null) {

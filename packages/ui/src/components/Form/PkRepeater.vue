@@ -64,6 +64,8 @@ const props = withDefaults(
          * instead of the stacked one-field-per-line layout. No collapse
          * affordance renders in this mode, whatever `collapsible` says. */
         table?: boolean
+        /** Relationship mode preserves the server-issued child id on submit. */
+        relationship?: string | null
         disabled?: boolean
         /** Validation errors for the whole form, keyed by dotted path. */
         errors?: Record<string, string>
@@ -80,7 +82,8 @@ const props = withDefaults(
         addable: true,
         deletable: true,
         cloneable: false,
-        table: false,
+    table: false,
+    relationship: null,
         disabled: false,
         errors: () => ({}),
         childOptions: () => ({}),
@@ -130,6 +133,10 @@ function toValue(): Row[] | null {
     for (const row of rows.value) {
         const clean: Row = {}
         let hasValue = false
+
+        if (props.relationship && row.data._id !== undefined) {
+            clean._id = row.data._id
+        }
 
         for (const child of props.children) {
             const entry = row.data[child.key] ?? null

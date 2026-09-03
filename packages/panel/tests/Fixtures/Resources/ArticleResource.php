@@ -10,6 +10,7 @@ use Alxtexh\Panel\Actions\BulkAction;
 use Alxtexh\Panel\Actions\RecordAction;
 use Alxtexh\Panel\Forms\Fields\CheckboxField;
 use Alxtexh\Panel\Forms\Fields\FileUploadField;
+use Alxtexh\Panel\Forms\Fields\RepeaterField;
 use Alxtexh\Panel\Forms\Fields\TextField;
 use Alxtexh\Panel\Forms\Form;
 use Alxtexh\Panel\Infolists\BadgeEntry;
@@ -40,6 +41,7 @@ use Alxtexh\Panel\Resources\RelationManager;
 use Alxtexh\Panel\Tests\Fixtures\Models\Article;
 use Alxtexh\Panel\Tests\Fixtures\Models\Comment;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
 
 /** The tenant-scoped counterpart of `PostResource`. */
 final class ArticleResource extends Resource
@@ -47,6 +49,59 @@ final class ArticleResource extends Resource
     protected static string $model = Article::class;
 
     protected static string $panel = 'admin';
+
+    /** @var list<string> */
+    public static array $lifecycleEvents = [];
+
+    public static function resetLifecycleEvents(): void
+    {
+        self::$lifecycleEvents = [];
+    }
+
+    public static function beforeValidate(\Illuminate\Http\Request $request): void
+    {
+        self::$lifecycleEvents[] = 'beforeValidate';
+    }
+
+    /** @param array<string, mixed> $data */
+    public static function afterValidate(array $data): void
+    {
+        self::$lifecycleEvents[] = 'afterValidate';
+    }
+
+    /** @param array<string, mixed> $data */
+    public static function beforeCreate(Model $record, array $data): void
+    {
+        self::$lifecycleEvents[] = 'beforeCreate';
+    }
+
+    /** @param array<string, mixed> $data */
+    public static function afterCreate(Model $record, array $data): void
+    {
+        self::$lifecycleEvents[] = 'afterCreate';
+    }
+
+    /** @param array<string, mixed> $data */
+    public static function beforeUpdate(Model $record, array $data): void
+    {
+        self::$lifecycleEvents[] = 'beforeUpdate';
+    }
+
+    /** @param array<string, mixed> $data */
+    public static function afterUpdate(Model $record, array $data): void
+    {
+        self::$lifecycleEvents[] = 'afterUpdate';
+    }
+
+    public static function beforeDelete(Model $record): void
+    {
+        self::$lifecycleEvents[] = 'beforeDelete';
+    }
+
+    public static function afterDelete(Model $record): void
+    {
+        self::$lifecycleEvents[] = 'afterDelete';
+    }
 
     /**
      * A FORM, because without one the write endpoints answer 404.
@@ -60,7 +115,7 @@ final class ArticleResource extends Resource
      */
     public static function form(Form $form): Form
     {
-        return $form->schema([
+        return $form->autosave()->schema([
             TextField::make('title')
                 ->required()
                 ->live()
@@ -91,6 +146,12 @@ final class ArticleResource extends Resource
              * testing.
              */
             FileUploadField::make('attachment')->accept(['pdf', 'txt'])->maxKilobytes(64),
+            RepeaterField::make('comments')
+                ->relationship('comments')
+                ->schema([
+                    TextField::make('body')->required(),
+                    TextField::make('status'),
+                ]),
         ]);
     }
 

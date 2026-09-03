@@ -70,6 +70,7 @@ final class RenderHookTest extends TestCase
                 'component' => 'TrialNotice',
                 'props' => ['daysLeft' => 3],
                 'resources' => null,
+                'version' => RenderHooks::VERSION,
             ],
         ], $context->registeredRenders());
     }

@@ -138,6 +138,26 @@ describe('PkRepeater - rows, not cards', () => {
     })
 })
 
+describe('PkRepeater - relationship rows', () => {
+    it('preserves child ids while still omitting them for JSON repeaters', async () => {
+        const relationship = mountSingle(
+            [{ _id: '7', text: 'Existing' }],
+            { relationship: 'comments' },
+        )
+
+        await relationship.find('input').setValue('Changed')
+        expect(relationship.emitted('update:modelValue')?.at(-1)?.[0]).toEqual([
+            { _id: '7', text: 'Changed' },
+        ])
+
+        const json = mountSingle([{ _id: '7', text: 'Existing' }])
+        await json.find('input').setValue('Changed')
+        expect(json.emitted('update:modelValue')?.at(-1)?.[0]).toEqual([
+            { text: 'Changed' },
+        ])
+    })
+})
+
 describe('PkRepeater - collapsible', () => {
     function mountCollapsible(value: Record<string, unknown>[] | null) {
         return mount(PkRepeater, {

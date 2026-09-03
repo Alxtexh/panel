@@ -1,4 +1,4 @@
-import { onMounted, ref, watch } from 'vue'
+import { getCurrentInstance, onMounted, ref, watch } from 'vue'
 
 /**
  * Column widths in pixels, persisted per user in localStorage.
@@ -36,9 +36,11 @@ function readStored(storageKey: string): Record<string, number> {
 export function useColumnWidths(storageKey: string) {
     const widths = ref<Record<string, number>>(readStored(storageKey))
 
-    onMounted(() => {
-        widths.value = readStored(storageKey)
-    })
+    if (getCurrentInstance()) {
+        onMounted(() => {
+            widths.value = readStored(storageKey)
+        })
+    }
 
     watch(
         widths,

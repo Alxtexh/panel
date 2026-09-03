@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Alxtexh\Panel\Forms\Fields;
 
 use InvalidArgumentException;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
  * A repeating group of fields, stored as a JSON array of objects.
@@ -51,6 +53,8 @@ final class RepeaterField extends Field
 
     private bool $table = false;
 
+    private ?string $relationship = null;
+
     public function type(): string
     {
         return 'repeater';
@@ -79,6 +83,28 @@ final class RepeaterField extends Field
         $this->children = array_values($fields);
 
         return $this;
+    }
+
+    /** Store rows in a declared parent relation instead of a JSON column. */
+    public function relationship(string $name): self
+    {
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $name) !== 1) {
+            throw new InvalidArgumentException("Invalid repeater relationship [{$name}].");
+        }
+
+        $this->relationship = $name;
+
+        return $this;
+    }
+
+    public function isRelationship(): bool
+    {
+        return $this->relationship !== null;
+    }
+
+    public function relationshipName(): ?string
+    {
+        return $this->relationship;
     }
 
     public function minItems(int $min): self
@@ -220,6 +246,10 @@ final class RepeaterField extends Field
     {
         $rules = [];
 
+        if ($this->relationship !== null) {
+            $rules["{$this->key}.*._id"] = ['nullable'];
+        }
+
         foreach ($this->children as $child) {
             $rules["{$this->key}.*.{$child->key}"] = $child->rules();
 
@@ -252,11 +282,16 @@ final class RepeaterField extends Field
      */
     public function transformForStorage(mixed $value): mixed
     {
+        return $this->rowsForStorage($value, preserveIds: false) ?: null;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function rowsForStorage(mixed $value, bool $preserveIds = true): array
+    {
         if (! is_array($value)) {
-            return null;
+            return [];
         }
 
-        $keys = array_map(static fn (Field $f): string => $f->key, $this->children);
         $out = [];
 
         foreach ($value as $row) {
@@ -267,22 +302,53 @@ final class RepeaterField extends Field
             $clean = [];
             $hasValue = false;
 
-            foreach ($keys as $key) {
-                $entry = $row[$key] ?? null;
+            if ($preserveIds && array_key_exists('_id', $row) && $row['_id'] !== null && $row['_id'] !== '') {
+                $clean['_id'] = (string) $row['_id'];
+            }
 
-                $clean[$key] = $entry;
+            foreach ($this->children as $child) {
+                $entry = $row[$child->key] ?? null;
+                $clean[$child->key] = $child->transformForStorage($entry);
 
                 if ($entry !== null && $entry !== '' && $entry !== []) {
                     $hasValue = true;
                 }
             }
 
-            if ($hasValue) {
+            if ($hasValue || isset($clean['_id'])) {
                 $out[] = $clean;
             }
         }
 
-        return $out === [] ? null : $out;
+        return $out;
+    }
+
+    /** Hydrate a relationship into the same row shape the client submits. */
+    public function valuesFrom(?Model $record): array
+    {
+        if ($this->relationship === null || $record === null || ! method_exists($record, $this->relationship)) {
+            return parent::valuesFrom($record);
+        }
+
+        $relation = $record->{$this->relationship}();
+
+        if (! $relation instanceof Relation) {
+            throw new InvalidArgumentException("Repeater relationship [{$this->relationship}] is not an Eloquent relation.");
+        }
+
+        $rows = [];
+
+        foreach ($relation->get() as $child) {
+            $row = ['_id' => (string) $child->getKey()];
+
+            foreach ($this->children as $field) {
+                $row[$field->key] = $field->presentValue($child->getAttribute($field->key));
+            }
+
+            $rows[] = $row;
+        }
+
+        return [$this->key => $rows];
     }
 
     /** @return array<string, mixed> Structure only; children as their own schema. */
@@ -298,6 +364,7 @@ final class RepeaterField extends Field
             'deletable' => $this->deletable,
             'cloneable' => $this->cloneable,
             'table' => $this->table,
+            'relationship' => $this->relationship,
             'children' => array_map(static fn (Field $f): array => $f->toSchema(), $this->children),
         ];
     }
