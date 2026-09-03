@@ -245,6 +245,35 @@ abstract class Resource
         return $form;
     }
 
+    /**
+     * Prepare a record request before its form rules run.
+     *
+     * Hosts may normalize request input here (for example, trim a code or
+     * map an external value) without replacing the panel's server-side form
+     * validation. The request object is intentionally passed by reference so
+     * `merge()`/`replace()` are available while the raw input is still intact.
+     */
+    public static function beforeValidate(Request $request): void {}
+
+    /** @param array<string, mixed> $data */
+    public static function afterValidate(array $data): void {}
+
+    /** @param array<string, mixed> $data */
+    public static function beforeCreate(Model $record, array $data): void {}
+
+    /** @param array<string, mixed> $data */
+    public static function afterCreate(Model $record, array $data): void {}
+
+    /** @param array<string, mixed> $data */
+    public static function beforeUpdate(Model $record, array $data): void {}
+
+    /** @param array<string, mixed> $data */
+    public static function afterUpdate(Model $record, array $data): void {}
+
+    public static function beforeDelete(Model $record): void {}
+
+    public static function afterDelete(Model $record): void {}
+
     public static function formDefinition(): Form
     {
         $form = static::form(Form::make());

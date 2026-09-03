@@ -58,28 +58,56 @@ final class PruneUploadsCommand extends Command
         foreach ($disk->directories('tenants') as $tenant) {
             $pending = $tenant.'/pending';
 
-            if (! $disk->directoryExists($pending)) {
+            if ($disk->directoryExists($pending)) {
+                foreach ($disk->files($pending) as $file) {
+                    // The sidecar goes with its file, not on its own schedule.
+                    if (str_ends_with($file, '.json')) {
+                        continue;
+                    }
+
+                    if ($disk->lastModified($file) > $cutoff) {
+                        continue;
+                    }
+
+                    $size = $disk->size($file);
+
+                    if (! $dryRun) {
+                        $disk->delete([$file, $file.'.json']);
+                    }
+
+                    $removed++;
+                    $bytes += $size;
+                }
+            }
+
+            $chunkRoot = $tenant.'/pending-chunks';
+
+            if (! $disk->directoryExists($chunkRoot)) {
                 continue;
             }
 
-            foreach ($disk->files($pending) as $file) {
-                // The sidecar goes with its file, not on its own schedule.
-                if (str_ends_with($file, '.json')) {
-                    continue;
+            foreach ($disk->directories($chunkRoot) as $session) {
+                $files = $disk->files($session);
+                $latest = 0;
+                $sessionBytes = 0;
+
+                foreach ($files as $file) {
+                    $latest = max($latest, $disk->lastModified($file));
+                    $sessionBytes += $disk->size($file);
                 }
 
-                if ($disk->lastModified($file) > $cutoff) {
+                // Check every chunk, not only meta.json: a client may have
+                // uploaded a chunk while metadata was being read.
+                if ($files === [] || $latest > $cutoff) {
                     continue;
                 }
-
-                $size = $disk->size($file);
 
                 if (! $dryRun) {
-                    $disk->delete([$file, $file.'.json']);
+                    $disk->deleteDirectory($session);
                 }
 
                 $removed++;
-                $bytes += $size;
+                $bytes += $sessionBytes;
             }
         }
 

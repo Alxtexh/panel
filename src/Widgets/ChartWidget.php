@@ -6,9 +6,11 @@ namespace Alxtexh\Panel\Widgets;
 
 use Closure;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Alxtexh\Panel\Support\Ability;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -84,6 +86,11 @@ final class ChartWidget
     private ?string $ability = null;
 
     private ?Closure $format = null;
+
+    private ?int $ttl = null;
+
+    /** @var list<class-string> */
+    private array $invalidatedBy = [];
 
     /** @var list<array{max: int|float, color: string}> */
     private array $thresholds = [];
@@ -169,6 +176,26 @@ final class ChartWidget
     public function withPeriods(bool $enabled = true): self
     {
         $this->periodSelector = $enabled;
+
+        return $this;
+    }
+
+    /** Cache this chart per tenant and period, with an explicit invalidation contract. */
+    public function cache(int $ttl): self
+    {
+        if ($ttl < 1) {
+            throw new InvalidArgumentException('A chart cache TTL must be positive.');
+        }
+
+        $this->ttl = $ttl;
+
+        return $this;
+    }
+
+    /** @param list<class-string> $events */
+    public function invalidatedBy(array $events): self
+    {
+        $this->invalidatedBy = $events;
 
         return $this;
     }
@@ -301,7 +328,20 @@ final class ChartWidget
         }
 
         try {
-            $resolved = ($this->data)($period, $now);
+            if ($this->ttl !== null && $this->invalidatedBy === []) {
+                throw new RuntimeException(
+                    "Chart [{$this->key}] is cached but declares no invalidation events."
+                );
+            }
+
+            $resolve = fn (): mixed => ($this->data)($period, $now);
+            $resolved = $this->ttl === null
+                ? $resolve()
+                : Cache::remember(
+                    "panel:chart:{$this->key}:{$tenantKey}:{$period->value}",
+                    $this->ttl,
+                    $resolve,
+                );
 
             /*
              * A `table` CHART SHORT-CIRCUITS HERE. Rows are not points on any

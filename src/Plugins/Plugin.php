@@ -79,6 +79,44 @@ abstract class Plugin implements PanelPlugin
     }
 
     /**
+     * Optional runtime dependencies expressed as class or interface names.
+     * Doctor can validate these without requiring a package-manager-specific
+     * implementation, while the plugin remains free to use Composer normally.
+     *
+     * @return list<class-string>
+     */
+    public function dependencies(): array
+    {
+        return [];
+    }
+
+    /**
+     * Optional host/plugin health findings for `panel:doctor`.
+     *
+     * @return list<array{level?: 'problem'|'note', title: string, detail: string, suggested?: string}>
+     */
+    public function health(): array
+    {
+        return [];
+    }
+
+    /** The config key whose value is validated by configRules(), if any. */
+    public function configKey(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Optional Laravel validation rules for plugin configuration.
+     *
+     * @return array<string, string|array<int, mixed>>
+     */
+    public function configRules(): array
+    {
+        return [];
+    }
+
+    /**
      * Register this plugin into the provided panel.
      *
      * The base class implements the contract methods listed in the
@@ -194,9 +232,16 @@ abstract class Plugin implements PanelPlugin
      *
      * @param  array<string, mixed>  $props
      * @param  list<string>|null  $resources
+     * @param  int  $version  Render-hook contract version.
      */
-    protected function render(string $position, string $component, array $props = [], ?array $resources = null): void
+    protected function render(
+        string $position,
+        string $component,
+        array $props = [],
+        ?array $resources = null,
+        int $version = RenderHooks::VERSION,
+    ): void
     {
-        $this->pluginContext()->render($position, $component, $props, $resources);
+        $this->pluginContext()->render($position, $component, $props, $resources, $version);
     }
 }

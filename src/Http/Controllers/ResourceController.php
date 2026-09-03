@@ -17,6 +17,7 @@ use Alxtexh\Panel\CustomFields\CustomField;
 use Alxtexh\Panel\CustomFields\CustomFieldFactory;
 use Alxtexh\Panel\CustomFields\CustomFieldStorage;
 use Alxtexh\Panel\Forms\Form;
+use Alxtexh\Panel\Forms\DraftStore;
 use Alxtexh\Panel\Forms\Fields\Field;
 use Alxtexh\Panel\Widgets;
 use Alxtexh\Panel\Forms\Fields\SelectField;
@@ -147,6 +148,101 @@ final class ResourceController extends Controller
         }
 
         return response()->json($this->formStatePayload($class, $form, $values));
+    }
+
+    /** Save a version-checked server draft for a create form. */
+    public function saveDraft(Request $request, string $resource): JsonResponse
+    {
+        return $this->writeDraft($request, $resource, null);
+    }
+
+    /** Save a version-checked server draft for an edit form. */
+    public function saveRecordDraft(Request $request, string $resource, string $id): JsonResponse
+    {
+        return $this->writeDraft($request, $resource, $id);
+    }
+
+    public function draft(Request $request, string $resource, ?string $id = null): JsonResponse
+    {
+        $class = $this->guard($resource);
+        $validated = $request->validate(['draftKey' => ['required', 'string', 'max:80']]);
+        $record = $this->draftRecord($request, $class, $id ?? $request->input('id'));
+
+        abort_unless($record === null ? $class::can('create') : $class::can('update', $record), 403);
+
+        $draft = DraftStore::get((string) $request->user()->getAuthIdentifier(), $class::key(), $validated['draftKey']);
+
+        if ($draft === null) {
+            return response()->json(['draft' => null]);
+        }
+
+        $current = $record?->updated_at?->toIso8601String();
+
+        return response()->json([
+            'draft' => $draft,
+            'stale' => $record !== null && $draft['version'] !== $current,
+            'currentVersion' => $current,
+        ], $record !== null && $draft['version'] !== $current ? 409 : 200);
+    }
+
+    public function forgetDraft(Request $request, string $resource, ?string $id = null): JsonResponse
+    {
+        $class = $this->guard($resource);
+        $validated = $request->validate(['draftKey' => ['required', 'string', 'max:80']]);
+        $record = $this->draftRecord($request, $class, $id ?? $request->input('id'));
+
+        abort_unless($record === null ? $class::can('create') : $class::can('update', $record), 403);
+        DraftStore::forget((string) $request->user()->getAuthIdentifier(), $class::key(), $validated['draftKey']);
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function writeDraft(Request $request, string $resource, ?string $id): JsonResponse
+    {
+        $class = $this->guard($resource);
+        $form = $class::formDefinition();
+        abort_unless($form->toSchema()['autosave'] ?? false, 404);
+        $validated = $request->validate([
+            'draftKey' => ['required', 'string', 'max:80'],
+            'values' => ['required', 'array'],
+            'version' => ['nullable', 'string', 'max:64'],
+        ]);
+        $record = $this->draftRecord($request, $class, $id);
+
+        abort_unless($record === null ? $class::can('create') : $class::can('update', $record), 403);
+        $current = $record?->updated_at?->toIso8601String();
+
+        if ($record !== null && $validated['version'] !== $current) {
+            return response()->json(['message' => 'The record changed since this draft began.', 'currentVersion' => $current], 409);
+        }
+
+        DraftStore::put(
+            (string) $request->user()->getAuthIdentifier(),
+            $class::key(),
+            $validated['draftKey'],
+            $form->sanitize($validated['values']),
+            $validated['version'] ?? null,
+        );
+
+        return response()->json(['ok' => true, 'version' => $current, 'savedAt' => now()->toIso8601String()]);
+    }
+
+    private function draftRecord(Request $request, string $class, mixed $id): ?Model
+    {
+        if ($id === null || $id === '') {
+            NestedContext::parent($request, $class);
+
+            return null;
+        }
+
+        $query = $class::model()::query();
+        $parent = NestedContext::parent($request, $class);
+
+        if ($parent !== null) {
+            NestedRelation::constrain($query, $class, $parent);
+        }
+
+        return $query->findOrFail($id);
     }
 
     /**

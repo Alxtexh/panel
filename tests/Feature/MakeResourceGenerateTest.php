@@ -54,7 +54,9 @@ final class MakeResourceGenerateTest extends TestCase
     {
         $resource = app_path('Panel/Resources/ArticleResource.php');
         $policy = app_path('Policies/ArticlePolicy.php');
-        $this->forget($resource, $policy);
+        $factory = base_path('database/factories/ArticleFactory.php');
+        $contractTest = base_path('tests/Feature/Panel/ArticleResourceTest.php');
+        $this->forget($resource, $policy, $factory, $contractTest);
 
         $this->artisan('make:panel-resource', ['model' => 'Article', '--generate' => true, '--force' => true])
             ->assertSuccessful();
@@ -67,6 +69,10 @@ final class MakeResourceGenerateTest extends TestCase
         $this->assertStringContainsString('TrashedFilter::make', $code);
         $this->assertStringContainsString('make:panel-relation-manager Article Comment', $code);
         $this->assertStringNotContainsString("make('deleted_at')", $code);
+        $this->assertFileExists($factory);
+        $this->assertFileExists($contractTest);
+        $this->assertStringContainsString('class ArticleFactory', (string) file_get_contents($factory));
+        $this->assertStringContainsString('test_the_generated_resource', (string) file_get_contents($contractTest));
 
         exec('php -l '.escapeshellarg($resource).' 2>&1', $output, $status);
         $this->assertSame(0, $status, implode("\n", $output));

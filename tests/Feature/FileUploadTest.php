@@ -130,6 +130,50 @@ final class FileUploadTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_a_host_scanner_can_reject_an_upload_before_storage(): void
+    {
+        $scanned = false;
+        $this->app['config']->set('panel.uploads.scanner', function (UploadedFile $file) use (&$scanned): bool {
+            $scanned = true;
+
+            return false;
+        });
+
+        $this->upload(UploadedFile::fake()->create('blocked.txt', 4, 'text/plain'))
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'The file was rejected by the security scanner.');
+
+        $this->assertTrue($scanned);
+        $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
+    public function test_chunked_uploads_assemble_into_a_normal_pending_handle(): void
+    {
+        $first = $this->postJson('/articles/uploads/chunk', [
+            'field' => 'attachment',
+            'chunk' => 0,
+            'total' => 2,
+            'filename' => 'chunked.txt',
+            'file' => UploadedFile::fake()->createWithContent('chunked.txt', 'hello '),
+        ])->assertStatus(202);
+
+        $uploadId = $first->json('uploadId');
+        $this->assertNotEmpty($uploadId);
+
+        $second = $this->postJson('/articles/uploads/chunk', [
+            'field' => 'attachment',
+            'uploadId' => $uploadId,
+            'chunk' => 1,
+            'total' => 2,
+            'filename' => 'chunked.txt',
+            'file' => UploadedFile::fake()->createWithContent('chunked.txt', 'world'),
+        ])->assertStatus(201);
+
+        $this->assertTrue($second->json('complete'));
+        $this->assertNotEmpty($second->json('handle'));
+        $this->assertNotEmpty(Storage::disk('local')->allFiles());
+    }
+
     /**
      * A TRAVERSING FILENAME CANNOT ESCAPE THE DIRECTORY IT IS GIVEN.
      *

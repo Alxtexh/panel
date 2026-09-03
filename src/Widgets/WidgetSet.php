@@ -103,21 +103,33 @@ final class WidgetSet
 
         foreach ($stats as $widget) {
             $props[$prefix.'_stat_'.$widget->key] = Inertia::defer(
-                static fn (): array => $widget->resolve($tenantKey),
+                static fn (): array => WidgetBudget::observe(
+                    'StatWidget',
+                    $widget->key,
+                    static fn (): array => $widget->resolve($tenantKey),
+                ),
                 $prefix.'-widgets',
             );
         }
 
         foreach ($charts as $chart) {
             $props[$prefix.'_chart_'.$chart->key] = Inertia::defer(
-                static fn (): array => $chart->resolve(Period::default(), $tenantKey, new \DateTimeImmutable),
+                static fn (): array => WidgetBudget::observe(
+                    'ChartWidget',
+                    $chart->key,
+                    static fn (): array => $chart->resolve(Period::default(), $tenantKey, new \DateTimeImmutable),
+                ),
                 $prefix.'-widgets',
             );
         }
 
         foreach ($tables as $table) {
             $props[$prefix.'_table_'.$table->key] = Inertia::defer(
-                static fn (): array => $table->resolve(),
+                static fn (): array => WidgetBudget::observe(
+                    'TableWidget',
+                    $table->key,
+                    static fn (): array => $table->resolve(),
+                ),
                 $prefix.'-widgets',
             );
         }

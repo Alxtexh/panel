@@ -11,6 +11,7 @@ use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
 
 /**
@@ -119,6 +120,14 @@ final class CommandsTest extends TestCase
         $this->artisan('panel:blueprint')->assertSuccessful();
     }
 
+    public function test_modules_command_reports_capability_boundaries_as_json(): void
+    {
+        $this->artisan('panel:modules', ['--json' => true])
+            ->assertSuccessful()
+            ->expectsOutputToContain('"core"')
+            ->expectsOutputToContain('"operations"');
+    }
+
     /* --------------------------------------------------------- prune-trash */
 
     public function test_prune_trash_removes_records_past_the_window(): void
@@ -173,6 +182,27 @@ final class CommandsTest extends TestCase
             Article::withoutGlobalScopes()->withTrashed()->find($recent->getKey()),
             'An explicit --days window was ignored.',
         );
+    }
+
+    public function test_prune_uploads_removes_inactive_chunk_sessions_only(): void
+    {
+        Storage::fake('local');
+        $old = "tenants/{$this->tenant->id}/pending-chunks/old-session";
+        $recent = "tenants/{$this->tenant->id}/pending-chunks/recent-session";
+
+        Storage::disk('local')->put($old.'/meta.json', '{}');
+        Storage::disk('local')->put($old.'/chunk-0', 'old');
+        Storage::disk('local')->put($recent.'/meta.json', '{}');
+        Storage::disk('local')->put($recent.'/chunk-0', 'recent');
+
+        $oldTime = now()->subHours(48)->getTimestamp();
+        touch(Storage::disk('local')->path($old.'/meta.json'), $oldTime);
+        touch(Storage::disk('local')->path($old.'/chunk-0'), $oldTime);
+
+        $this->artisan('panel:prune-uploads --hours=24')->assertSuccessful();
+
+        Storage::disk('local')->assertMissing($old.'/chunk-0');
+        Storage::disk('local')->assertExists($recent.'/chunk-0');
     }
 
     /* --------------------------------------------------------- permissions */

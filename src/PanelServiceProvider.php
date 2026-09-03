@@ -67,15 +67,17 @@ final class PanelServiceProvider extends ServiceProvider
          * can replace one by registering the same id, without having to worry
          * about ordering.
          */
-        $this->app->singleton(Documents\DocumentKinds::class, static function (): Documents\DocumentKinds {
-            $kinds = new Documents\DocumentKinds;
+        if (class_exists(Documents\DocumentKinds::class)) {
+            $this->app->singleton(Documents\DocumentKinds::class, static function (): Documents\DocumentKinds {
+                $kinds = new Documents\DocumentKinds;
 
-            $kinds->register(new Documents\Kinds\InvoiceKind);
-            $kinds->register(new Documents\Kinds\ReceiptKind);
-            $kinds->register(new Documents\Kinds\VoucherKind);
+                $kinds->register(new Documents\Kinds\InvoiceKind);
+                $kinds->register(new Documents\Kinds\ReceiptKind);
+                $kinds->register(new Documents\Kinds\VoucherKind);
 
-            return $kinds;
-        });
+                return $kinds;
+            });
+        }
 
         /*
          * WHERE A DOCUMENT'S LETTERHEAD COMES FROM.
@@ -89,9 +91,13 @@ final class PanelServiceProvider extends ServiceProvider
          * long-lived binding under Octane would serve one customer's name on
          * another's invoice.
          */
-        $this->app->scopedIf(Documents\DocumentBranding::class, Documents\TenantBranding::class);
+        if (interface_exists(Documents\DocumentBranding::class)) {
+            $this->app->scopedIf(Documents\DocumentBranding::class, Documents\TenantBranding::class);
+        }
 
-        $this->app->singleton(Documents\DocumentRenderer::class);
+        if (class_exists(Documents\DocumentRenderer::class)) {
+            $this->app->singleton(Documents\DocumentRenderer::class);
+        }
 
         /*
          * Scoped, because it memoizes rows it has read. Installation settings
@@ -183,14 +189,13 @@ final class PanelServiceProvider extends ServiceProvider
          * PUBLISHING STAYS GUARDED, because it genuinely only means something to
          * `vendor:publish`.
          */
-        $this->commands([
+        $commands = [
             Commands\BackupCommand::class,
             Commands\BillingCheckCommand::class,
             Commands\BlueprintCommand::class,
             Commands\CacheClearCommand::class,
             Commands\InstallCommand::class,
             Commands\SetupCommand::class,
-            Commands\DispatchScheduledReportsCommand::class,
             Commands\IndexKnowledgeCommand::class,
             Commands\MakeApiTokenCommand::class,
             Commands\MakePageCommand::class,
@@ -207,6 +212,8 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\MakeRecipeCommand::class,
             Commands\ReindexTenantCommand::class,
             Commands\DoctorCommand::class,
+            Commands\ModulesCommand::class,
+            Commands\ValidateCommand::class,
             Commands\SuspendTenantCommand::class,
             Commands\UpdateCommand::class,
             Commands\MonitorSampleCommand::class,
@@ -218,7 +225,14 @@ final class PanelServiceProvider extends ServiceProvider
             Commands\PruneTrashCommand::class,
             Commands\PruneUploadsCommand::class,
             Commands\NotificationsDigestCommand::class,
-        ]);
+        ];
+
+        // Operations are optional; core must still boot without their command.
+        if (class_exists('Alxtexh\\Panel\\Commands\\DispatchScheduledReportsCommand')) {
+            $commands[] = 'Alxtexh\\Panel\\Commands\\DispatchScheduledReportsCommand';
+        }
+
+        $this->commands($commands);
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -288,7 +302,9 @@ final class PanelServiceProvider extends ServiceProvider
          * tenant. Attached rather than forked, because the package is 0.x and a
          * fork would be silently dropped by the next `composer update`.
          */
-        Ai\TenantScopedConversations::attach();
+        if (class_exists(Ai\TenantScopedConversations::class)) {
+            Ai\TenantScopedConversations::attach();
+        }
         // Roadmap 5.4: an announcement whose composer chose the bell or
         // Telegram delivers there once, on create.
         Alerts\AnnouncementDelivery::attach();
@@ -619,6 +635,12 @@ final class PanelServiceProvider extends ServiceProvider
      */
     private function registerTelegram(): void
     {
+        if (! class_exists(\NotificationChannels\Telegram\Telegram::class)
+            || ! class_exists(Alerts\Telegram::class)
+            || ! class_exists(Notifications\Channels\TelegramChannel::class)) {
+            return;
+        }
+
         Alerts\Telegram::configure();
 
         Notification::resolved(

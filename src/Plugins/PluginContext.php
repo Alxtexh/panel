@@ -48,7 +48,7 @@ final class PluginContext
     /**
      * Markup a plugin injects at a named position - roadmap 4.4.
      *
-     * @var list<array{position: string, component: string, props: array<string, mixed>, resources: list<string>|null}>
+     * @var list<array{position: string, component: string, props: array<string, mixed>, resources: list<string>|null, version: int}>
      */
     private array $renders = [];
 
@@ -187,12 +187,14 @@ final class PluginContext
      *
      * @param  array<string, mixed>  $props  Serialised into the page payload.
      * @param  list<string>|null  $resources  Resource keys to limit this to; null is everywhere.
+     * @param  int  $version  Render-hook contract version; defaults to the current version.
      */
     public function render(
         string $position,
         string $component,
         array $props = [],
         ?array $resources = null,
+        int $version = RenderHooks::VERSION,
     ): self {
         if (! RenderHooks::isPosition($position)) {
             throw new InvalidArgumentException(
@@ -206,6 +208,7 @@ final class PluginContext
             'component' => $component,
             'props' => $props,
             'resources' => $resources,
+            'version' => $version,
         ];
 
         return $this;
@@ -226,7 +229,7 @@ final class PluginContext
     }
 
     /**
-     * @return list<array{position: string, component: string, props: array<string, mixed>, resources: list<string>|null}>
+     * @return list<array{position: string, component: string, props: array<string, mixed>, resources: list<string>|null, version: int}>
      */
     public function registeredRenders(): array
     {

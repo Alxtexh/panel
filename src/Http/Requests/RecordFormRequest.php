@@ -99,6 +99,16 @@ final class RecordFormRequest extends FormRequest
         return $this->resourceClass()::formDefinition()->rules();
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->resourceClass()::beforeValidate($this);
+    }
+
+    protected function passedValidation(): void
+    {
+        $this->resourceClass()::afterValidate($this->validated());
+    }
+
     /**
      * THE RESOURCE THIS REQUEST IS ABOUT, resolved from the route rather than
      * from the body - a resource key taken from input would let a caller

@@ -318,6 +318,7 @@ final class PanelRoutes
         if ($panel->hasLogin()) {
             $loginGroup = Route::middleware([
                 Middleware\UsePanel::class.':'.$panel->id,
+                Middleware\SecurityHeaders::class,
                 ...$panel->getGuestMiddleware(),
                 Middleware\SharePanelProps::class,
             ]);
@@ -434,6 +435,7 @@ final class PanelRoutes
         if (Auth\SocialProviders::offered($panel) !== []) {
             Route::middleware([
                 Middleware\UsePanel::class.':'.$panel->id,
+                Middleware\SecurityHeaders::class,
                 ...$panel->getGuestMiddleware(),
                 Middleware\SharePanelProps::class,
             ])
@@ -453,6 +455,7 @@ final class PanelRoutes
          */
         Route::middleware([
             Middleware\UsePanel::class.':'.$panel->id,
+            Middleware\SecurityHeaders::class,
             ...$panel->getGuestMiddleware(),
         ])
             ->prefix($panel->getPath())
@@ -465,6 +468,8 @@ final class PanelRoutes
 
         $mainGroup = Route::middleware([
             Middleware\UsePanel::class.':'.$panel->id,
+            Middleware\SecurityHeaders::class,
+            Middleware\PayloadLimit::class,
             ...$panel->getMiddleware(),
 
             /*
@@ -1116,7 +1121,7 @@ final class PanelRoutes
                  * whose readers receive invoices has no business designing the
                  * letterhead they arrive on.
                  */
-                if ($panel->offers('documents')) {
+                if ($panel->offers('documents') && class_exists(\Alxtexh\Panel\Documents\DocumentKinds::class)) {
                     Route::prefix('documents')->name('documents.')->group(function (): void {
                         Route::get('/', [Controllers\DocumentTemplateController::class, 'index'])
                             ->name('index');
@@ -1261,6 +1266,13 @@ final class PanelRoutes
         Route::post('{resource}/form-state', [ResourceController::class, 'formState'])
             ->whereIn('resource', $keys)->name('formState');
 
+        Route::post('{resource}/draft', [ResourceController::class, 'saveDraft'])
+            ->whereIn('resource', $keys)->name('draft.store');
+        Route::get('{resource}/draft', [ResourceController::class, 'draft'])
+            ->whereIn('resource', $keys)->name('draft');
+        Route::delete('{resource}/draft', [ResourceController::class, 'forgetDraft'])
+            ->whereIn('resource', $keys)->name('draft.forget');
+
         Route::post('{resource}/form-action', [ResourceController::class, 'formAction'])
             ->whereIn('resource', $keys)->name('formAction');
 
@@ -1275,6 +1287,10 @@ final class PanelRoutes
             ->whereNumber('id')
             ->name('pick.choose');
 
+        if (class_exists(ImportController::class)
+            && class_exists(BulkController::class)
+            && class_exists('Alxtexh\\Panel\\Imports\\Importer')
+            && class_exists('Alxtexh\\Panel\\Jobs\\ExportRecords')) {
         Route::post('{resource}/import/inspect', [ImportController::class, 'inspect'])
             ->whereIn('resource', $keys)->name('import.inspect');
 
@@ -1335,10 +1351,21 @@ final class PanelRoutes
             ->where('token', '[0-9a-fA-F-]{36}')
             ->name('job');
 
+        Route::post('{resource}/jobs/{token}/cancel', [BulkController::class, 'cancel'])
+            ->whereIn('resource', $keys)
+            ->where('token', '[0-9a-fA-F-]{36}')
+            ->name('job.cancel');
+
         Route::get('{resource}/jobs/{token}/download', [BulkController::class, 'download'])
             ->whereIn('resource', $keys)
             ->where('token', '[0-9a-fA-F-]{36}')
             ->name('job.download');
+
+        Route::post('{resource}/imports/{token}/retry', [ImportController::class, 'retry'])
+            ->whereIn('resource', $keys)
+            ->where('token', '[0-9a-fA-F-]{36}')
+            ->name('import.retry');
+        }
 
         /*
          * The upload endpoint takes the resource but no record: a file is chosen
@@ -1348,6 +1375,9 @@ final class PanelRoutes
          */
         Route::post('{resource}/uploads', [UploadController::class, 'store'])
             ->whereIn('resource', $keys)->name('upload');
+
+        Route::post('{resource}/uploads/chunk', [UploadController::class, 'chunk'])
+            ->whereIn('resource', $keys)->name('upload.chunk');
 
         Route::delete('{resource}/uploads', [UploadController::class, 'destroy'])
             ->whereIn('resource', $keys)->name('upload.discard');
@@ -1363,6 +1393,13 @@ final class PanelRoutes
 
         Route::get('{resource}/{id}', [ResourceController::class, 'show'])
             ->whereIn('resource', $keys)->whereNumber('id')->name('show');
+
+        Route::post('{resource}/{id}/draft', [ResourceController::class, 'saveRecordDraft'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('record.draft.store');
+        Route::get('{resource}/{id}/draft', [ResourceController::class, 'draft'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('record.draft');
+        Route::delete('{resource}/{id}/draft', [ResourceController::class, 'forgetDraft'])
+            ->whereIn('resource', $keys)->whereNumber('id')->name('record.draft.forget');
 
         Route::get('{resource}/{id}/relations/{relation}', [ResourceController::class, 'relation'])
             ->whereIn('resource', $keys)

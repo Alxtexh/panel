@@ -35,7 +35,7 @@ final class BulkRunner
     /**
      * @param  QueryBuilder  $target  The filtered, tenant-scoped set.
      * @param  class-string<Model>  $model
-     * @param  Closure(int): void|null  $onProgress  Called with the running total.
+     * @param  Closure(int): (bool|void)|null  $onProgress  Return false to stop after the current chunk.
      * @return int How many records were actually written.
      */
     public function run(
@@ -68,7 +68,9 @@ final class BulkRunner
             $affected += $this->apply($action, $model, $keyColumn, $chunk, $data);
 
             if ($onProgress !== null) {
-                $onProgress($affected);
+                if ($onProgress($affected) === false) {
+                    break;
+                }
             }
 
             // A short chunk means the end of the set; asking again costs a

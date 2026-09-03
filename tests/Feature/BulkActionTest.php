@@ -10,6 +10,8 @@ use Alxtexh\Panel\Tests\Fixtures\Models\User;
 use Alxtexh\Panel\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
+use Alxtexh\Panel\Jobs\RunBulkAction;
 
 /**
  * One decision applied to many rows.
@@ -188,5 +190,40 @@ final class BulkActionTest extends TestCase
             count($writes),
             'A bulk mutation issued one UPDATE per record: '.count($writes).' for 20 rows.',
         );
+    }
+
+    public function test_a_queued_bulk_retry_with_the_same_key_dispatches_once(): void
+    {
+        Queue::fake();
+        config(['panel.bulk.queue_threshold' => 1]);
+        $ids = $this->makeArticles(2);
+
+        $payload = ['action' => 'publish', 'ids' => $ids, 'idempotencyKey' => 'bulk-retry'];
+
+        $this->postJson('/articles/bulk', $payload)->assertOk();
+        $this->postJson('/articles/bulk', $payload)->assertOk();
+
+        Queue::assertPushed(RunBulkAction::class, 1);
+    }
+
+    public function test_a_queued_bulk_key_cannot_be_reused_for_different_rows(): void
+    {
+        Queue::fake();
+        config(['panel.bulk.queue_threshold' => 1]);
+        $ids = $this->makeArticles(3);
+
+        $this->postJson('/articles/bulk', [
+            'action' => 'publish',
+            'ids' => [$ids[0], $ids[1]],
+            'idempotencyKey' => 'bulk-retry',
+        ])->assertOk();
+
+        $this->postJson('/articles/bulk', [
+            'action' => 'publish',
+            'ids' => [$ids[1], $ids[2]],
+            'idempotencyKey' => 'bulk-retry',
+        ])->assertStatus(409);
+
+        Queue::assertPushed(RunBulkAction::class, 1);
     }
 }

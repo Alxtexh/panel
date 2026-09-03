@@ -62,6 +62,8 @@ final class RenderHooksSurfaceTest extends TestCase
     {
         $this->assertTrue(RenderHooks::isPosition(RenderHooks::DASHBOARD_AFTER));
         $this->assertContains(RenderHooks::DASHBOARD_AFTER, RenderHooks::positions());
+        $this->assertTrue(RenderHooks::isCompatible(RenderHooks::DASHBOARD_AFTER, RenderHooks::VERSION));
+        $this->assertFalse(RenderHooks::isCompatible(RenderHooks::DASHBOARD_AFTER, RenderHooks::VERSION + 1));
     }
 
     public function test_the_create_page_carries_form_hooks_scoped_to_this_resource(): void
@@ -159,4 +161,5 @@ final class RenderHooksSurfaceTest extends TestCase
             array_column($hooks, 'component'),
         );
     }
+
 }

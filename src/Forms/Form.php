@@ -37,6 +37,8 @@ final class Form
 
     private int $columns = 1;
 
+    private ?int $autosaveMilliseconds = null;
+
     public static function make(): self
     {
         return new self;
@@ -81,6 +83,18 @@ final class Form
         return $this;
     }
 
+    /** Opt into version-aware local draft recovery for this form. */
+    public function autosave(int $milliseconds = 1000): self
+    {
+        if ($milliseconds < 250 || $milliseconds > 60000) {
+            throw new \InvalidArgumentException('Form autosave debounce must be between 250 and 60000 milliseconds.');
+        }
+
+        $this->autosaveMilliseconds = $milliseconds;
+
+        return $this;
+    }
+
     /**
      * Every field, at any nesting depth.
      *
@@ -110,6 +124,8 @@ final class Form
     {
         $schema = [
             'columns' => $this->columns,
+            'autosave' => $this->autosaveMilliseconds !== null,
+            'autosaveMilliseconds' => $this->autosaveMilliseconds,
             // The TREE, so the client can render layout. Fields are leaves.
             'nodes' => array_map(
                 static fn (Component|Renderable $n): array => $n->toSchema(),
@@ -278,6 +294,13 @@ final class Form
                     $out[$field->key] = $field->transformForStorage($absent);
                 }
 
+                continue;
+            }
+
+            if ($field instanceof RepeaterField && $field->isRelationship()) {
+                // Relationship rows are persisted after the parent exists.
+                // Keeping them out of the parent mass-assignment payload makes
+                // it impossible to accidentally write them into a JSON column.
                 continue;
             }
 

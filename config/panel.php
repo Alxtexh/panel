@@ -13,6 +13,11 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return [
 
+    'deprecations' => [
+        'warn' => (bool) env('PANEL_DEPRECATION_WARN', true),
+        'log' => (bool) env('PANEL_DEPRECATION_LOG', false),
+    ],
+
     /*
     |---------------------------------------------------------------------------
     | Schema cache
@@ -76,6 +81,20 @@ return [
     'uploads' => [
         'disk' => env('PANEL_UPLOAD_DISK', 'local'),
         'max_kilobytes' => (int) env('PANEL_UPLOAD_MAX_KB', 10240),
+        // Optional host callback: fn (UploadedFile $file): bool. Returning
+        // false, or throwing, rejects the upload before it reaches storage.
+        'scanner' => null,
+        'max_chunks' => (int) env('PANEL_UPLOAD_MAX_CHUNKS', 1000),
+    ],
+
+    /* Optional because a host may need to add its own Vite/analytics origins. */
+    'security' => [
+        'content_security_policy' => env('PANEL_CONTENT_SECURITY_POLICY'),
+        'max_payload_kilobytes' => (int) env('PANEL_MAX_PAYLOAD_KB', 25600),
+    ],
+
+    'drafts' => [
+        'ttl' => (int) env('PANEL_DRAFT_TTL', 86400),
     ],
 
     'pagination' => [
@@ -83,6 +102,11 @@ return [
         'per_page_options' => [10, 25, 50, 100],
         'keyset_threshold' => 10_000,
         'count_strategy' => env('PANEL_COUNT_STRATEGY', 'deferred'), // deferred|approximate|none
+    ],
+
+    'widgets' => [
+        // Set to 0 to disable query-budget observation.
+        'query_budget' => (int) env('PANEL_WIDGET_QUERY_BUDGET', 50),
     ],
 
     /*

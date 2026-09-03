@@ -7,6 +7,7 @@ namespace Alxtexh\Panel\Files;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use DateTimeInterface;
 use InvalidArgumentException;
 use Alxtexh\Panel\Support\TenantContext;
 use RuntimeException;
@@ -144,6 +145,139 @@ final class FileStore
     }
 
     /**
+     * Accept one chunk and assemble the normal pending-file handle on the last.
+     *
+     * Chunk metadata is tenant- and owner-bound. Chunks are never trusted as a
+     * complete file: the assembled bytes go through acceptPending(), so the
+     * existing size, MIME, extension, and host scanner checks remain the final
+     * authority.
+     *
+     * @param  list<string>  $extensions
+     * @return array{uploadId: string, complete: bool, handle?: string, name?: string, size?: int}
+     */
+    public static function acceptChunk(
+        UploadedFile $file,
+        ?string $uploadId,
+        int $chunk,
+        int $total,
+        string $name,
+        array $extensions,
+        int $maxKilobytes,
+    ): array {
+        $maxChunks = max(1, (int) config('panel.uploads.max_chunks', 1000));
+
+        if ($total < 1 || $total > $maxChunks || $chunk < 0 || $chunk >= $total) {
+            throw new InvalidArgumentException('The upload chunk sequence is invalid.');
+        }
+
+        if ($uploadId === null) {
+            $uploadId = (string) Str::uuid();
+        }
+
+        if (preg_match('/^[0-9a-f-]{36}$/i', $uploadId) !== 1) {
+            throw new InvalidArgumentException('The upload session is invalid.');
+        }
+
+        $disk = Storage::disk(self::disk());
+        $directory = self::tenantSegment().'/pending-chunks/'.$uploadId;
+        $metadataPath = $directory.'/meta.json';
+        $metadata = $disk->exists($metadataPath)
+            ? json_decode((string) $disk->get($metadataPath), true)
+            : null;
+
+        if (! is_array($metadata)) {
+            $metadata = [
+                'owner' => (string) (auth()->id() ?? ''),
+                'tenant' => self::tenantSegment(),
+                'name' => self::safeDisplayName($name),
+                'total' => $total,
+                'received' => [],
+                'size' => 0,
+            ];
+        }
+
+        if (($metadata['owner'] ?? null) !== (string) (auth()->id() ?? '')
+            || ($metadata['tenant'] ?? null) !== self::tenantSegment()
+            || (int) ($metadata['total'] ?? 0) !== $total) {
+            throw new InvalidArgumentException('The upload session does not belong to the current user.');
+        }
+
+        $path = $directory.'/chunk-'.$chunk;
+        $oldSize = $disk->exists($path) ? $disk->size($path) : 0;
+        $disk->makeDirectory($directory);
+        $disk->putFileAs($directory, $file, 'chunk-'.$chunk);
+        $newSize = $disk->size($path);
+        $metadata['size'] = (int) ($metadata['size'] ?? 0) - $oldSize + $newSize;
+
+        if ($metadata['size'] > $maxKilobytes * 1024) {
+            self::forgetChunked($uploadId);
+            throw new InvalidArgumentException("The file is larger than {$maxKilobytes} KB.");
+        }
+
+        $received = array_fill_keys(array_map('intval', (array) ($metadata['received'] ?? [])), true);
+        $received[$chunk] = true;
+        $metadata['received'] = array_map('intval', array_keys($received));
+        sort($metadata['received']);
+        $disk->put($metadataPath, json_encode($metadata, JSON_THROW_ON_ERROR));
+
+        if (count($metadata['received']) !== $total) {
+            return ['uploadId' => $uploadId, 'complete' => false];
+        }
+
+        $assembled = tempnam(sys_get_temp_dir(), 'panel-upload-');
+        $output = $assembled === false ? false : fopen($assembled, 'wb');
+
+        if ($output === false) {
+            self::forgetChunked($uploadId);
+            throw new InvalidArgumentException('The upload could not be assembled.');
+        }
+
+        try {
+            for ($index = 0; $index < $total; $index++) {
+                $input = fopen($disk->path($directory.'/chunk-'.$index), 'rb');
+
+                if ($input === false) {
+                    throw new InvalidArgumentException('The upload chunk is unavailable.');
+                }
+
+                stream_copy_to_stream($input, $output);
+                fclose($input);
+            }
+
+            fclose($output);
+            $pending = self::acceptPending(
+                new UploadedFile($assembled, $metadata['name'], null, null, true),
+                $extensions,
+                $maxKilobytes,
+            );
+        } finally {
+            if (is_resource($output)) {
+                fclose($output);
+            }
+
+            if (is_string($assembled)) {
+                @unlink($assembled);
+            }
+            self::forgetChunked($uploadId);
+        }
+
+        return [
+            'uploadId' => $uploadId,
+            'complete' => true,
+            ...$pending->toArray(),
+        ];
+    }
+
+    public static function forgetChunked(string $uploadId): void
+    {
+        if (preg_match('/^[0-9a-f-]{36}$/i', $uploadId) !== 1) {
+            return;
+        }
+
+        Storage::disk(self::disk())->deleteDirectory(self::tenantSegment().'/pending-chunks/'.$uploadId);
+    }
+
+    /**
      * Move a pending upload to its permanent home and return the stored path.
      *
      * OWNERSHIP IS RE-CHECKED HERE, not only at upload. The handle makes a round
@@ -221,6 +355,22 @@ final class FileStore
             throw new InvalidArgumentException(
                 "The file's contents ({$mime}) do not match its .{$extension} extension.",
             );
+        }
+
+        $scanner = config('panel.uploads.scanner');
+
+        if (is_callable($scanner)) {
+            try {
+                if ($scanner($file) === false) {
+                    throw new InvalidArgumentException('The file was rejected by the security scanner.');
+                }
+            } catch (InvalidArgumentException $e) {
+                throw $e;
+            } catch (Throwable) {
+                // A scanner outage must fail closed, without exposing scanner
+                // internals or allowing an uninspected file into storage.
+                throw new InvalidArgumentException('The file could not be cleared by the security scanner.');
+            }
         }
     }
 
@@ -315,6 +465,30 @@ final class FileStore
             'name' => self::safeDisplayName((string) ($meta['name'] ?? basename($path))),
             'size' => (int) ($meta['size'] ?? $disk->size($path)),
         ];
+    }
+
+    /**
+     * Issue a short-lived signed URL from a private-capable storage adapter.
+     *
+     * This method does not authorize a record; callers must do that first.
+     * It does enforce the current tenant prefix, so an authorized caller still
+     * cannot mint a link for another tenant's path by mistake.
+     *
+     * @param  array<string, string>  $options
+     */
+    public static function temporaryUrl(string $path, DateTimeInterface $expiration, array $options = []): string
+    {
+        if (! self::belongsToCurrentTenant($path)) {
+            throw new RuntimeException('The file does not belong to the current tenant.');
+        }
+
+        $disk = Storage::disk(self::disk());
+
+        if (! method_exists($disk, 'temporaryUrl')) {
+            throw new RuntimeException('The configured upload disk cannot issue temporary URLs.');
+        }
+
+        return (string) $disk->temporaryUrl($path, $expiration, $options);
     }
 
     /**

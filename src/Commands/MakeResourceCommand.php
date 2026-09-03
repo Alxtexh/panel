@@ -139,6 +139,8 @@ final class MakeResourceCommand extends Command
         $this->components->info("Created {$path}");
 
         $this->writePolicy($model, $modelClass);
+        $this->writeFactory($model, $modelClass);
+        $this->writeContractTest($model, $modelClass, $namespace);
 
         if ($this->option('generate')) {
             /*
@@ -272,6 +274,90 @@ final class MakeResourceCommand extends Command
 
         $this->components->info("Created {$path}");
         $this->components->info("{$model}Policy denies until `panel:permissions sync` grants the abilities.");
+    }
+
+    private function writeFactory(string $model, string $modelClass): void
+    {
+        $path = database_path("factories/{$model}Factory.php");
+
+        if (file_exists($path)) {
+            return;
+        }
+
+        if (! is_dir(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
+
+        $stub = <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace Database\Factories;
+
+        use {$modelClass};
+        use Illuminate\Database\Eloquent\Factories\Factory;
+
+        /** @extends Factory<{$model}> */
+        class {$model}Factory extends Factory
+        {
+            protected $model = {$model}::class;
+
+            /**
+             * Add domain-safe defaults here. The empty definition is deliberate:
+             * guessing required business fields would create invalid fixtures.
+             *
+             * @return array<string, mixed>
+             */
+            public function definition(): array
+            {
+                return [];
+            }
+        }
+
+        PHP;
+
+        file_put_contents($path, $stub);
+        $this->components->info("Created {$path}");
+    }
+
+    private function writeContractTest(string $model, string $modelClass, string $namespace): void
+    {
+        $path = base_path("tests/Feature/Panel/{$model}ResourceTest.php");
+
+        if (file_exists($path)) {
+            return;
+        }
+
+        if (! is_dir(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
+
+        $resourceClass = "{$namespace}\\{$model}Resource";
+        $stub = <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace Tests\Feature\Panel;
+
+        use {$modelClass};
+        use {$resourceClass};
+        use Tests\TestCase;
+
+        final class {$model}ResourceTest extends TestCase
+        {
+            public function test_the_generated_resource_exposes_a_model_and_table_schema(): void
+            {
+                self::assertSame({$model}::class, {$model}Resource::model());
+                self::assertNotEmpty({$model}Resource::definition()->getColumns());
+            }
+        }
+
+        PHP;
+
+        file_put_contents($path, $stub);
+        $this->components->info("Created {$path}");
     }
 
     /**

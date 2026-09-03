@@ -1310,6 +1310,10 @@ final class Blueprint
      */
     private static function documentVocabulary(): string
     {
+        if (! class_exists(Documents\DocumentKinds::class)) {
+            return '';
+        }
+
         $kinds = app(Documents\DocumentKinds::class)->all();
 
         if ($kinds === []) {

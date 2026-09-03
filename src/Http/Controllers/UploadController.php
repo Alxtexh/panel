@@ -70,6 +70,39 @@ final class UploadController extends Controller
         return response()->json($pending->toArray(), 201);
     }
 
+    /** Accept one chunk; the final response has the ordinary pending handle. */
+    public function chunk(Request $request, string $resource): JsonResponse
+    {
+        $validated = $request->validate([
+            'file' => ['required', 'file'],
+            'field' => ['required', 'string', 'max:64'],
+            'uploadId' => ['sometimes', 'nullable', 'uuid'],
+            'chunk' => ['required', 'integer', 'min:0'],
+            'total' => ['required', 'integer', 'min:1', 'max:'.max(1, (int) config('panel.uploads.max_chunks', 1000))],
+            'filename' => ['sometimes', 'string', 'max:255'],
+        ]);
+
+        $class = $this->resolve($resource);
+        abort_unless($class::can('create') || $class::can('update'), 403);
+        $field = $this->field($class, $validated['field']);
+
+        try {
+            $result = FileStore::acceptChunk(
+                $request->file('file'),
+                $validated['uploadId'] ?? null,
+                (int) $validated['chunk'],
+                (int) $validated['total'],
+                (string) ($validated['filename'] ?? $request->file('file')->getClientOriginalName()),
+                $field->extensions(),
+                $field->limitKilobytes(),
+            );
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json($result, $result['complete'] ? 201 : 202);
+    }
+
     /** Discard a pending upload the user removed before saving. */
     public function destroy(Request $request, string $resource): JsonResponse
     {

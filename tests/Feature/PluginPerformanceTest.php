@@ -8,6 +8,9 @@ use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\PanelManager;
 use Alxtexh\Panel\Tests\Fixtures\Plugins\CountingRegisterPlugin;
 use Alxtexh\Panel\Tests\Fixtures\Plugins\LazyConstructPlugin;
+use Alxtexh\Panel\Tests\Fixtures\Plugins\HealthCheckPlugin;
+use Alxtexh\Panel\Tests\Fixtures\Plugins\MissingDependencyPlugin;
+use Alxtexh\Panel\Tests\Fixtures\Plugins\ConfigSchemaPlugin;
 use Alxtexh\Panel\Tests\TestCase;
 
 final class PluginPerformanceTest extends TestCase
@@ -90,6 +93,37 @@ final class PluginPerformanceTest extends TestCase
         $panels->resourcesFor('lazy-target');
 
         self::assertSame(1, LazyConstructPlugin::$constructed);
+    }
+
+    public function test_doctor_runs_optional_plugin_health_contract(): void
+    {
+        PanelManager::forgetPlugins();
+        config(['panel.plugins' => [HealthCheckPlugin::class]]);
+
+        $this->artisan('panel:doctor')
+            ->expectsOutputToContain('Fixture is healthy');
+    }
+
+    public function test_doctor_reports_missing_optional_plugin_dependency(): void
+    {
+        PanelManager::forgetPlugins();
+        config(['panel.plugins' => [MissingDependencyPlugin::class]]);
+
+        $this->artisan('panel:doctor')
+            ->expectsOutputToContain('missing dependency');
+    }
+
+    public function test_doctor_reports_invalid_plugin_configuration(): void
+    {
+        PanelManager::forgetPlugins();
+        config([
+            'panel.plugins' => [ConfigSchemaPlugin::class],
+            'tests.plugin' => ['endpoint' => 'not-a-url'],
+        ]);
+
+        $this->artisan('panel:doctor')
+            ->expectsOutputToContain('invalid configuration')
+            ->assertFailed();
     }
 
     public function test_doctor_reports_missing_plugin_class(): void

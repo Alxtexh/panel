@@ -143,6 +143,43 @@ final class ImportHttpTest extends TestCase
         $this->assertSame(0, Article::query()->where('title', 'Second')->count());
     }
 
+    public function test_retry_reprocesses_only_the_durable_failed_lines(): void
+    {
+        Schema::table('articles', function ($table): void {
+            $table->unique('slug');
+        });
+
+        Article::withoutGlobalScopes()->create([
+            'tenant_id' => $this->user->tenant_id,
+            'title' => 'Existing',
+            'slug' => 'taken-slug',
+            'status' => 'draft',
+        ]);
+
+        $csv = UploadedFile::fake()->createWithContent(
+            'rows.csv',
+            "title,slug,status\nFirst,new-slug,draft\nSecond,taken-slug,draft\n",
+        );
+
+        $payload = $this->post('/articles/import', [
+            'file' => $csv,
+            'mapping' => ['title' => 'title', 'slug' => 'slug', 'status' => 'status'],
+        ])->assertOk()->json();
+
+        $this->assertSame(1, $payload['failed']);
+        $token = $payload['token'];
+
+        Article::withoutGlobalScopes()->where('title', 'Existing')->firstOrFail()->forceDelete();
+
+        $retry = $this->post("/articles/imports/{$token}/retry", [], [
+            'Idempotency-Key' => 'retry-'.$token,
+        ])->assertOk()->json();
+
+        $this->assertSame('done', $retry['status']);
+        $this->assertSame(1, Article::query()->where('title', 'First')->count());
+        $this->assertSame(1, Article::query()->where('title', 'Second')->count());
+    }
+
     public function test_failed_rows_are_downloadable(): void
     {
         $csv = UploadedFile::fake()->createWithContent('rows.csv', "title,status\n,draft\n");
