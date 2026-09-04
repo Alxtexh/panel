@@ -402,19 +402,14 @@ final class Panel
      *
      * @var list<string>
      */
-    private const LANDING_DESIGNS = [
-        'aurora', 'editorial', 'console', 'studio',
-        'product', 'agency', 'restaurant', 'hotel', 'portfolio', 'dashboard',
-    ];
+    private const LANDING_DESIGNS = [];
 
     /**
      * Host-facing aliases that resolve to a shipped landing design.
      *
      * @var array<string, string>
      */
-    private const LANDING_ALIASES = [
-        'composed' => 'aurora',
-    ];
+    private const LANDING_ALIASES = [];
 
     /**
      * Whether this panel enabled the public landing route via `landing()`.
@@ -1622,7 +1617,7 @@ final class Panel
             $resolved = self::LANDING_ALIASES[$design] ?? $design;
             $this->landingDesign = in_array($resolved, self::LANDING_DESIGNS, true)
                 ? $resolved
-                : 'aurora';
+                : null;
             config(['panel.landing.design' => $this->landingDesign]);
         }
 
