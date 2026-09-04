@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import { PkSlideover } from '@alxtexh-enterprise/panel'
+import { closePanelInfo, panelInfoOpen } from './panelInfoState'
 
 export interface PanelInfoSection {
     heading: string
@@ -15,7 +16,7 @@ export interface PanelInfoPanel {
 }
 
 const page = usePage()
-const open = ref(false)
+const open = computed(() => panelInfoOpen.value)
 
 const infoPanel = (): PanelInfoPanel | null => {
     const value = (page.props as Record<string, unknown>).infoPanel
@@ -27,18 +28,6 @@ const infoPanel = (): PanelInfoPanel | null => {
     return value as PanelInfoPanel
 }
 
-function show(): void {
-    if (infoPanel()) {
-        open.value = true
-    }
-}
-
-function hide(): void {
-    open.value = false
-}
-
-onMounted(() => window.addEventListener('panel:open-info', show))
-onBeforeUnmount(() => window.removeEventListener('panel:open-info', show))
 </script>
 
 <template>
@@ -49,7 +38,7 @@ onBeforeUnmount(() => window.removeEventListener('panel:open-info', show))
         :description="infoPanel()?.description"
         side="right"
         size="md"
-        @close="hide"
+        @close="closePanelInfo"
     >
         <div class="flex flex-col gap-5">
             <section

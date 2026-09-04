@@ -23,6 +23,7 @@ import type { BreadcrumbItem, NavItem } from '../../types'
 import AppLogo from './AppLogo.vue'
 import AssistantDrawer from './AssistantDrawer.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
+import { openPanelInfo } from './panelInfoState'
 import DefaultAccountMenuItems from './DefaultAccountMenuItems.vue'
 import PanelCommandPalette from './PanelCommandPalette.vue'
 import PanelLockButton from './PanelLockButton.vue'
@@ -45,7 +46,7 @@ const hasInfoPanel = computed(() => {
 })
 
 function openInfoPanel(): void {
-    window.dispatchEvent(new CustomEvent('panel:open-info'))
+    openPanelInfo()
 }
 
 /**

@@ -15,6 +15,7 @@ import PanelLockButton from './PanelLockButton.vue'
 import NotificationBell from './PanelNotificationBell.vue'
 import PanelQuickCreate from './PanelQuickCreate.vue'
 import TopNavUser from './TopNavUser.vue'
+import { openPanelInfo } from './panelInfoState'
 
 const props = withDefaults(
     defineProps<{
@@ -50,7 +51,7 @@ const hasInfoPanel = computed(() => {
 })
 
 function openInfoPanel(): void {
-    window.dispatchEvent(new CustomEvent('panel:open-info'))
+    openPanelInfo()
 }
 
 /**
