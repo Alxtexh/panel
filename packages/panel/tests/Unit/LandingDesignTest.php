@@ -8,15 +8,16 @@ use Alxtexh\Panel\Landing\LandingPresets;
 use Alxtexh\Panel\Panel;
 use Alxtexh\Panel\Tests\TestCase;
 
-/** The generic landing catalog was removed pending reference-verified work. */
+/** The landing catalog contains reference-verified reusable compositions. */
 final class LandingDesignTest extends TestCase
 {
-    public function test_no_generic_landing_presets_are_shipped(): void
+    public function test_reference_verified_landing_preset_is_shipped(): void
     {
-        $this->assertSame([], LandingPresets::names());
-        $this->assertSame([], Panel::landings());
-        $this->assertSame([], Panel::landingDesigns());
+        $this->assertSame(['shadcn'], LandingPresets::names());
+        $this->assertSame(['shadcn'], Panel::landings());
+        $this->assertSame(['shadcn'], Panel::landingDesigns());
         $this->assertSame([], LandingPresets::get('anything'));
+        $this->assertNotEmpty(LandingPresets::get('shadcn'));
     }
 
     public function test_landing_requests_cannot_select_a_removed_template(): void

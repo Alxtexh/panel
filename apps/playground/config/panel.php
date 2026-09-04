@@ -113,7 +113,7 @@ return [
          | the previews switcher is on too. A product with its own marketing
          | site leaves `route` false and keeps the editor.
          */
-        'route' => false,
+        'route' => true,
         'design' => env('PANEL_LANDING', 'aurora'),
         'brand' => 'Alxtexhpanel',
         'tagline' => 'Built with Laravel, Inertia and Vue.',
@@ -122,7 +122,7 @@ return [
             ['label' => 'About', 'href' => '/about'],
             ['label' => 'FAQ', 'href' => '/faq'],
         ],
-        'previews' => false,
+        'previews' => true,
     ],
 
     /*

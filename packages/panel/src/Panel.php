@@ -402,7 +402,7 @@ final class Panel
      *
      * @var list<string>
      */
-    private const LANDING_DESIGNS = [];
+    private const LANDING_DESIGNS = ['shadcn'];
 
     /**
      * Host-facing aliases that resolve to a shipped landing design.
