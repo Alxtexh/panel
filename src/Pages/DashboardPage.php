@@ -277,9 +277,9 @@ abstract class DashboardPage extends Page
         return ['operations', 'arham', 'analytics', 'commerce', 'minimal', 'executive'];
     }
 
-    public static function design(?Request $request = null): string
+    public static function design(): string
     {
-        $configured = (string) ($request?->query('design') ?? config('panel.dashboard.design', 'operations'));
+        $configured = (string) config('panel.dashboard.design', 'operations');
 
         return in_array($configured, static::designs(), true) ? $configured : 'operations';
     }
@@ -371,8 +371,7 @@ abstract class DashboardPage extends Page
             'filters' => $filters->toArray(),
             'filterDimensions' => static::filterDimensions(),
             'heading' => static::label(),
-            'design' => static::design($request),
-            'designs' => static::designs(),
+            'design' => static::design(),
 
             /*
              * THE NOTICES, WHICH ARE THE REASON ANNOUNCEMENTS WORK AT ALL.
