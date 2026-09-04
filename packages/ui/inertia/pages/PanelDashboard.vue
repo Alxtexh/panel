@@ -133,7 +133,7 @@ const props = withDefaults(
         filterDimensions?: Dimension[]
         heading?: string
         /** Reusable visual family; widget data is independent of the skin. */
-        design?: 'operations' | 'arham' | 'analytics' | 'commerce' | 'minimal' | 'executive' | string
+        design?: 'operations' | 'analytics' | 'commerce' | 'minimal' | 'executive' | string
         /** Panel path prefix; the dismiss and report routes sit inside it. */
         prefix?: string
         tables?: TableWidgetDecl[]

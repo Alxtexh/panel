@@ -123,10 +123,6 @@ const palette = computed<Record<string, string>>(() =>
 )
 
 const horizontal = computed(() => appearance.value.sidebarSide === 'horizontal')
-const dashboardDesign = computed(() => {
-    const value = (page.props as Record<string, unknown>).design
-    return page.url.includes('/dashboard') && typeof value === 'string' ? value : 'operations'
-})
 
 /**
  * The handset navigation, built from the same shared props the sidebar reads -
@@ -200,11 +196,7 @@ router.on('success', () => {
         published stylesheet keys on to freeze the document and leave scrolling
         to the inset.
     -->
-    <div
-        class="pk-shell relative flex h-svh flex-col overflow-hidden"
-        :class="`pk-dashboard-shell-${dashboardDesign}`"
-        :style="palette"
-    >
+    <div class="pk-shell relative flex h-svh flex-col overflow-hidden" :style="palette">
         <!--
         FIRST IN THE DOCUMENT, because that is the only position that works. A
         skip link placed anywhere else is reached after the thing it exists to

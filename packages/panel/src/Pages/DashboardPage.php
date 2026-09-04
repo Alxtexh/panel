@@ -274,7 +274,7 @@ abstract class DashboardPage extends Page
      */
     public static function designs(): array
     {
-        return ['operations', 'arham', 'analytics', 'commerce', 'minimal', 'executive'];
+        return ['operations', 'analytics', 'commerce', 'minimal', 'executive'];
     }
 
     public static function design(): string
