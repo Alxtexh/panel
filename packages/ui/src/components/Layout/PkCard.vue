@@ -54,7 +54,7 @@ defineSlots<{
 </script>
 
 <template>
-    <section class="bg-card rounded-lg border">
+    <section class="pk-surface rounded-lg">
         <header
             v-if="title || description || $slots.header || $slots.actions"
             class="flex items-start justify-between gap-4 border-b px-4 py-3"

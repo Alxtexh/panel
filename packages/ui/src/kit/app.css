@@ -3,6 +3,7 @@
  * after panel:install has CSS without npm run build.
  */
 @import 'tailwindcss';
+@import './design-system.css';
 
 @source '../../src/**/*.{vue,ts}';
 @source '../../inertia/**/*.{vue,ts}';

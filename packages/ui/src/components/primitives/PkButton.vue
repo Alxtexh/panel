@@ -76,6 +76,7 @@ const nativeType = computed(() => (props.as === 'button' ? props.type : undefine
         :type="nativeType"
         :disabled="as === 'button' ? disabled : undefined"
         :aria-disabled="as !== 'button' && disabled ? 'true' : undefined"
+        class="pk-focus-ring"
         :class="classes"
     >
         <slot />

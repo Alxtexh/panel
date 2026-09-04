@@ -1,0 +1,86 @@
+/* Shared semantic design primitives for packaged screens and host apps. */
+@layer components {
+    .pk-surface {
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    }
+
+    .pk-focus-ring:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--ring) 18%, transparent);
+    }
+
+    @media (forced-colors: active) {
+        .pk-focus-ring:focus-visible,
+        .pk-control:focus-visible {
+            outline: 2px solid CanvasText;
+            outline-offset: 2px;
+            box-shadow: none;
+        }
+
+        .pk-surface {
+            border-color: CanvasText;
+        }
+    }
+
+    .pk-page {
+        width: 100%;
+        max-width: 90rem;
+        margin-inline: auto;
+        padding-inline: clamp(1rem, 2.5vw, 2rem);
+    }
+
+    .pk-section-heading {
+        color: var(--foreground);
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.25rem;
+        letter-spacing: -0.01em;
+    }
+
+    .pk-table-scroll {
+        min-width: 0;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-gutter: stable;
+    }
+
+    .pk-control {
+        min-height: 2.5rem;
+        border: 1px solid var(--input);
+        border-radius: var(--radius-md);
+        background: color-mix(in srgb, var(--background) 96%, var(--muted));
+        transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+    }
+
+    .pk-control:focus-visible {
+        border-color: var(--ring);
+        outline: none;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 22%, transparent);
+    }
+
+    .pk-density-compact [data-slot='table-row'] > * {
+        padding-block: calc(var(--pk-row-padding, 0.5rem) * 0.75);
+    }
+
+    [data-slot='button'],
+    [data-slot='input'],
+    [data-slot='select'],
+    [data-slot='textarea'] {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+        }
+    }
+}

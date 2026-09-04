@@ -159,7 +159,7 @@ function isEmpty(value: unknown): boolean {
             </template>
         </PkEmptyState>
 
-        <div v-else-if="rows.length > 0" class="pk-scroll w-full overflow-x-auto">
+        <div v-else-if="rows.length > 0" class="pk-table-scroll pk-scroll w-full">
             <table class="w-full border-collapse text-sm">
                 <thead class="bg-muted/40">
                     <tr>
@@ -177,6 +177,7 @@ function isEmpty(value: unknown): boolean {
                     <tr
                         v-for="(row, i) in rows"
                         :key="row.id ?? i"
+                        data-slot="table-row"
                         class="pk-row hover:bg-muted/40 transition-colors"
                     >
                         <td

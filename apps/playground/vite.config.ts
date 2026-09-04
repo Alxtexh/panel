@@ -27,6 +27,24 @@ export default defineConfig({
     server: {
         host: '127.0.0.1',
     },
+    build: {
+        rolldownOptions: {
+            output: {
+                manualChunks(id) {
+                    if (!id.includes('node_modules')) {
+                        return undefined
+                    }
+
+                    // Optional integrations stay out of the first panel load.
+                    if (id.includes('@scalar')) return 'api-docs'
+                    if (id.includes('leaflet')) return 'maps'
+                    if (id.includes('chart.js') || id.includes('apexcharts')) return 'charts'
+
+                    return 'vendor'
+                },
+            },
+        },
+    },
     resolve: {
         // packages/ui is consumed through a symlink, so Node resolves its own
         // imports from the package's real path and finds ITS copy of Vue

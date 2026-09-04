@@ -90,6 +90,11 @@ final class RouterResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            // Give narrow screens a deliberate card presentation instead of
+            // forcing a wide network table into horizontal scrolling.
+            ->layouts(['table', 'cards'])
+            ->stickyFirstColumn()
+            ->resizableColumns()
             /*
              * Clustered by status: online routers together, then degraded, then
              * offline - which is how anyone triaging a network reads this list.

@@ -51,6 +51,7 @@ import {
     PkBoundary,
     RecordActions,
     InlineRecordActions,
+    SavedViews,
     SelectionBar,
     TablePagination,
     TableShell,
@@ -71,6 +72,7 @@ import type {
     RecordActionItem,
     SchemaColumn,
 } from '@alxtexh-enterprise/panel'
+import type { SavedTableView } from '@alxtexh-enterprise/panel'
 import ImportDialog from '../components/ImportDialog.vue'
 import RenderHook from '../components/RenderHook.vue'
 import ResourceCrudModal from '../components/ResourceCrudModal.vue'
@@ -272,6 +274,84 @@ const t = useListTable(props.schema.routes.index, props, {
 // Keyed by resource, so hiding a column on Clients does not hide it on Routers.
 const { hidden, setHidden } = useColumnVisibility(`alxtexhpanel.${props.schema.key}.columns`)
 const { widths, setWidth } = useColumnWidths(`alxtexhpanel.${props.schema.key}.widths`)
+
+const savedViewsKey = `alxtexhpanel.${props.schema.key}.saved-views`
+const savedViews = ref<SavedTableView[]>([])
+const activeSavedView = ref<string | null>(null)
+
+function readSavedViews() {
+    if (typeof localStorage === 'undefined') return
+
+    try {
+        const value = JSON.parse(localStorage.getItem(savedViewsKey) ?? '[]')
+
+        if (Array.isArray(value)) savedViews.value = value as SavedTableView[]
+    } catch {
+        savedViews.value = []
+    }
+}
+
+function persistSavedViews() {
+    try {
+        localStorage.setItem(savedViewsKey, JSON.stringify(savedViews.value))
+    } catch {
+        // Private mode or storage quota: the current table still works.
+    }
+}
+
+function currentSavedView(name: string): SavedTableView {
+    return {
+        name,
+        search: props.search,
+        filters: { ...props.filters },
+        sort: props.sort,
+        direction: props.direction,
+        perPage: props.perPage,
+        tab: props.tab,
+        group: props.groupBy?.key ?? null,
+        lens: props.lens ?? null,
+        hidden: [...hidden.value],
+        layout: indexLayout.value,
+    }
+}
+
+function saveView(name: string) {
+    savedViews.value = [
+        ...savedViews.value.filter((view) => view.name !== name),
+        currentSavedView(name),
+    ].slice(-12)
+    activeSavedView.value = name
+    persistSavedViews()
+}
+
+function applySavedView(view: SavedTableView) {
+    setHidden(new Set(view.hidden))
+    setIndexLayout(view.layout)
+    activeSavedView.value = view.name
+
+    const filters = Object.fromEntries(
+        Object.keys(props.filters).map((key) => [key, view.filters[key] ?? null]),
+    )
+
+    t.apply({
+        ...filters,
+        search: view.search,
+        sort: view.sort,
+        direction: view.direction,
+        perPage: view.perPage,
+        tab: view.tab,
+        group: view.group ?? '-',
+        lens: view.lens,
+    })
+}
+
+function removeSavedView(name: string) {
+    savedViews.value = savedViews.value.filter((view) => view.name !== name)
+    if (activeSavedView.value === name) activeSavedView.value = null
+    persistSavedViews()
+}
+
+if (typeof window !== 'undefined') readSavedViews()
 
 const layoutStorageKey = `alxtexhpanel.${props.schema.key}.layout`
 const indexLayout = ref<'table' | 'cards'>(
@@ -1520,6 +1600,13 @@ function badgeLabel(key: string, value: unknown): string {
                     @clear-filters="t.resetFilters"
                     @layout="setIndexLayout"
                 />
+                <SavedViews
+                    :views="savedViews"
+                    :active="activeSavedView"
+                    @save="saveView"
+                    @apply="applySavedView"
+                    @remove="removeSavedView"
+                />
             </template>
 
             <!--
@@ -1554,7 +1641,9 @@ function badgeLabel(key: string, value: unknown): string {
                                 class="flex justify-between gap-2"
                             >
                                 <dt class="shrink-0">{{ col.label }}</dt>
-                                <dd class="truncate text-right">{{ row[col.key] ?? 'None' }}</dd>
+                                <dd class="truncate text-right">
+                                    {{ render(col.key, row[col.key], row) }}
+                                </dd>
                             </div>
                         </dl>
                     </button>

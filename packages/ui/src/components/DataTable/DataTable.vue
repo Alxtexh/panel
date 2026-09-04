@@ -848,6 +848,7 @@ function summaryValue(key: string): string {
 
                     <tr
                         v-if="rowVisible(index)"
+                        data-slot="table-row"
                         class="group pk-row border-b transition-colors hover:bg-muted/50"
                         :class="[
                             isSelected(row)
