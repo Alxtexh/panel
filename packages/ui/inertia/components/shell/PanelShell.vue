@@ -54,6 +54,7 @@ import AppSidebarHeader from './AppSidebarHeader.vue'
 import AppTopNav from './AppTopNav.vue'
 import PanelIdleLockGuard from './PanelIdleLockGuard.vue'
 import PanelImpersonationBanner from './PanelImpersonationBanner.vue'
+import PanelInfoSidebar from './PanelInfoSidebar.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -329,6 +330,7 @@ router.on('success', () => {
     -->
         <SessionExpired />
         <PanelIdleLockGuard />
+        <PanelInfoSidebar />
         <RenderHook position="shell.feedback" :hooks="shellHooks" />
     </div>
 </template>

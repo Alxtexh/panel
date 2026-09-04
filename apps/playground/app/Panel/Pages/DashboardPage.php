@@ -56,6 +56,28 @@ final class DashboardPage extends AlxtexhpanelDashboard
 
     protected static ?int $sort = -100;
 
+    public static function infoPanel(): ?array
+    {
+        return [
+            'title' => 'Dashboard guide',
+            'description' => 'Use this overview to monitor the panel and jump into the work that needs attention.',
+            'sections' => [
+                [
+                    'heading' => 'Live widgets',
+                    'body' => 'Cards and charts load independently, so a slow network or reporting query does not block the rest of the dashboard.',
+                ],
+                [
+                    'heading' => 'Personalise the view',
+                    'body' => 'Use Shortcuts to keep frequent actions close, and use Rearrange widgets to set the order that suits your team.',
+                ],
+                [
+                    'heading' => 'Need more detail?',
+                    'body' => 'Open the linked resource from a table card to use its filters, saved views, bulk actions, and permission-aware exports.',
+                ],
+            ],
+        ];
+    }
+
     /**
      * @return list<StatWidget>
      */

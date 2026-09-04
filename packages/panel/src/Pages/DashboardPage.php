@@ -254,6 +254,20 @@ abstract class DashboardPage extends Page
     }
 
     /**
+     * Optional contextual guidance shown in the shell's right-side info panel.
+     *
+     * The content is server-provided so it can describe the current panel,
+     * tenant, permissions, or workflow without putting sensitive detail in a
+     * client-only registry.
+     *
+     * @return array{title: string, description?: string|null, sections?: list<array{heading: string, body: string}>}|null
+     */
+    public static function infoPanel(): ?array
+    {
+        return null;
+    }
+
+    /**
      * The packaged screen that draws them.
      *
      * OVERRIDABLE, because a dashboard is the screen most likely to want its own
@@ -361,6 +375,7 @@ abstract class DashboardPage extends Page
             'widgets' => array_map(static fn (StatWidget $w): array => $w->toArray(), $stats),
             'charts' => array_map(static fn (ChartWidget $c): array => $c->toArray(), $charts),
             'tables' => array_map(static fn (TableWidget $t): array => $t->toArray(), $tables),
+            'infoPanel' => static::infoPanel(),
 
             /*
              * ECHOED BACK rather than left to the client, so a shared or

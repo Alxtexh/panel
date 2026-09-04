@@ -110,6 +110,7 @@ export { usePanelIdleLock, type PanelIdleLockShared } from './composables/usePan
 export { default as PanelShell } from './components/shell/PanelShell.vue'
 export { default as PanelAccountMenu } from './components/shell/PanelAccountMenu.vue'
 export { default as PanelCommandPalette } from './components/shell/PanelCommandPalette.vue'
+export { default as PanelInfoSidebar } from './components/shell/PanelInfoSidebar.vue'
 export { default as PanelNotificationBell } from './components/shell/PanelNotificationBell.vue'
 export { default as PanelBreadcrumbs } from './components/shell/PanelBreadcrumbs.vue'
 export { default as PanelImpersonationBanner } from './components/shell/PanelImpersonationBanner.vue'

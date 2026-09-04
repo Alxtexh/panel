@@ -43,6 +43,16 @@ const { chrome } = useSidebarLayout()
 
 const page = usePage()
 
+const hasInfoPanel = computed(() => {
+    const info = (page.props as Record<string, unknown>).infoPanel
+
+    return Boolean(info && typeof info === 'object')
+})
+
+function openInfoPanel(): void {
+    window.dispatchEvent(new CustomEvent('panel:open-info'))
+}
+
 /**
  * The topbar MIRRORS the sidebar.
  *
@@ -115,6 +125,19 @@ const trail = computed<BreadcrumbItem[]>(() =>
                  screen you are on rather than navigating away from it. -->
             <AssistantDrawer />
             <NotificationBell />
+            <button
+                v-if="hasInfoPanel"
+                type="button"
+                class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md p-2 transition-colors"
+                aria-label="Page information"
+                title="Page information"
+                @click="openInfoPanel"
+            >
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4M12 8h.01" />
+                </svg>
+            </button>
             <slot name="actions" />
             <PkBoundary
                 v-if="chrome.topNavUser && !chrome.siteHeader"
