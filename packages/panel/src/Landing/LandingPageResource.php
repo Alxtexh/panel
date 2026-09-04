@@ -141,7 +141,7 @@ final class LandingPageResource extends SingularResource
 
         return in_array($configured, LandingPresets::names(), true)
             ? $configured
-            : (LandingPresets::names()[0] ?? 'aurora');
+            : (LandingPresets::names()[0] ?? '');
     }
 
     /** @param array<string, mixed> $validated */

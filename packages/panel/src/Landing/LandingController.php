@@ -44,7 +44,7 @@ final class LandingController extends Controller
      */
     public static function registers(): bool
     {
-        return config('panel.landing.route', false) === true;
+        return config('panel.landing.route', false) === true && LandingPresets::names() !== [];
     }
 
     /**
