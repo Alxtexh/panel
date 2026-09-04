@@ -7,7 +7,8 @@ namespace Alxtexh\Panel\Landing;
 /**
  * The shipped landing pages, as BLOCKS rather than as files.
  *
- * Aurora, Editorial and Console are ordered lists of sections from one library.
+ * Aurora, Editorial, Console, Studio, Product, Agency, Hospitality and
+ * Portfolio are ordered lists of sections from one library.
  *
  * A PRESET IS A STARTING POINT, NOT A TEMPLATE. It seeds the editable page; once
  * an installation has saved its own arrangement, that is what renders and these
@@ -18,7 +19,10 @@ final class LandingPresets
     /** @return list<string> */
     public static function names(): array
     {
-        return ['aurora', 'editorial', 'console', 'studio'];
+        return [
+            'aurora', 'editorial', 'console', 'studio',
+            'product', 'agency', 'restaurant', 'hotel', 'portfolio', 'dashboard',
+        ];
     }
 
     /**
@@ -46,6 +50,12 @@ final class LandingPresets
             'editorial' => self::editorial(),
             'console' => self::console(),
             'studio' => self::studio(),
+            'product' => self::product(),
+            'agency' => self::agency(),
+            'restaurant' => self::restaurant(),
+            'hotel' => self::hotel(),
+            'portfolio' => self::portfolio(),
+            'dashboard' => self::dashboard(),
             default => self::aurora(),
         };
     }
@@ -268,6 +278,132 @@ final class LandingPresets
                 'label' => 'Get started',
                 'href' => '/register',
             ]],
+        ]));
+    }
+
+    /** Product-led SaaS composition inspired by the supplied dashboard starters. */
+    private static function product(): array
+    {
+        $aurora = self::aurora();
+        $by = static fn (string $type): array => collect($aurora)->firstWhere('type', $type) ?? [];
+
+        return array_values(array_filter([
+            ['type' => 'hero', 'data' => [
+                'eyebrow' => 'A calmer way to run your business',
+                'title' => 'Everything your team needs, in one clear workspace',
+                'body' => 'Turn operational work into a focused, measurable workflow with a panel that grows with your product.',
+                'primaryLabel' => 'Start building', 'primaryHref' => '/register',
+                'secondaryLabel' => 'Explore the platform', 'secondaryHref' => '/about',
+            ]],
+            $by('logos'), ['type' => 'marquee', 'data' => [
+                'title' => 'A workspace that keeps moving',
+                'items' => [['name' => 'Fast navigation'], ['name' => 'Reusable blocks'], ['name' => 'Accessible by default'], ['name' => 'Ready for Laravel']],
+            ]], $by('showcase'), $by('bento'), $by('steps'), $by('pricing'), $by('faq'), $by('cta'),
+        ]));
+    }
+
+    /** Studio/agency composition: visual proof, process, team and contact. */
+    private static function agency(): array
+    {
+        $aurora = self::aurora();
+        $by = static fn (string $type): array => collect($aurora)->firstWhere('type', $type) ?? [];
+
+        return array_values(array_filter([
+            ['type' => 'hero', 'data' => [
+                'eyebrow' => 'Independent digital studio',
+                'title' => 'Work that makes complex products feel simple',
+                'body' => 'A flexible, editorial landing system for studios, agencies and teams with something worth showing.',
+                'primaryLabel' => 'Start a conversation', 'primaryHref' => '/help',
+                'secondaryLabel' => 'See our work', 'secondaryHref' => '#work',
+            ]],
+            $by('showcase'), ['type' => 'marquee', 'data' => [
+                'title' => 'Selected capabilities',
+                'items' => [['name' => 'Strategy'], ['name' => 'Design'], ['name' => 'Systems'], ['name' => 'Delivery']],
+            ]], $by('features'), $by('steps'), $by('team'), $by('testimonials'), $by('contact'), $by('cta'),
+        ]));
+    }
+
+    /** Hospitality composition with warm storytelling and conversion points. */
+    private static function restaurant(): array
+    {
+        $aurora = self::aurora();
+        $by = static fn (string $type): array => collect($aurora)->firstWhere('type', $type) ?? [];
+
+        return array_values(array_filter([
+            ['type' => 'hero', 'data' => [
+                'eyebrow' => 'Good food, thoughtfully served',
+                'title' => 'A table worth making time for',
+                'body' => 'A reusable hospitality landing composition for restaurants, cafés and food brands.',
+                'primaryLabel' => 'Book a table', 'primaryHref' => '/register',
+                'secondaryLabel' => 'View the menu', 'secondaryHref' => '/about',
+            ]],
+            ['type' => 'features', 'data' => [
+                'title' => 'Made for the moments between meals',
+                'body' => 'Menus, reservations, private dining and the story behind every plate.',
+                'items' => [
+                    ['title' => 'Seasonal ingredients', 'body' => 'Menus shaped by what is best right now.'],
+                    ['title' => 'A room with a feeling', 'body' => 'Warm hospitality from the first hello to the last course.'],
+                    ['title' => 'Gather together', 'body' => 'Private dining and celebrations made effortless.'],
+                ],
+            ]],
+            $by('showcase'), $by('testimonials'), $by('contact'), $by('faq'), $by('cta'),
+        ]));
+    }
+
+    /** Hotel/resort composition with room, experience and booking sections. */
+    private static function hotel(): array
+    {
+        $aurora = self::aurora();
+        $by = static fn (string $type): array => collect($aurora)->firstWhere('type', $type) ?? [];
+
+        return array_values(array_filter([
+            ['type' => 'hero', 'data' => [
+                'eyebrow' => 'Stay somewhere memorable',
+                'title' => 'A slower place to arrive',
+                'body' => 'An immersive, image-ready composition for hotels, retreats and destination experiences.',
+                'primaryLabel' => 'Check availability', 'primaryHref' => '/register',
+                'secondaryLabel' => 'Discover the stay', 'secondaryHref' => '#experiences',
+            ]],
+            $by('showcase'), ['type' => 'marquee', 'data' => [
+                'title' => 'The stay, at your pace',
+                'items' => [['name' => 'Rooms'], ['name' => 'Dining'], ['name' => 'Wellness'], ['name' => 'Experiences']],
+            ]], $by('features'), $by('steps'), $by('testimonials'), $by('contact'), $by('cta'),
+        ]));
+    }
+
+    /** Portfolio composition with proof-first case studies and contact. */
+    private static function portfolio(): array
+    {
+        $aurora = self::aurora();
+        $by = static fn (string $type): array => collect($aurora)->firstWhere('type', $type) ?? [];
+
+        return array_values(array_filter([
+            ['type' => 'hero', 'data' => [
+                'eyebrow' => 'Selected work',
+                'title' => 'Ideas with a point of view',
+                'body' => 'A portfolio-ready composition for designers, makers and product teams.',
+                'primaryLabel' => 'View selected work', 'primaryHref' => '#work',
+                'secondaryLabel' => 'Get in touch', 'secondaryHref' => '#contact',
+            ]],
+            $by('showcase'), $by('bento'), $by('stats'), $by('testimonials'), $by('contact'), $by('cta'),
+        ]));
+    }
+
+    /** Dashboard/product hybrid composition for developer tools and platforms. */
+    private static function dashboard(): array
+    {
+        $aurora = self::aurora();
+        $by = static fn (string $type): array => collect($aurora)->firstWhere('type', $type) ?? [];
+
+        return array_values(array_filter([
+            ['type' => 'hero', 'data' => [
+                'eyebrow' => 'Your operational command centre',
+                'title' => 'See the signal. Move with confidence.',
+                'body' => 'A dashboard-first landing composition for SaaS products, internal platforms and data-rich teams.',
+                'primaryLabel' => 'Open the dashboard', 'primaryHref' => '/register',
+                'secondaryLabel' => 'Read the docs', 'secondaryHref' => '/about',
+            ]],
+            $by('stats'), $by('showcase'), $by('features'), $by('bento'), $by('pricing'), $by('cta'),
         ]));
     }
 }

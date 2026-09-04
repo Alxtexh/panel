@@ -25,7 +25,7 @@ withDefaults(
 <template>
     <section
         :id="id"
-        class="w-full px-4 py-16 sm:px-6 sm:py-24"
+        class="pk-landing-section w-full px-4 sm:px-6"
         :class="muted ? 'bg-muted/40' : ''"
     >
         <div class="mx-auto w-full" :class="narrow ? 'max-w-3xl' : 'max-w-6xl'">

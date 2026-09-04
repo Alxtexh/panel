@@ -86,6 +86,20 @@ final class DashboardPageTest extends TestCase
         $this->assertSame('Subscribers', $data['widgets'][0]['label']);
     }
 
+    public function test_dashboard_design_is_shared_without_changing_widget_data(): void
+    {
+        config(['panel.dashboard.design' => 'analytics']);
+
+        $data = $this->dataFor($this->operator(['view_network_widgets']));
+
+        $this->assertSame('analytics', $data['design']);
+        $this->assertSame(['subscribers', 'active'], array_column($data['widgets'], 'key'));
+
+        config(['panel.dashboard.design' => 'not-a-skin']);
+
+        $this->assertSame('operations', FixtureDashboard::design());
+    }
+
     /**
      * THE OTHER HALF OF ANNOUNCEMENTS, and until this release the package had
      * only one of them.

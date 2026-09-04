@@ -103,12 +103,17 @@ const socialProviders = useSocialProviders()
             'pk-editorial': design === 'editorial',
             'pk-console': design === 'console',
             'pk-studio': design === 'studio',
+            'pk-product': design === 'product' || design === 'dashboard',
+            'pk-agency': design === 'agency' || design === 'portfolio',
+            'pk-hospitality': design === 'restaurant' || design === 'hotel',
         }"
     >
-        <PkAuroraBackdrop v-if="design === 'aurora'" />
+        <PkAuroraBackdrop v-if="design === 'aurora' || design === 'product' || design === 'dashboard'" />
         <PkEditorialBackdrop v-else-if="design === 'editorial'" />
         <PkConsoleBackdrop v-else-if="design === 'console'" />
         <PkStudioBackdrop v-else-if="design === 'studio'" />
+        <PkEditorialBackdrop v-else-if="design === 'agency' || design === 'portfolio'" />
+        <PkStudioBackdrop v-else-if="design === 'restaurant' || design === 'hotel'" />
 
         <div class="relative z-10 flex flex-1 flex-col">
             <LandingNav

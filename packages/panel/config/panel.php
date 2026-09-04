@@ -1137,4 +1137,12 @@ return [
         'url' => null,
     ],
 
+    /*
+     * Dashboard visual family. Widgets, permissions and deferred data remain
+     * identical; this only selects the reusable presentation rhythm.
+     */
+    'dashboard' => [
+        'design' => env('PANEL_DASHBOARD_DESIGN', 'operations'),
+    ],
+
 ];

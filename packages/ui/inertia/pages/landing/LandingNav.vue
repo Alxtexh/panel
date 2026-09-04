@@ -69,7 +69,11 @@ const signedIn = computed(() => (page.props.auth as { user?: unknown } | undefin
                 Several designs ship, so the reference app has to make trying
                 them one click rather than an edit-and-reload.
             -->
-            <nav v-if="previews.length" class="hidden items-center gap-1 text-sm md:flex">
+            <nav
+                v-if="previews.length"
+                aria-label="Landing page designs"
+                class="hidden max-w-[min(52vw,36rem)] items-center gap-1 overflow-x-auto text-sm md:flex"
+            >
                 <Link
                     v-for="d in previews"
                     :key="d"
@@ -84,6 +88,27 @@ const signedIn = computed(() => (page.props.auth as { user?: unknown } | undefin
                     {{ d }}
                 </Link>
             </nav>
+
+            <details v-if="previews.length" class="relative md:hidden">
+                <summary
+                    class="pk-focus-ring cursor-pointer list-none rounded-md border px-2.5 py-1.5 text-xs capitalize [&::-webkit-details-marker]:hidden"
+                >
+                    {{ design }} design
+                </summary>
+                <div
+                    class="bg-popover text-popover-foreground absolute top-full right-0 z-30 mt-2 grid min-w-40 gap-0.5 rounded-lg border p-1 shadow-xl"
+                >
+                    <Link
+                        v-for="d in previews"
+                        :key="`mobile-${d}`"
+                        :href="`/preview/${d}`"
+                        class="pk-focus-ring rounded-md px-2.5 py-2 text-left text-sm capitalize hover:bg-muted"
+                        :class="d === design ? 'font-medium text-primary' : ''"
+                    >
+                        {{ d }}
+                    </Link>
+                </div>
+            </details>
 
             <div class="flex items-center gap-2">
                 <Link v-if="signedIn" :href="dashboardHref" :class="buttonClasses({ size: 'sm' })">

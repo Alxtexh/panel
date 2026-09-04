@@ -23,6 +23,7 @@ import PkFaq from './PkFaq.vue'
 import PkFeatureGrid from './PkFeatureGrid.vue'
 import PkHero from './PkHero.vue'
 import PkLogoCloud from './PkLogoCloud.vue'
+import PkMarquee from './PkMarquee.vue'
 import PkPricing from './PkPricing.vue'
 import PkShowcase from './PkShowcase.vue'
 import PkStats from './PkStats.vue'
@@ -42,6 +43,7 @@ const props = withDefaults(
 const REGISTRY: Record<string, unknown> = {
     hero: PkHero,
     logos: PkLogoCloud,
+    marquee: PkMarquee,
     features: PkFeatureGrid,
     bento: PkBento,
     showcase: PkShowcase,

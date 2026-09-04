@@ -27,6 +27,15 @@ import {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+/* Keep navigation feedback visible even when a page is server-fast. */
+router.on('start', () => {
+    document.documentElement.dataset.pkNavigating = 'true';
+});
+
+router.on('finish', () => {
+    delete document.documentElement.dataset.pkNavigating;
+});
+
 /** Auth screens that now come from `@alxtexh-enterprise/panel/inertia` - see the resolver. */
 const PACKAGED_AUTH = [
     'auth/Login',

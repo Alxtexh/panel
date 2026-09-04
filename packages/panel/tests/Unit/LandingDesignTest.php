@@ -16,7 +16,7 @@ final class LandingDesignTest extends TestCase
     public function test_landings_lists_every_shipped_design(): void
     {
         $this->assertSame(
-            ['aurora', 'editorial', 'console', 'studio'],
+            ['aurora', 'editorial', 'console', 'studio', 'product', 'agency', 'restaurant', 'hotel', 'portfolio', 'dashboard'],
             Panel::landings(),
         );
         $this->assertSame(Panel::landings(), Panel::landingDesigns());

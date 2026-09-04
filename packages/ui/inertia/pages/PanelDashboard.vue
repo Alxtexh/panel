@@ -132,6 +132,8 @@ const props = withDefaults(
         /** Filter dimensions this dashboard declared, with their options. */
         filterDimensions?: Dimension[]
         heading?: string
+        /** Reusable visual family; widget data is independent of the skin. */
+        design?: 'operations' | 'analytics' | 'commerce' | 'minimal' | 'executive' | string
         /** Panel path prefix; the dismiss and report routes sit inside it. */
         prefix?: string
         tables?: TableWidgetDecl[]
@@ -158,6 +160,7 @@ const props = withDefaults(
         }),
         filterDimensions: () => [],
         heading: 'Dashboard',
+        design: 'operations',
         prefix: '',
         tables: () => [],
         shortcuts: null,
@@ -812,7 +815,7 @@ function layoutLabel(item: AnyLayoutItem): string {
 <template>
     <Head :title="heading" />
 
-    <div :class="[PAGE_SHELL, 'flex flex-col gap-4']">
+    <div :class="[PAGE_SHELL, 'pk-dashboard flex flex-col gap-4', `pk-dashboard-${design}`]">
         <RenderHook position="dashboard.before" :hooks="renderHooks" />
 
         <!--

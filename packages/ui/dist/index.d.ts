@@ -220,6 +220,7 @@ export { default as PkSection } from './components/Landing/PkSection.vue';
 export { default as PkSectionHeading } from './components/Landing/PkSectionHeading.vue';
 export { default as PkHero } from './components/Landing/PkHero.vue';
 export { default as PkLogoCloud } from './components/Landing/PkLogoCloud.vue';
+export { default as PkMarquee } from './components/Landing/PkMarquee.vue';
 export { default as PkFeatureGrid } from './components/Landing/PkFeatureGrid.vue';
 export { default as PkSteps } from './components/Landing/PkSteps.vue';
 export { default as PkStats } from './components/Landing/PkStats.vue';

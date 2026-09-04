@@ -402,7 +402,10 @@ final class Panel
      *
      * @var list<string>
      */
-    private const LANDING_DESIGNS = ['aurora', 'editorial', 'console', 'studio'];
+    private const LANDING_DESIGNS = [
+        'aurora', 'editorial', 'console', 'studio',
+        'product', 'agency', 'restaurant', 'hotel', 'portfolio', 'dashboard',
+    ];
 
     /**
      * Host-facing aliases that resolve to a shipped landing design.

@@ -30,6 +30,12 @@ final class LandingPageTest extends TestCase
             'editorial' => ['editorial'],
             'console' => ['console'],
             'studio' => ['studio'],
+            'product' => ['product'],
+            'agency' => ['agency'],
+            'restaurant' => ['restaurant'],
+            'hotel' => ['hotel'],
+            'portfolio' => ['portfolio'],
+            'dashboard' => ['dashboard'],
         ];
     }
 
@@ -70,7 +76,7 @@ final class LandingPageTest extends TestCase
     public function test_no_preset_names_a_section_the_client_cannot_draw(): void
     {
         $known = [
-            'hero', 'logos', 'features', 'bento', 'showcase', 'steps', 'stats',
+            'hero', 'logos', 'marquee', 'features', 'bento', 'showcase', 'steps', 'stats',
             'testimonials', 'team', 'articles', 'contact', 'pricing', 'faq', 'cta',
         ];
 

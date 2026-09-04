@@ -26,6 +26,14 @@ import './app.css'
 
 bootstrapAppearance()
 
+router.on('start', () => {
+    document.documentElement.dataset.pkNavigating = 'true'
+})
+
+router.on('finish', () => {
+    delete document.documentElement.dataset.pkNavigating
+})
+
 router.on('success', (event) => {
     syncAppearanceFromInertiaPage(event.detail.page)
 })

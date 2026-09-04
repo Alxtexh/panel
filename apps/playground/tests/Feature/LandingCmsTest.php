@@ -32,7 +32,7 @@ final class LandingCmsTest extends TestCase
     public function test_every_editable_block_is_a_section_the_page_can_render(): void
     {
         $known = [
-            'hero', 'logos', 'features', 'bento', 'showcase', 'steps', 'stats',
+            'hero', 'logos', 'marquee', 'features', 'bento', 'showcase', 'steps', 'stats',
             'testimonials', 'team', 'articles', 'contact', 'pricing', 'faq', 'cta',
         ];
 
