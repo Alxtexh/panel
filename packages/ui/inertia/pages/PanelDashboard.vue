@@ -134,6 +134,7 @@ const props = withDefaults(
         heading?: string
         /** Reusable visual family; widget data is independent of the skin. */
         design?: 'operations' | 'arham' | 'analytics' | 'commerce' | 'minimal' | 'executive' | string
+        designs?: string[]
         /** Panel path prefix; the dismiss and report routes sit inside it. */
         prefix?: string
         tables?: TableWidgetDecl[]
@@ -161,6 +162,7 @@ const props = withDefaults(
         filterDimensions: () => [],
         heading: 'Dashboard',
         design: 'operations',
+        designs: () => ['operations', 'arham', 'analytics', 'commerce', 'minimal', 'executive'],
         prefix: '',
         tables: () => [],
         shortcuts: null,
@@ -180,6 +182,19 @@ type _AnnouncementMatch = NonNullable<typeof props.announcements>[number] extend
 
 const page = usePage()
 const InertiaLink = markRaw(Link)
+
+function changeDesign(value: string): void {
+    if (!value || value === props.design) return
+
+    const query = new URLSearchParams(window.location.search)
+    query.set('design', value)
+
+    router.get(`${window.location.pathname}?${query.toString()}`, {}, {
+        preserveScroll: true,
+        preserveState: false,
+        replace: true,
+    })
+}
 
 /**
  * Read the resolved value from PAGE PROPS, not from the Deferred slot.
@@ -286,7 +301,10 @@ useWidgetChannels(() =>
 )
 
 const statColumns = computed(
-    () => Math.min(Math.max(props.widgets.length, 2), 6) as 2 | 3 | 4 | 5 | 6,
+    () =>
+        props.design === 'arham'
+            ? 4
+            : (Math.min(Math.max(props.widgets.length, 2), 6) as 2 | 3 | 4 | 5 | 6),
 )
 
 const statSegments = computed(() =>
@@ -869,9 +887,20 @@ function layoutLabel(item: AnyLayoutItem): string {
             </div>
 
             <div
-                v-if="filterDimensions.length || charts.length || hiddenEntries.length"
+                v-if="designs.length || filterDimensions.length || charts.length || hiddenEntries.length"
                 class="flex items-center gap-2"
             >
+                <label class="sr-only" for="dashboard-design">Dashboard design</label>
+                <select
+                    id="dashboard-design"
+                    class="h-9 rounded-md border bg-background px-2.5 text-sm font-medium capitalize shadow-sm outline-none transition-colors focus:ring-2 focus:ring-ring"
+                    :value="design"
+                    @change="changeDesign(($event.target as HTMLSelectElement).value)"
+                >
+                    <option v-for="option in designs" :key="option" :value="option">
+                        {{ option }} design
+                    </option>
+                </select>
                 <button
                     v-if="hiddenEntries.length"
                     type="button"
