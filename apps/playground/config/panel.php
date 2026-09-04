@@ -125,6 +125,10 @@ return [
         'previews' => false,
     ],
 
+    'dashboard' => [
+        'design' => env('PANEL_DASHBOARD_DESIGN', 'arham'),
+    ],
+
     /*
     |---------------------------------------------------------------------------
     | Singular resources
