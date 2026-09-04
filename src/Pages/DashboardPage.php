@@ -266,6 +266,25 @@ abstract class DashboardPage extends Page
     }
 
     /**
+     * Dashboard visual family. The widget contract stays identical across
+     * skins, so applications can change the composition without rewriting
+     * their PHP widget declarations.
+     *
+     * @return list<string>
+     */
+    public static function designs(): array
+    {
+        return ['operations', 'analytics', 'commerce', 'minimal', 'executive'];
+    }
+
+    public static function design(): string
+    {
+        $configured = (string) config('panel.dashboard.design', 'operations');
+
+        return in_array($configured, static::designs(), true) ? $configured : 'operations';
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function data(Request $request): array
@@ -352,6 +371,7 @@ abstract class DashboardPage extends Page
             'filters' => $filters->toArray(),
             'filterDimensions' => static::filterDimensions(),
             'heading' => static::label(),
+            'design' => static::design(),
 
             /*
              * THE NOTICES, WHICH ARE THE REASON ANNOUNCEMENTS WORK AT ALL.

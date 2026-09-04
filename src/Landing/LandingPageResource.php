@@ -204,6 +204,15 @@ final class LandingPageResource extends SingularResource
                             BuilderField::make('items')->label('Names')
                                 ->block('logo', 'Name', [TextField::make('name')->required()]),
                         ])
+                        ->block('marquee', 'Scrolling highlights', [
+                            TextField::make('title'),
+                            SelectField::make('speed')->options([
+                                'slow' => 'Slow', 'normal' => 'Normal', 'fast' => 'Fast',
+                            ]),
+                            ToggleField::make('reverse')->label('Reverse direction'),
+                            BuilderField::make('items')->label('Highlights')
+                                ->block('highlight', 'Highlight', [TextField::make('name')->required(), TextField::make('href')->label('Link')]),
+                        ])
                         ->block('features', 'Feature grid', [
                             TextField::make('title'),
                             TextareaField::make('body')->rows(2),
@@ -332,7 +341,7 @@ final class LandingPageResource extends SingularResource
             Section::make('Start from a shipped design')
                 ->description(
                     'Choosing one replaces the sections above the next time you save. '
-                    .'The five designs differ in composition and in copy, not only in colour.'
+                    .'The shipped designs differ in composition and in copy, not only in colour.'
                 )
                 ->schema([
                     SelectField::make('preset')->label('Copy a design in')
