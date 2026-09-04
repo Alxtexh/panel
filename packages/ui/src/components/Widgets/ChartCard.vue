@@ -80,10 +80,11 @@ const bodyStyle = computed(() => {
 
 <template>
     <div
-        class="bg-card flex w-full flex-col self-start rounded-lg border"
+        class="@container/card bg-card flex w-full flex-col self-start rounded-lg border"
         :class="collapsed ? 'px-4 py-2' : 'gap-3 p-4'"
         data-slot="chart-card"
         :data-collapsed="collapsed ? 'true' : 'false'"
+        :aria-busy="loading ? 'true' : undefined"
     >
         <div class="flex flex-wrap items-start justify-between gap-2">
             <div class="flex min-w-0 items-start gap-2">

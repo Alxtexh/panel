@@ -815,7 +815,7 @@ function layoutLabel(item: AnyLayoutItem): string {
 <template>
     <Head :title="heading" />
 
-    <div :class="[PAGE_SHELL, 'pk-dashboard flex flex-col gap-4', `pk-dashboard-${design}`]">
+    <div :class="[PAGE_SHELL, '@container/main pk-dashboard flex flex-col gap-4', `pk-dashboard-${design}`]">
         <RenderHook position="dashboard.before" :hooks="renderHooks" />
 
         <!--
@@ -1220,7 +1220,7 @@ function layoutLabel(item: AnyLayoutItem): string {
                 </div>
                 <div
                     v-else
-                    class="flex flex-col items-start gap-3 lg:flex-row"
+                    class="flex flex-col items-start gap-3 @lg/main:flex-row"
                     data-slot="dashboard-widget-columns"
                 >
                     <div
@@ -1356,7 +1356,7 @@ function layoutLabel(item: AnyLayoutItem): string {
                 </div>
                 <div
                     v-else
-                    class="flex flex-col items-start gap-3 lg:flex-row"
+                    class="flex flex-col items-start gap-3 @lg/main:flex-row"
                     data-slot="dashboard-widget-columns"
                 >
                     <div

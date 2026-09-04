@@ -13015,7 +13015,7 @@ const gg = ["name", "value", "checked", "disabled", "onChange"], hg = {
       e.comparison ? (t(), n("span", mb, c(e.comparison), 1)) : x("", !0)
     ]));
   }
-}), pb = ["data-collapsed"], vb = { class: "flex flex-wrap items-start justify-between gap-2" }, gb = { class: "flex min-w-0 items-start gap-2" }, hb = {
+}), pb = ["data-collapsed", "aria-busy"], vb = { class: "flex flex-wrap items-start justify-between gap-2" }, gb = { class: "flex min-w-0 items-start gap-2" }, hb = {
   key: 0,
   class: "text-muted-foreground mt-0.5 size-4 shrink-0",
   viewBox: "0 0 24 24",
@@ -13065,9 +13065,10 @@ const gg = ["name", "value", "checked", "disabled", "onChange"], hg = {
         return { minHeight: `${o.bodyHeight}px` };
     });
     return (d, u) => (t(), n("div", {
-      class: _(["bg-card flex w-full flex-col self-start rounded-lg border", r.value ? "px-4 py-2" : "gap-3 p-4"]),
+      class: _(["@container/card bg-card flex w-full flex-col self-start rounded-lg border", r.value ? "px-4 py-2" : "gap-3 p-4"]),
       "data-slot": "chart-card",
-      "data-collapsed": r.value ? "true" : "false"
+      "data-collapsed": r.value ? "true" : "false",
+      "aria-busy": e.loading ? "true" : void 0
     }, [
       l("div", vb, [
         l("div", gb, [
